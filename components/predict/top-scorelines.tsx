@@ -23,20 +23,20 @@ export function TopScorelines({
   const maxProb = Math.max(...topScorelines.map((s) => s.probability), 0)
 
   function getOutcomeColor(homeGoals: number, awayGoals: number): string {
-    if (homeGoals > awayGoals) return "bg-emerald-600/20"
-    if (homeGoals < awayGoals) return "bg-blue-600/20"
-    return "bg-muted-foreground/20"
+    if (homeGoals > awayGoals) return "bg-[#1a2b4a]/10"
+    if (homeGoals < awayGoals) return "bg-[#40C28A]/15"
+    return "bg-gray-100"
   }
 
   function getBarColor(homeGoals: number, awayGoals: number): string {
-    if (homeGoals > awayGoals) return "bg-emerald-600"
-    if (homeGoals < awayGoals) return "bg-blue-600"
-    return "bg-muted-foreground"
+    if (homeGoals > awayGoals) return "bg-[#1a2b4a]"
+    if (homeGoals < awayGoals) return "bg-[#40C28A]"
+    return "bg-gray-400"
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+      <div className="flex items-center justify-between text-xs font-medium text-gray-400">
         <span>Score ({homeTeam} - {awayTeam})</span>
         <span>Probability</span>
       </div>
@@ -50,7 +50,7 @@ export function TopScorelines({
             <div key={i} className="flex items-center gap-3">
               <div
                 className={cn(
-                  "flex w-16 shrink-0 items-center justify-center rounded-md px-2 py-1 text-sm font-medium tabular-nums",
+                  "flex w-16 shrink-0 items-center justify-center rounded px-2 py-1 text-sm font-medium tabular-nums",
                   getOutcomeColor(scoreline.homeGoals, scoreline.awayGoals)
                 )}
               >
@@ -59,7 +59,7 @@ export function TopScorelines({
               <div className="relative flex h-6 flex-1 items-center">
                 <div
                   className={cn(
-                    "h-full rounded-md transition-all duration-500",
+                    "h-full rounded transition-all duration-500",
                     getBarColor(scoreline.homeGoals, scoreline.awayGoals)
                   )}
                   style={{

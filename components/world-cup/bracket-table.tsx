@@ -21,13 +21,6 @@ function pct(v: number): string {
   return (v * 100).toFixed(1) + "%";
 }
 
-function probBg(v: number): string {
-  if (v >= 0.4) return "bg-emerald-500/20";
-  if (v >= 0.2) return "bg-emerald-500/10";
-  if (v >= 0.1) return "bg-yellow-500/10";
-  return "";
-}
-
 // R32 match numbers in bracket order
 const LEFT_PATHWAY = [73, 74, 75, 76, 77, 78, 79, 80];
 const RIGHT_PATHWAY = [81, 82, 83, 84, 85, 86, 87, 88];
@@ -42,17 +35,14 @@ function buildSlugInfo(groupOdds: BracketTableProps["groupOdds"]): Map<string, {
 }
 
 // Build a map: matchNum → { group → positionLabel }
-// e.g., match 73 (home="2A", away="2B") → { A: "2A", B: "2B" }
 function buildPositionLabels(): Map<number, Map<string, string>> {
   const result = new Map<number, Map<string, string>>();
   for (const m of R32_MATCHES) {
     const labels = new Map<string, string>();
-    // Home source: e.g. "2A" → group "A", position "2nd"
-    const homeGroup = m.home.slice(1); // "A" from "2A"
-    const homePos = m.home[0]; // "2" from "2A"
+    const homeGroup = m.home.slice(1);
+    const homePos = m.home[0];
     labels.set(homeGroup, `${homePos === "1" ? "1st" : "2nd"} ${homeGroup}`);
 
-    // Away source
     if (m.away === "3rd" && m.eligible3rd) {
       for (const g of m.eligible3rd) {
         labels.set(g, `3rd ${g}`);
@@ -81,54 +71,53 @@ function MatchSlot({
 }) {
   const matchLabels = POSITION_LABELS.get(Number(matchNum));
 
-  // Sort teams by probability descending, take top entries
   const sorted = Object.entries(data.teams)
     .sort((a, b) => b[1] - a[1])
     .filter(([, prob]) => prob >= 0.01);
 
   const has3rd = data.description.includes("3rd");
-
   const schedule = MATCH_SCHEDULE[Number(matchNum)];
 
   return (
-    <div className={`rounded-lg border overflow-hidden ${has3rd ? "border-amber-500/30" : ""}`}>
-      <div className={`px-3 py-1.5 ${
-        has3rd ? "bg-amber-500/10" : "bg-muted/50"
-      }`}>
-        <div className={`text-xs font-semibold ${has3rd ? "text-amber-400" : ""}`}>
-          Match {matchNum} — {data.description}
+    <div className="rounded border border-gray-200 overflow-hidden">
+      <div className={`px-3 py-1.5 ${has3rd ? "bg-amber-50 border-b border-amber-200" : "bg-[#1a2b4a]"}`}>
+        <div className={`text-xs font-semibold ${has3rd ? "text-amber-800" : "text-white"}`}>
+          M{matchNum} &mdash; {data.description}
         </div>
         {schedule && (
-          <div className="text-[10px] text-muted-foreground mt-0.5">
+          <div className={`text-[10px] mt-0.5 ${has3rd ? "text-amber-600" : "text-white/60"}`}>
             {schedule.date} &middot; {schedule.city}
           </div>
         )}
       </div>
-      <div className="divide-y">
-        {sorted.map(([slug, prob]) => {
-          const info = slugInfo.get(slug);
-          const posLabel = info && matchLabels ? matchLabels.get(info.group) : undefined;
-          return (
-            <div
-              key={slug}
-              className={`flex items-center justify-between px-3 py-1.5 text-sm ${probBg(prob)}`}
-            >
-              <span className="truncate">
-                {info?.name ?? slug}
-                {posLabel && (
-                  <span className="ml-1.5 text-[10px] text-muted-foreground">
-                    ({posLabel})
-                  </span>
-                )}
-              </span>
-              <span className="font-mono text-xs ml-2 shrink-0">{pct(prob)}</span>
-            </div>
-          );
-        })}
-        {sorted.length === 0 && (
-          <div className="px-3 py-2 text-sm text-muted-foreground">No data</div>
-        )}
-      </div>
+      <table className="tr-table">
+        <tbody>
+          {sorted.map(([slug, prob]) => {
+            const info = slugInfo.get(slug);
+            const posLabel = info && matchLabels ? matchLabels.get(info.group) : undefined;
+            return (
+              <tr key={slug}>
+                <td>
+                  {info?.name ?? slug}
+                  {posLabel && (
+                    <span className="ml-1 text-[10px] text-gray-400">
+                      ({posLabel})
+                    </span>
+                  )}
+                </td>
+                <td className="text-right font-mono font-semibold">
+                  {pct(prob)}
+                </td>
+              </tr>
+            );
+          })}
+          {sorted.length === 0 && (
+            <tr>
+              <td colSpan={2} className="text-gray-400">No data</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -139,9 +128,9 @@ export function BracketTable({ bracketOdds, groupOdds }: BracketTableProps) {
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="text-lg font-semibold mb-3">Left Pathway</h3>
-        <p className="text-xs text-muted-foreground mb-3">
-          Groups A, B, C, E, F, I → QF 97, 99 → SF 101
+        <h3 className="text-base font-bold mb-1">Left Pathway</h3>
+        <p className="text-xs text-gray-400 mb-3">
+          Groups A, B, C, E, F, I
         </p>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {LEFT_PATHWAY.map((num) => {
@@ -160,9 +149,9 @@ export function BracketTable({ bracketOdds, groupOdds }: BracketTableProps) {
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold mb-3">Right Pathway</h3>
-        <p className="text-xs text-muted-foreground mb-3">
-          Groups D, G, H, J, K, L → QF 98, 100 → SF 102
+        <h3 className="text-base font-bold mb-1">Right Pathway</h3>
+        <p className="text-xs text-gray-400 mb-3">
+          Groups D, G, H, J, K, L
         </p>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {RIGHT_PATHWAY.map((num) => {

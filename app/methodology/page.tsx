@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 export const metadata: Metadata = {
   title: "Methodology — International Soccer Rankings",
@@ -12,17 +10,17 @@ export default function MethodologyPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Methodology</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl font-bold">Methodology</h1>
+        <p className="text-sm text-gray-400">
           How we rank international soccer teams and predict match outcomes
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Overview</CardTitle>
-        </CardHeader>
-        <CardContent className="prose prose-neutral dark:prose-invert max-w-none">
+      <section className="overflow-hidden rounded border border-gray-200">
+        <div className="bg-[#1a2b4a] px-4 py-2">
+          <h2 className="text-sm font-semibold text-white">Overview</h2>
+        </div>
+        <div className="prose prose-neutral max-w-none p-4 text-sm">
           <p>
             Our ranking system is a hybrid of two independently strong
             approaches, optimized for predicting major tournament outcomes:
@@ -45,23 +43,21 @@ export default function MethodologyPage() {
             system but with a more granular player model and a separate
             offensive/defensive decomposition at every level.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Separator />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Component 1: Match-Based Elo</CardTitle>
-        </CardHeader>
-        <CardContent className="prose prose-neutral dark:prose-invert max-w-none">
+      <section className="overflow-hidden rounded border border-gray-200">
+        <div className="bg-[#1a2b4a] px-4 py-2">
+          <h2 className="text-sm font-semibold text-white">Component 1: Match-Based Elo</h2>
+        </div>
+        <div className="prose prose-neutral max-w-none p-4 text-sm">
           <p>
             Each team maintains two Elo sub-ratings &mdash;{" "}
             <strong>Offensive Elo</strong> and <strong>Defensive Elo</strong>{" "}
             &mdash; rather than a single number.
           </p>
           <h4>Core Formula</h4>
-          <pre className="font-mono text-sm">
+          <pre className="font-mono text-sm bg-gray-50 p-3 rounded">
             R_new = R_old + K * G * (W - W_e)
           </pre>
           <ul>
@@ -93,14 +89,14 @@ export default function MethodologyPage() {
             a 60/40 split based on the scoring pattern. A 2-0 win adjusts
             Offensive Elo by 60% and Defensive Elo by 40%.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Component 2: Roster-Based Strength</CardTitle>
-        </CardHeader>
-        <CardContent className="prose prose-neutral dark:prose-invert max-w-none">
+      <section className="overflow-hidden rounded border border-gray-200">
+        <div className="bg-[#1a2b4a] px-4 py-2">
+          <h2 className="text-sm font-semibold text-white">Component 2: Roster-Based Strength</h2>
+        </div>
+        <div className="prose prose-neutral max-w-none p-4 text-sm">
           <p>
             Each national team&apos;s squad is rated by aggregating individual player
             scores derived from club performance. Player ratings are
@@ -128,14 +124,14 @@ export default function MethodologyPage() {
             (e.g., Premier League: 1.00, La Liga: 0.98, MLS: 0.72) derived from
             continental competition results.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Score Prediction Model</CardTitle>
-        </CardHeader>
-        <CardContent className="prose prose-neutral dark:prose-invert max-w-none">
+      <section className="overflow-hidden rounded border border-gray-200">
+        <div className="bg-[#1a2b4a] px-4 py-2">
+          <h2 className="text-sm font-semibold text-white">Score Prediction Model</h2>
+        </div>
+        <div className="prose prose-neutral max-w-none p-4 text-sm">
           <p>
             Match predictions use a <strong>Dixon-Coles + Poisson</strong> model:
           </p>
@@ -160,15 +156,15 @@ export default function MethodologyPage() {
             The output is a full matrix of P(home_score, away_score) for all
             plausible scorelines, summed to produce win/draw/loss probabilities.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Final Rating</CardTitle>
-        </CardHeader>
-        <CardContent className="prose prose-neutral dark:prose-invert max-w-none">
-          <pre className="font-mono text-sm">
+      <section className="overflow-hidden rounded border border-gray-200">
+        <div className="bg-[#1a2b4a] px-4 py-2">
+          <h2 className="text-sm font-semibold text-white">Final Rating</h2>
+        </div>
+        <div className="prose prose-neutral max-w-none p-4 text-sm">
+          <pre className="font-mono text-sm bg-gray-50 p-3 rounded">
 {`Team_Offensive = 0.70 * Elo_Offensive + 0.30 * Roster_Offensive
 Team_Defensive = 0.70 * Elo_Defensive + 0.30 * Roster_Defensive
 Team_Overall = (Team_Offensive + (3000 - Team_Defensive)) / 2`}
@@ -178,16 +174,14 @@ Team_Overall = (Team_Offensive + (3000 - Team_Defensive)) / 2`}
             combined with the offensive rating to produce the overall score that
             determines ranking order.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Separator />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Data Sources</CardTitle>
-        </CardHeader>
-        <CardContent className="prose prose-neutral dark:prose-invert max-w-none">
+      <section className="overflow-hidden rounded border border-gray-200">
+        <div className="bg-[#1a2b4a] px-4 py-2">
+          <h2 className="text-sm font-semibold text-white">Data Sources</h2>
+        </div>
+        <div className="prose prose-neutral max-w-none p-4 text-sm">
           <ul>
             <li>
               <strong>Match results:</strong> Kaggle international football
@@ -207,8 +201,8 @@ Team_Overall = (Team_Offensive + (3000 - Team_Defensive)) / 2`}
             <li>Elo, A. (1978). The Rating of Chessplayers, Past and Present</li>
             <li>FiveThirtyEight SPI Methodology</li>
           </ul>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   );
 }

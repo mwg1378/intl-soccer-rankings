@@ -50,17 +50,17 @@ function CustomTooltip({
   const rating = payload.find((p) => p.dataKey === "rating")?.value;
 
   return (
-    <div className="rounded-lg border bg-background px-3 py-2 text-sm shadow-md">
+    <div className="rounded border border-gray-200 bg-white px-3 py-2 text-sm shadow-md">
       <p className="mb-1 font-medium">{formatted}</p>
       {rank != null && (
-        <p className="text-muted-foreground">
-          Rank: <span className="font-semibold text-foreground">#{rank}</span>
+        <p className="text-gray-500">
+          Rank: <span className="font-semibold text-[#1a2b4a]">#{rank}</span>
         </p>
       )}
       {rating != null && (
-        <p className="text-muted-foreground">
+        <p className="text-gray-500">
           Rating:{" "}
-          <span className="font-semibold text-foreground">
+          <span className="font-semibold text-[#1a2b4a]">
             {rating.toFixed(1)}
           </span>
         </p>
@@ -72,7 +72,7 @@ function CustomTooltip({
 export function RankingChart({ data }: RankingChartProps) {
   if (data.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center text-muted-foreground">
+      <div className="flex h-64 items-center justify-center text-gray-400">
         No ranking data available.
       </div>
     );
@@ -87,25 +87,23 @@ export function RankingChart({ data }: RankingChartProps) {
   return (
     <ResponsiveContainer width="100%" height={360}>
       <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis
           dataKey="date"
           tickFormatter={formatDateTick}
-          tick={{ fontSize: 12 }}
-          className="text-muted-foreground"
+          tick={{ fontSize: 12, fill: "#9ca3af" }}
         />
         <YAxis
           yAxisId="rank"
           orientation="left"
           reversed
           domain={[1, Math.max(maxRank + 5, 10)]}
-          tick={{ fontSize: 12 }}
-          className="text-muted-foreground"
+          tick={{ fontSize: 12, fill: "#9ca3af" }}
           label={{
             value: "Rank",
             angle: -90,
             position: "insideLeft",
-            style: { fontSize: 12, fill: "var(--color-muted-foreground)" },
+            style: { fontSize: 12, fill: "#9ca3af" },
           }}
         />
         <YAxis
@@ -115,13 +113,12 @@ export function RankingChart({ data }: RankingChartProps) {
             Math.floor(minRating - ratingPadding),
             Math.ceil(maxRating + ratingPadding),
           ]}
-          tick={{ fontSize: 12 }}
-          className="text-muted-foreground"
+          tick={{ fontSize: 12, fill: "#9ca3af" }}
           label={{
             value: "Rating",
             angle: 90,
             position: "insideRight",
-            style: { fontSize: 12, fill: "var(--color-muted-foreground)" },
+            style: { fontSize: 12, fill: "#9ca3af" },
           }}
         />
         <RechartsTooltip content={<CustomTooltip />} />
@@ -129,7 +126,7 @@ export function RankingChart({ data }: RankingChartProps) {
           yAxisId="rank"
           type="monotone"
           dataKey="rank"
-          stroke="var(--color-primary)"
+          stroke="#1a2b4a"
           strokeWidth={2}
           dot={false}
           activeDot={{ r: 4, strokeWidth: 0 }}
@@ -138,7 +135,7 @@ export function RankingChart({ data }: RankingChartProps) {
           yAxisId="rating"
           type="monotone"
           dataKey="rating"
-          stroke="var(--color-muted-foreground)"
+          stroke="#9ca3af"
           strokeWidth={1.5}
           strokeDasharray="5 3"
           dot={false}

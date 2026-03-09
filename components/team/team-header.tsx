@@ -1,12 +1,3 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-
 interface Team {
   name: string;
   fifaCode: string;
@@ -21,49 +12,53 @@ interface TeamHeaderProps {
   team: Team;
 }
 
+const confederationColors: Record<string, string> = {
+  UEFA: "text-blue-600",
+  CONMEBOL: "text-green-600",
+  CONCACAF: "text-yellow-600",
+  CAF: "text-orange-600",
+  AFC: "text-red-600",
+  OFC: "text-teal-600",
+};
+
 export function TeamHeader({ team }: TeamHeaderProps) {
   const ratingCards = [
-    { label: "Overall", value: team.currentOverallRating },
-    { label: "Offensive", value: team.currentOffensiveRating },
-    { label: "Defensive", value: team.currentDefensiveRating },
+    { label: "Overall", value: team.currentOverallRating, highlight: true },
+    { label: "Offensive", value: team.currentOffensiveRating, highlight: false },
+    { label: "Defensive", value: team.currentDefensiveRating, highlight: false },
   ] as const;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight">{team.name}</h1>
-          <Badge variant="secondary" className="text-sm">
-            {team.fifaCode}
-          </Badge>
+          <h1 className="text-xl font-bold">{team.name}</h1>
+          <span className="text-xs font-semibold text-gray-400">{team.fifaCode}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-4xl font-extrabold tabular-nums text-primary">
+          <span className="text-3xl font-extrabold tabular-nums text-[#1a2b4a]">
             #{team.currentRank}
           </span>
-          <Badge variant="outline">{team.confederation}</Badge>
+          <span className={`text-xs font-semibold ${confederationColors[team.confederation] ?? "text-gray-500"}`}>
+            {team.confederation}
+          </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-3">
         {ratingCards.map((card) => (
-          <Card key={card.label}>
-            <CardHeader>
-              <CardTitle className="text-muted-foreground">
+          <div key={card.label} className="overflow-hidden rounded border border-gray-200">
+            <div className="bg-[#1a2b4a] px-3 py-1.5">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-white">
                 {card.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p
-                className={cn(
-                  "text-3xl font-bold tabular-nums",
-                  card.label === "Overall" && "text-primary"
-                )}
-              >
+              </span>
+            </div>
+            <div className="px-3 py-2">
+              <span className={`text-2xl font-bold tabular-nums ${card.highlight ? "text-[#1a2b4a]" : "text-gray-600"}`}>
                 {card.value.toFixed(1)}
-              </p>
-            </CardContent>
-          </Card>
+              </span>
+            </div>
+          </div>
         ))}
       </div>
     </div>

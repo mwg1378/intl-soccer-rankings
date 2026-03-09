@@ -1,8 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
 const confederations = [
   { value: "ALL", label: "All" },
   { value: "UEFA", label: "UEFA" },
@@ -25,20 +22,19 @@ export function ConfederationFilter({
   onSelect,
 }: ConfederationFilterProps) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-1">
       {confederations.map((conf) => (
-        <Button
+        <button
           key={conf.value}
-          variant="outline"
-          size="sm"
-          className={cn(
-            selected === conf.value &&
-              "border-primary bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
-          )}
           onClick={() => onSelect(conf.value)}
+          className={`px-2.5 py-1 text-xs font-semibold rounded ${
+            selected === conf.value
+              ? "bg-[#1a2b4a] text-white"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
         >
           {conf.label}
-        </Button>
+        </button>
       ))}
     </div>
   );

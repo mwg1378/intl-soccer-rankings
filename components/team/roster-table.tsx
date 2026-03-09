@@ -1,17 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 
 interface Player {
   id: string;
@@ -43,14 +33,14 @@ const positionOrder: Record<string, number> = {
 };
 
 const positionColors: Record<string, string> = {
-  GK: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400",
-  DEF: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
-  MID: "bg-green-500/15 text-green-700 dark:text-green-400",
-  FWD: "bg-red-500/15 text-red-700 dark:text-red-400",
+  GK: "bg-yellow-500/15 text-yellow-700",
+  DEF: "bg-blue-500/15 text-blue-700",
+  MID: "bg-green-500/15 text-green-700",
+  FWD: "bg-red-500/15 text-red-700",
 };
 
 function formatMarketValue(value: number | null): string {
-  if (value == null) return "—";
+  if (value == null) return "\u2014";
   if (value >= 1_000_000) {
     const millions = value / 1_000_000;
     return `\u20AC${millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)}M`;
@@ -60,15 +50,6 @@ function formatMarketValue(value: number | null): string {
     return `\u20AC${thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)}K`;
   }
   return `\u20AC${value}`;
-}
-
-function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: SortField | null; sortDir: SortDir }) {
-  if (sortField !== field) {
-    return <ArrowUpDown className="ml-1 inline h-3.5 w-3.5 text-muted-foreground/50" />;
-  }
-  return sortDir === "asc"
-    ? <ArrowUp className="ml-1 inline h-3.5 w-3.5" />
-    : <ArrowDown className="ml-1 inline h-3.5 w-3.5" />;
 }
 
 export function RosterTable({ players }: RosterTableProps) {
@@ -100,83 +81,90 @@ export function RosterTable({ players }: RosterTableProps) {
     return copy;
   }, [players, sortField, sortDir]);
 
+  const sortIndicator = (field: SortField) => {
+    if (sortField !== field) return "";
+    return sortDir === "asc" ? " \u25B2" : " \u25BC";
+  };
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead
-            className="cursor-pointer select-none"
-            onClick={() => handleSort("position")}
-          >
-            Pos <SortIcon field="position" sortField={sortField} sortDir={sortDir} />
-          </TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead className="hidden md:table-cell">Detailed Pos</TableHead>
-          <TableHead className="hidden lg:table-cell">Club</TableHead>
-          <TableHead className="hidden lg:table-cell">League</TableHead>
-          <TableHead
-            className="cursor-pointer select-none text-right"
-            onClick={() => handleSort("compositeRating")}
-          >
-            Rating <SortIcon field="compositeRating" sortField={sortField} sortDir={sortDir} />
-          </TableHead>
-          <TableHead
-            className="cursor-pointer select-none text-right"
-            onClick={() => handleSort("marketValue")}
-          >
-            Value <SortIcon field="marketValue" sortField={sortField} sortDir={sortDir} />
-          </TableHead>
-          <TableHead className="hidden sm:table-cell text-right">Caps</TableHead>
-          <TableHead className="hidden sm:table-cell text-right">Goals</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {sorted.map((player) => (
-          <TableRow key={player.id}>
-            <TableCell>
-              <span
-                className={cn(
-                  "inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-semibold",
-                  positionColors[player.position] ?? "bg-muted text-muted-foreground"
-                )}
-              >
-                {player.position}
-              </span>
-            </TableCell>
-            <TableCell className="font-medium">
-              <span className="flex items-center gap-2">
-                {player.name}
-                {player.isStartingXI && (
-                  <Badge variant="default" className="text-[10px] leading-none">
-                    XI
-                  </Badge>
-                )}
-              </span>
-            </TableCell>
-            <TableCell className="hidden md:table-cell text-muted-foreground">
-              {player.detailedPosition}
-            </TableCell>
-            <TableCell className="hidden lg:table-cell">
-              {player.currentClub}
-            </TableCell>
-            <TableCell className="hidden lg:table-cell text-muted-foreground">
-              {player.currentLeague}
-            </TableCell>
-            <TableCell className="text-right tabular-nums font-medium">
-              {player.compositeRating?.toFixed(1) ?? "—"}
-            </TableCell>
-            <TableCell className="text-right tabular-nums">
-              {formatMarketValue(player.marketValue)}
-            </TableCell>
-            <TableCell className="hidden sm:table-cell text-right tabular-nums">
-              {player.caps}
-            </TableCell>
-            <TableCell className="hidden sm:table-cell text-right tabular-nums">
-              {player.internationalGoals}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="overflow-x-auto rounded border border-gray-200">
+      <table className="tr-table">
+        <thead>
+          <tr>
+            <th
+              className="cursor-pointer select-none"
+              onClick={() => handleSort("position")}
+            >
+              Pos{sortIndicator("position")}
+            </th>
+            <th>Name</th>
+            <th className="hidden md:table-cell">Detailed Pos</th>
+            <th className="hidden lg:table-cell">Club</th>
+            <th className="hidden lg:table-cell">League</th>
+            <th
+              className="cursor-pointer select-none text-right"
+              onClick={() => handleSort("compositeRating")}
+            >
+              Rating{sortIndicator("compositeRating")}
+            </th>
+            <th
+              className="cursor-pointer select-none text-right"
+              onClick={() => handleSort("marketValue")}
+            >
+              Value{sortIndicator("marketValue")}
+            </th>
+            <th className="hidden sm:table-cell text-right">Caps</th>
+            <th className="hidden sm:table-cell text-right">Goals</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((player) => (
+            <tr key={player.id}>
+              <td>
+                <span
+                  className={cn(
+                    "inline-flex items-center justify-center rounded px-2 py-0.5 text-xs font-semibold",
+                    positionColors[player.position] ?? "bg-gray-100 text-gray-500"
+                  )}
+                >
+                  {player.position}
+                </span>
+              </td>
+              <td className="font-medium">
+                <span className="flex items-center gap-2">
+                  {player.name}
+                  {player.isStartingXI && (
+                    <span className="rounded bg-[#1a2b4a] px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+                      XI
+                    </span>
+                  )}
+                </span>
+              </td>
+              <td className="hidden md:table-cell text-gray-400">
+                {player.detailedPosition}
+              </td>
+              <td className="hidden lg:table-cell">
+                {player.currentClub}
+              </td>
+              <td className="hidden lg:table-cell text-gray-400">
+                {player.currentLeague}
+              </td>
+              <td className="text-right tabular-nums font-medium font-mono">
+                {player.compositeRating?.toFixed(1) ?? "\u2014"}
+              </td>
+              <td className="text-right tabular-nums font-mono">
+                {formatMarketValue(player.marketValue)}
+              </td>
+              <td className="hidden sm:table-cell text-right tabular-nums font-mono">
+                {player.caps}
+              </td>
+              <td className="hidden sm:table-cell text-right tabular-nums font-mono">
+                {player.internationalGoals}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

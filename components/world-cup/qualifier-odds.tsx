@@ -7,48 +7,47 @@ interface QualifierOddsProps {
   }>;
 }
 
-function ProbBar({ prob, color }: { prob: number; color: string }) {
-  return (
-    <div className="flex items-center gap-2 w-full">
-      <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full ${color}`}
-          style={{ width: `${prob * 100}%` }}
-        />
-      </div>
-      <span className="text-sm font-mono w-14 text-right">
-        {(prob * 100).toFixed(1)}%
-      </span>
-    </div>
-  );
+function pct(v: number): string {
+  return (v * 100).toFixed(1) + "%";
 }
 
-const PATH_COLORS = [
-  "bg-blue-500",
-  "bg-emerald-500",
-  "bg-amber-500",
-  "bg-rose-500",
-  "bg-purple-500",
-];
+function probColor(v: number): string {
+  if (v >= 0.5) return "text-green-700 font-semibold";
+  if (v >= 0.3) return "text-green-600";
+  if (v >= 0.15) return "text-gray-700";
+  if (v >= 0.05) return "text-gray-400";
+  return "text-gray-300";
+}
 
 export function QualifierOdds({ qualifierOdds }: QualifierOddsProps) {
   const paths = Object.entries(qualifierOdds);
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Playoff Qualification Odds</h2>
+    <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {paths.map(([pathId, data], pathIdx) => {
+        {paths.map(([pathId, data]) => {
           const sorted = Object.entries(data.teams).sort((a, b) => b[1] - a[1]);
           return (
-            <div key={pathId} className="rounded-lg border p-4 space-y-3">
-              <h3 className="font-semibold text-sm">{data.description}</h3>
-              {sorted.map(([name, prob]) => (
-                <div key={name} className="space-y-1">
-                  <span className="text-sm">{name}</span>
-                  <ProbBar prob={prob} color={PATH_COLORS[pathIdx % PATH_COLORS.length]} />
-                </div>
-              ))}
+            <div key={pathId} className="overflow-hidden rounded border border-gray-200">
+              <table className="tr-table">
+                <thead>
+                  <tr>
+                    <th colSpan={2} className="!text-[13px] !normal-case !tracking-normal">
+                      {data.description}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.map(([name, prob]) => (
+                    <tr key={name}>
+                      <td>{name}</td>
+                      <td className={`text-right font-mono ${probColor(prob)}`}>
+                        {pct(prob)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           );
         })}

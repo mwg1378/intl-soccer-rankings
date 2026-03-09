@@ -27,24 +27,19 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            International Soccer Rankings
-          </h1>
-          <p className="text-muted-foreground">
-            Combining match-based Elo ratings with player club performance
-          </p>
-        </div>
+      <div className="flex items-baseline justify-between">
+        <h1 className="text-xl font-bold">
+          International Soccer Rankings
+        </h1>
         {teams.length > 0 && (
-          <p className="text-sm text-muted-foreground">
-            Last updated:{" "}
+          <span className="text-xs text-gray-400">
+            Updated{" "}
             {lastUpdated.toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
+              month: "short",
               day: "numeric",
+              year: "numeric",
             })}
-          </p>
+          </span>
         )}
       </div>
 
@@ -53,7 +48,7 @@ export default async function HomePage() {
       ) : (
         <div className="rounded-lg border border-dashed p-12 text-center">
           <h2 className="text-lg font-semibold">No rankings data yet</h2>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 text-gray-400">
             Rankings will appear here once match data has been imported and
             processed through the Elo rating engine.
           </p>
@@ -63,7 +58,7 @@ export default async function HomePage() {
       <div className="text-center">
         <a
           href="/rankings"
-          className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+          className="text-sm text-gray-400 hover:text-gray-700 underline-offset-4 hover:underline"
         >
           View all 211 teams &rarr;
         </a>

@@ -14,7 +14,7 @@ export default async function GroupStagePage() {
     return (
       <div className="rounded-lg border border-dashed p-12 text-center">
         <h2 className="text-lg font-semibold">No simulation data</h2>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-gray-400">
           Run the simulation script to generate World Cup forecasts.
         </p>
       </div>
@@ -56,7 +56,7 @@ export default async function GroupStagePage() {
     <div className="space-y-8">
       <QualifierOdds qualifierOdds={qualifierOdds} />
       <GroupStageTable groupOdds={groupOdds} playoffTeamsByGroup={playoffTeamsByGroup} />
-      <p className="text-xs text-muted-foreground text-center">
+      <p className="text-xs text-gray-400 text-center">
         Based on {sim.iterations.toLocaleString()} Monte Carlo simulations |
         Last updated {sim.createdAt.toLocaleDateString("en-US", {
           year: "numeric", month: "long", day: "numeric",

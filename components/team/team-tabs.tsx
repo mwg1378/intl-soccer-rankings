@@ -1,6 +1,6 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
 import { RosterTable } from "@/components/team/roster-table";
 import { MatchHistory } from "@/components/team/match-history";
 import { RankingChart } from "@/components/team/ranking-chart";
@@ -39,48 +39,66 @@ interface TeamTabsProps {
   }>;
 }
 
-export function TeamTabs({ roster, matches, chartData }: TeamTabsProps) {
-  return (
-    <Tabs defaultValue="roster" className="w-full">
-      <TabsList>
-        <TabsTrigger value="roster">
-          Roster ({roster.length})
-        </TabsTrigger>
-        <TabsTrigger value="matches">
-          Matches ({matches.length})
-        </TabsTrigger>
-        <TabsTrigger value="history">Ranking History</TabsTrigger>
-      </TabsList>
+const tabs = [
+  { key: "roster", label: "Roster" },
+  { key: "matches", label: "Matches" },
+  { key: "history", label: "Ranking History" },
+] as const;
 
-      <TabsContent value="roster" className="mt-4">
-        {roster.length > 0 ? (
+type TabKey = (typeof tabs)[number]["key"];
+
+export function TeamTabs({ roster, matches, chartData }: TeamTabsProps) {
+  const [active, setActive] = useState<TabKey>("roster");
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-1 border-b border-gray-200">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActive(tab.key)}
+            className={`px-4 py-2 text-xs font-semibold uppercase tracking-wide border-b-2 -mb-px transition-colors ${
+              active === tab.key
+                ? "text-[#1a2b4a] border-[#1a2b4a]"
+                : "text-gray-400 border-transparent hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            {tab.label}
+            {tab.key === "roster" && ` (${roster.length})`}
+            {tab.key === "matches" && ` (${matches.length})`}
+          </button>
+        ))}
+      </div>
+
+      {active === "roster" && (
+        roster.length > 0 ? (
           <RosterTable players={roster} />
         ) : (
-          <p className="py-8 text-center text-muted-foreground">
+          <p className="py-8 text-center text-gray-400">
             No roster data available yet.
           </p>
-        )}
-      </TabsContent>
+        )
+      )}
 
-      <TabsContent value="matches" className="mt-4">
-        {matches.length > 0 ? (
+      {active === "matches" && (
+        matches.length > 0 ? (
           <MatchHistory matches={matches} />
         ) : (
-          <p className="py-8 text-center text-muted-foreground">
+          <p className="py-8 text-center text-gray-400">
             No match history available yet.
           </p>
-        )}
-      </TabsContent>
+        )
+      )}
 
-      <TabsContent value="history" className="mt-4">
-        {chartData.length > 0 ? (
+      {active === "history" && (
+        chartData.length > 0 ? (
           <RankingChart data={chartData} />
         ) : (
-          <p className="py-8 text-center text-muted-foreground">
+          <p className="py-8 text-center text-gray-400">
             No ranking history available yet.
           </p>
-        )}
-      </TabsContent>
-    </Tabs>
+        )
+      )}
+    </div>
   );
 }

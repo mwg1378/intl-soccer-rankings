@@ -47,8 +47,8 @@ export default function PredictPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Match Predictor</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl font-bold">Match Predictor</h1>
+        <p className="text-sm text-gray-400">
           Select two teams to see score-level probability predictions
         </p>
       </div>
@@ -115,7 +115,7 @@ export default function PredictPage() {
 
       {predicting && (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#1a2b4a]" />
         </div>
       )}
 

@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Trophy } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Rankings" },
-  { href: "/world-cup", label: "World Cup" },
-  { href: "/predict", label: "Predict" },
+  { href: "/world-cup", label: "World Cup 2026" },
+  { href: "/predict", label: "Predictions" },
   { href: "/methodology", label: "Methodology" },
 ];
 
@@ -17,32 +15,29 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-14 items-center px-4">
-        <Link href="/" className="mr-6 flex items-center gap-2 font-bold">
-          <Trophy className="h-5 w-5" />
-          <span className="hidden sm:inline">Soccer Rankings</span>
+    <header className="sticky top-0 z-50 w-full bg-[#1a2b4a] text-white shadow-md">
+      <div className="container mx-auto flex h-11 items-center px-4">
+        <Link href="/" className="mr-8 flex items-center gap-2 font-bold text-sm tracking-wide">
+          <span className="text-[#40C28A]">&#9917;</span>
+          <span>Soccer Rankings</span>
         </Link>
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={cn(
-                "rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                "px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors",
                 (pathname === link.href ||
                   (link.href !== "/" && pathname.startsWith(link.href)))
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground"
+                  ? "text-[#40C28A]"
+                  : "text-white/70 hover:text-white"
               )}
             >
               {link.label}
             </Link>
           ))}
         </nav>
-        <div className="ml-auto">
-          <ThemeToggle />
-        </div>
       </div>
     </header>
   );

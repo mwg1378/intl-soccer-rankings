@@ -14,16 +14,16 @@ export function WorldCupNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-1 border-b">
+    <nav className="flex gap-1 border-b border-gray-200">
       {tabs.map((tab) => (
         <Link
           key={tab.href}
           href={tab.href}
           className={cn(
-            "px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px",
+            "px-4 py-2 text-xs font-semibold uppercase tracking-wide border-b-2 transition-colors -mb-px",
             pathname === tab.href
-              ? "text-foreground border-foreground"
-              : "text-muted-foreground border-transparent hover:text-foreground hover:border-foreground/30"
+              ? "text-[#1a2b4a] border-[#1a2b4a]"
+              : "text-gray-400 border-transparent hover:text-gray-700 hover:border-gray-300"
           )}
         >
           {tab.label}

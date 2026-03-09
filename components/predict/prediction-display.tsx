@@ -1,12 +1,5 @@
 "use client"
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
 import { ProbabilityBar } from "@/components/predict/probability-bar"
 import { ScoreMatrix } from "@/components/predict/score-matrix"
 import { TopScorelines, type Scoreline } from "@/components/predict/top-scorelines"
@@ -45,35 +38,32 @@ export function PredictionDisplay({ prediction }: PredictionDisplayProps) {
       {/* Expected Goals */}
       <div className="flex items-center justify-center gap-8">
         <div className="flex flex-col items-center gap-1">
-          <span className="text-sm font-medium text-muted-foreground">
+          <span className="text-sm font-medium text-gray-500">
             {homeTeam}
           </span>
           <span className="text-3xl font-bold tabular-nums">
             {homeExpectedGoals.toFixed(2)}
           </span>
-          <span className="text-xs text-muted-foreground">Expected Goals</span>
+          <span className="text-xs text-gray-400">Expected Goals</span>
         </div>
-        <span className="text-2xl font-light text-muted-foreground">vs</span>
+        <span className="text-2xl font-light text-gray-300">vs</span>
         <div className="flex flex-col items-center gap-1">
-          <span className="text-sm font-medium text-muted-foreground">
+          <span className="text-sm font-medium text-gray-500">
             {awayTeam}
           </span>
           <span className="text-3xl font-bold tabular-nums">
             {awayExpectedGoals.toFixed(2)}
           </span>
-          <span className="text-xs text-muted-foreground">Expected Goals</span>
+          <span className="text-xs text-gray-400">Expected Goals</span>
         </div>
       </div>
 
       {/* Win Probability Bar */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Win Probability</CardTitle>
-          <CardDescription>
-            Predicted outcome probabilities for this match
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="overflow-hidden rounded border border-gray-200">
+        <div className="bg-[#1a2b4a] px-4 py-2">
+          <h3 className="text-sm font-semibold text-white">Win Probability</h3>
+        </div>
+        <div className="p-4">
           <ProbabilityBar
             homeTeam={homeTeam}
             awayTeam={awayTeam}
@@ -81,42 +71,36 @@ export function PredictionDisplay({ prediction }: PredictionDisplayProps) {
             drawProb={drawProb}
             awayWinProb={awayWinProb}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Score Matrix and Top Scorelines side by side on larger screens */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Score Probabilities</CardTitle>
-            <CardDescription>
-              Probability of each exact scoreline
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className="overflow-hidden rounded border border-gray-200">
+          <div className="bg-[#1a2b4a] px-4 py-2">
+            <h3 className="text-sm font-semibold text-white">Score Probabilities</h3>
+          </div>
+          <div className="p-4">
             <ScoreMatrix
               matrix={scoreMatrix}
               homeTeam={homeTeam}
               awayTeam={awayTeam}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Most Likely Scores</CardTitle>
-            <CardDescription>
-              Top 10 most probable scorelines
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className="overflow-hidden rounded border border-gray-200">
+          <div className="bg-[#1a2b4a] px-4 py-2">
+            <h3 className="text-sm font-semibold text-white">Most Likely Scores</h3>
+          </div>
+          <div className="p-4">
             <TopScorelines
               scorelines={topScorelines}
               homeTeam={homeTeam}
               awayTeam={awayTeam}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

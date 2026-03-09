@@ -46,7 +46,7 @@ export function TeamSelector({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <span className="text-xs font-semibold text-gray-500">{label}</span>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           render={
@@ -59,12 +59,12 @@ export function TeamSelector({
           {selectedTeam ? (
             <span className="flex items-center gap-2">
               <span>{selectedTeam.name}</span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-gray-400">
                 ({selectedTeam.fifaCode})
               </span>
             </span>
           ) : (
-            <span className="text-muted-foreground">Select {label.toLowerCase()}...</span>
+            <span className="text-gray-400">Select {label.toLowerCase()}...</span>
           )}
           <ChevronsUpDownIcon className="ml-auto size-4 shrink-0 opacity-50" />
         </PopoverTrigger>
@@ -86,7 +86,7 @@ export function TeamSelector({
                   >
                     <span className="flex items-center gap-2">
                       <span>{team.name}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-gray-400">
                         {team.fifaCode}
                       </span>
                     </span>

@@ -27,12 +27,12 @@ function pct(v: number): string {
   return (v * 100).toFixed(1) + "%";
 }
 
-function cellBg(v: number): string {
-  if (v >= 0.8) return "bg-emerald-500/25 text-emerald-300";
-  if (v >= 0.5) return "bg-emerald-500/15 text-emerald-400";
-  if (v >= 0.3) return "bg-emerald-500/10";
-  if (v >= 0.1) return "bg-yellow-500/5";
-  return "text-muted-foreground";
+function cellColor(v: number): string {
+  if (v >= 0.8) return "text-green-700 font-semibold";
+  if (v >= 0.5) return "text-green-600";
+  if (v >= 0.3) return "text-gray-700";
+  if (v >= 0.1) return "text-gray-500";
+  return "text-gray-300";
 }
 
 export function AdvancementTable({ advancementOdds }: AdvancementTableProps) {
@@ -41,81 +41,78 @@ export function AdvancementTable({ advancementOdds }: AdvancementTableProps) {
 
   const allTeams = Object.entries(advancementOdds);
 
-  // Separate confirmed teams (probQualify == 1.0) and playoff teams
   const confirmed = allTeams.filter(([, o]) => o.probQualify >= 0.999);
   const playoff = allTeams.filter(([, o]) => o.probQualify < 0.999 && o.probQualify > 0);
 
   const teamsToShow = showPlayoffs ? [...confirmed, ...playoff] : confirmed;
 
   const sorted = teamsToShow.sort((a, b) => {
-    const aVal = a[1][sortKey];
-    const bVal = b[1][sortKey];
-    return bVal - aVal;
+    return b[1][sortKey] - a[1][sortKey];
   });
 
-  const columns: Array<{ key: SortKey; label: string; shortLabel: string }> = [
-    { key: "probR32", label: "Round of 32", shortLabel: "R32" },
-    { key: "probR16", label: "Round of 16", shortLabel: "R16" },
-    { key: "probQF", label: "Quarterfinals", shortLabel: "QF" },
-    { key: "probSF", label: "Semifinals", shortLabel: "SF" },
-    { key: "probFinal", label: "Final", shortLabel: "Final" },
-    { key: "probChampion", label: "Champion", shortLabel: "Champ" },
+  const columns: Array<{ key: SortKey; label: string }> = [
+    { key: "probR32", label: "R32" },
+    { key: "probR16", label: "R16" },
+    { key: "probQF", label: "QF" },
+    { key: "probSF", label: "SF" },
+    { key: "probFinal", label: "Final" },
+    { key: "probChampion", label: "Champ" },
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex gap-2">
         <button
           onClick={() => setShowPlayoffs(!showPlayoffs)}
-          className={`px-3 py-1 text-sm rounded-md ${
-            showPlayoffs ? "bg-foreground text-background" : "bg-muted hover:bg-muted/80"
+          className={`px-2.5 py-1 text-xs font-semibold rounded ${
+            showPlayoffs ? "bg-[#1a2b4a] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
           {showPlayoffs ? "Hide" : "Show"} Playoff Teams
         </button>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded border border-gray-200">
+        <table className="tr-table">
           <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="text-left px-4 py-2 font-medium sticky left-0 bg-muted/50">#</th>
-              <th className="text-left px-4 py-2 font-medium sticky left-8 bg-muted/50">Team</th>
-              <th className="text-center px-2 py-2 font-medium">Grp</th>
+            <tr>
+              <th className="w-[40px]">#</th>
+              <th>Team</th>
+              <th className="text-center w-[40px]">Grp</th>
               {showPlayoffs && (
-                <th className="text-right px-2 py-2 font-medium">Qualify</th>
+                <th className="text-right">Qual</th>
               )}
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`text-right px-2 py-2 font-medium cursor-pointer hover:text-foreground ${
-                    sortKey === col.key ? "text-foreground underline" : "text-muted-foreground"
+                  className={`text-right cursor-pointer ${
+                    sortKey === col.key ? "!text-[#40C28A] underline" : ""
                   }`}
                   onClick={() => setSortKey(col.key)}
                 >
-                  {col.shortLabel}
+                  {col.label}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {sorted.map(([slug, odds], idx) => (
-              <tr key={slug} className="border-b last:border-0 hover:bg-muted/30">
-                <td className="px-4 py-2 text-muted-foreground font-mono text-xs sticky left-0 bg-background">
+              <tr key={slug}>
+                <td className="text-gray-400 font-mono">
                   {idx + 1}
                 </td>
-                <td className="px-4 py-2 font-medium whitespace-nowrap sticky left-8 bg-background">
+                <td className="font-medium">
                   {odds.name}
                   {odds.probQualify < 0.999 && (
-                    <span className="ml-1 text-xs text-amber-400">*</span>
+                    <span className="ml-1 text-[10px] text-amber-500">*</span>
                   )}
                 </td>
-                <td className="text-center px-2 py-2 text-muted-foreground text-xs">
+                <td className="text-center text-gray-400 text-xs">
                   {odds.group || "—"}
                 </td>
                 {showPlayoffs && (
-                  <td className={`text-right px-2 py-2 font-mono text-xs ${
-                    odds.probQualify < 0.999 ? "text-amber-400" : "text-muted-foreground"
+                  <td className={`text-right font-mono ${
+                    odds.probQualify < 0.999 ? "text-amber-600" : "text-gray-400"
                   }`}>
                     {odds.probQualify >= 0.999 ? "100%" : pct(odds.probQualify)}
                   </td>
@@ -123,7 +120,7 @@ export function AdvancementTable({ advancementOdds }: AdvancementTableProps) {
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className={`text-right px-2 py-2 font-mono text-xs ${cellBg(odds[col.key])}`}
+                    className={`text-right font-mono ${cellColor(odds[col.key])}`}
                   >
                     {pct(odds[col.key])}
                   </td>
@@ -135,11 +132,11 @@ export function AdvancementTable({ advancementOdds }: AdvancementTableProps) {
       </div>
 
       {!showPlayoffs && playoff.length > 0 && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-gray-400">
           * {playoff.length} playoff teams hidden.{" "}
           <button
             onClick={() => setShowPlayoffs(true)}
-            className="underline hover:text-foreground"
+            className="underline hover:text-gray-600"
           >
             Show all teams
           </button>

@@ -23,12 +23,12 @@ function pct(v: number): string {
   return (v * 100).toFixed(1) + "%";
 }
 
-function probBg(v: number): string {
-  if (v >= 0.5) return "bg-emerald-500/20 text-emerald-400";
-  if (v >= 0.3) return "bg-emerald-500/10 text-emerald-300";
-  if (v >= 0.15) return "bg-yellow-500/10 text-yellow-400";
-  if (v >= 0.05) return "bg-orange-500/10 text-orange-400";
-  return "text-muted-foreground";
+function probColor(v: number): string {
+  if (v >= 0.5) return "text-green-700 font-semibold";
+  if (v >= 0.3) return "text-green-600";
+  if (v >= 0.15) return "text-gray-700";
+  if (v >= 0.05) return "text-gray-400";
+  return "text-gray-300";
 }
 
 const GROUPS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
@@ -56,10 +56,10 @@ export function GroupStageTable({ groupOdds, playoffTeamsByGroup = {} }: GroupSt
       <div className="flex flex-wrap gap-1">
         <button
           onClick={() => setSelectedGroup(null)}
-          className={`px-3 py-1 text-sm rounded-md ${
+          className={`px-2.5 py-1 text-xs font-semibold rounded ${
             !selectedGroup
-              ? "bg-foreground text-background"
-              : "bg-muted hover:bg-muted/80"
+              ? "bg-[#1a2b4a] text-white"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
           All
@@ -68,10 +68,10 @@ export function GroupStageTable({ groupOdds, playoffTeamsByGroup = {} }: GroupSt
           <button
             key={g}
             onClick={() => setSelectedGroup(g === selectedGroup ? null : g)}
-            className={`px-3 py-1 text-sm rounded-md ${
+            className={`px-2.5 py-1 text-xs font-semibold rounded ${
               selectedGroup === g
-                ? "bg-foreground text-background"
-                : "bg-muted hover:bg-muted/80"
+                ? "bg-[#1a2b4a] text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             {g}
@@ -87,69 +87,66 @@ export function GroupStageTable({ groupOdds, playoffTeamsByGroup = {} }: GroupSt
           const qualifiers = teams.filter((t) => playoffNames.has(t.name));
 
           const TeamRow = ({ t }: { t: GroupOdds }) => (
-            <tr key={t.name} className="border-b last:border-0">
-              <td className="px-4 py-2 font-medium whitespace-nowrap">{t.name}</td>
-              <td className={`text-right px-2 py-2 font-mono text-xs ${probBg(t.probFirst)}`}>
+            <tr key={t.name}>
+              <td>{t.name}</td>
+              <td className={`text-right font-mono ${probColor(t.probFirst)}`}>
                 {pct(t.probFirst)}
               </td>
-              <td className={`text-right px-2 py-2 font-mono text-xs ${probBg(t.probSecond)}`}>
+              <td className={`text-right font-mono ${probColor(t.probSecond)}`}>
                 {pct(t.probSecond)}
               </td>
-              <td className={`text-right px-2 py-2 font-mono text-xs ${probBg(t.probThird)}`}>
+              <td className={`text-right font-mono ${probColor(t.probThird)}`}>
                 {pct(t.probThird)}
               </td>
-              <td className={`text-right px-2 py-2 font-mono text-xs ${probBg(t.probFourth)}`}>
+              <td className={`text-right font-mono ${probColor(t.probFourth)}`}>
                 {pct(t.probFourth)}
               </td>
-              <td className={`text-right px-2 py-2 font-mono text-xs font-bold ${probBg(t.probAdvance)}`}>
+              <td className={`text-right font-mono font-semibold ${probColor(t.probAdvance)}`}>
                 {pct(t.probAdvance)}
               </td>
-              <td className="text-right px-2 py-2 font-mono text-xs text-muted-foreground">
+              <td className="text-right font-mono text-gray-400">
                 {t.avgPoints.toFixed(1)}
               </td>
             </tr>
           );
 
           return (
-            <div key={g} className="rounded-lg border overflow-hidden">
-              <div className="bg-muted/50 px-4 py-2 font-semibold text-sm">
-                Group {g}
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-muted-foreground">
-                      <th className="text-left px-4 py-2 font-medium">Team</th>
-                      <th className="text-right px-2 py-2 font-medium">1st</th>
-                      <th className="text-right px-2 py-2 font-medium">2nd</th>
-                      <th className="text-right px-2 py-2 font-medium">3rd</th>
-                      <th className="text-right px-2 py-2 font-medium">4th</th>
-                      <th className="text-right px-2 py-2 font-medium">Adv.</th>
-                      <th className="text-right px-2 py-2 font-medium">Pts</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {confirmed.map((t) => (
-                      <TeamRow key={t.name} t={t} />
-                    ))}
-                    {qualifiers.length > 0 && (
-                      <>
-                        <tr>
-                          <td
-                            colSpan={7}
-                            className="px-4 py-1 text-[11px] italic text-muted-foreground border-t border-dashed"
-                          >
-                            if they qualify
-                          </td>
-                        </tr>
-                        {qualifiers.map((t) => (
-                          <TeamRow key={t.name} t={t} />
-                        ))}
-                      </>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+            <div key={g} className="overflow-hidden rounded border border-gray-200">
+              <table className="tr-table">
+                <thead>
+                  <tr>
+                    <th colSpan={7} className="!text-[13px] !normal-case !tracking-normal">
+                      Group {g}
+                    </th>
+                  </tr>
+                  <tr>
+                    <th>Team</th>
+                    <th className="text-right">1st</th>
+                    <th className="text-right">2nd</th>
+                    <th className="text-right">3rd</th>
+                    <th className="text-right">4th</th>
+                    <th className="text-right">Adv.</th>
+                    <th className="text-right">Pts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {confirmed.map((t) => (
+                    <TeamRow key={t.name} t={t} />
+                  ))}
+                  {qualifiers.length > 0 && (
+                    <>
+                      <tr className="separator-row">
+                        <td colSpan={7} className="text-[11px] italic text-gray-400">
+                          if they qualify
+                        </td>
+                      </tr>
+                      {qualifiers.map((t) => (
+                        <TeamRow key={t.name} t={t} />
+                      ))}
+                    </>
+                  )}
+                </tbody>
+              </table>
             </div>
           );
         })}

@@ -27,11 +27,11 @@ export function ProbabilityBar({
         <span>{homeTeam}</span>
         <span>{awayTeam}</span>
       </div>
-      <div className="flex h-10 w-full overflow-hidden rounded-lg text-sm font-medium">
+      <div className="flex h-10 w-full overflow-hidden rounded text-sm font-medium">
         {homePct > 0 && (
           <div
             className={cn(
-              "flex items-center justify-center bg-emerald-600 text-white transition-all duration-500",
+              "flex items-center justify-center bg-[#1a2b4a] text-white transition-all duration-500",
               homePct < 10 && "text-xs"
             )}
             style={{ width: `${homePct}%` }}
@@ -42,7 +42,7 @@ export function ProbabilityBar({
         {drawPct > 0 && (
           <div
             className={cn(
-              "flex items-center justify-center bg-muted-foreground/40 text-foreground transition-all duration-500",
+              "flex items-center justify-center bg-gray-300 text-gray-700 transition-all duration-500",
               drawPct < 10 && "text-xs"
             )}
             style={{ width: `${drawPct}%` }}
@@ -53,7 +53,7 @@ export function ProbabilityBar({
         {awayPct > 0 && (
           <div
             className={cn(
-              "flex items-center justify-center bg-blue-600 text-white transition-all duration-500",
+              "flex items-center justify-center bg-[#40C28A] text-white transition-all duration-500",
               awayPct < 10 && "text-xs"
             )}
             style={{ width: `${awayPct}%` }}
@@ -62,7 +62,7 @@ export function ProbabilityBar({
           </div>
         )}
       </div>
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
+      <div className="flex items-center justify-between text-xs text-gray-400">
         <span>Home Win</span>
         <span>Draw</span>
         <span>Away Win</span>

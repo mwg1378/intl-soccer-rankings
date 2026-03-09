@@ -121,9 +121,70 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground text-sm;
   }
   html {
     @apply font-sans;
   }
+}
+
+/* TeamRankings-inspired dense data table styling */
+.tr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tr-table thead th {
+  background: #1a2b4a;
+  color: #fff;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 8px 12px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 2px solid #0f1d36;
+}
+
+.tr-table thead th.text-right {
+  text-align: right;
+}
+
+.tr-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background 0.1s;
+}
+
+.tr-table tbody tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.tr-table tbody tr:hover {
+  background: #eef2f7;
+}
+
+.tr-table tbody td {
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+.tr-table tbody td.text-right {
+  text-align: right;
+}
+
+/* Separator row for "if they qualify" etc */
+.tr-table tbody tr.separator-row {
+  background: none;
+}
+
+.tr-table tbody tr.separator-row:hover {
+  background: none;
+}
+
+.tr-table tbody tr.separator-row td {
+  padding: 4px 12px;
+  border-top: 1px dashed #cbd5e1;
+  border-bottom: none;
 }

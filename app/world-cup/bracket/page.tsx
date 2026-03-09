@@ -12,7 +12,7 @@ export default async function BracketPage() {
     return (
       <div className="rounded-lg border border-dashed p-12 text-center">
         <h2 className="text-lg font-semibold">No simulation data</h2>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-gray-400">
           Run the simulation script to generate World Cup forecasts.
         </p>
       </div>
@@ -40,14 +40,14 @@ export default async function BracketPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold">Round of 32 Bracket Probabilities</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-gray-400">
           Probability each team appears in each R32 bracket slot. Especially
           interesting for 3rd-place team assignments which vary based on which
           groups produce qualifying 3rd-place teams.
         </p>
       </div>
       <BracketTable bracketOdds={bracketOdds} groupOdds={groupOdds} />
-      <p className="text-xs text-muted-foreground text-center">
+      <p className="text-xs text-gray-400 text-center">
         Based on {sim.iterations.toLocaleString()} Monte Carlo simulations |
         Last updated {sim.createdAt.toLocaleDateString("en-US", {
           year: "numeric", month: "long", day: "numeric",

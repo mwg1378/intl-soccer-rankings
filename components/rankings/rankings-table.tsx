@@ -1,21 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ChevronUp, ChevronDown, Minus } from "lucide-react";
 
 // ISO 3166-1 alpha-2 to regional indicator flag emoji
 function fifaCodeToFlag(fifaCode: string): string {
-  // Map common FIFA codes that differ from ISO 3166-1 alpha-2
   const fifaToIso: Record<string, string> = {
     // Europe
     ENG: "GB", SCO: "GB", WAL: "GB", NIR: "GB",
@@ -79,34 +68,13 @@ function fifaCodeToFlag(fifaCode: string): string {
   }
 }
 
-const confederationConfig: Record<
-  string,
-  { label: string; className: string }
-> = {
-  UEFA: {
-    label: "UEFA",
-    className: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
-  },
-  CONMEBOL: {
-    label: "CONMEBOL",
-    className: "bg-green-500/15 text-green-700 dark:text-green-400",
-  },
-  CONCACAF: {
-    label: "CONCACAF",
-    className: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400",
-  },
-  CAF: {
-    label: "CAF",
-    className: "bg-orange-500/15 text-orange-700 dark:text-orange-400",
-  },
-  AFC: {
-    label: "AFC",
-    className: "bg-red-500/15 text-red-700 dark:text-red-400",
-  },
-  OFC: {
-    label: "OFC",
-    className: "bg-teal-500/15 text-teal-700 dark:text-teal-400",
-  },
+const confederationColors: Record<string, string> = {
+  UEFA: "text-blue-600",
+  CONMEBOL: "text-green-600",
+  CONCACAF: "text-yellow-600",
+  CAF: "text-orange-600",
+  AFC: "text-red-600",
+  OFC: "text-teal-600",
 };
 
 export interface RankingsTeam {
@@ -127,87 +95,64 @@ interface RankingsTableProps {
   teams: RankingsTeam[];
 }
 
-function RankChangeIndicator() {
-  // Placeholder: will be replaced with actual rank change data
-  return (
-    <span className="inline-flex w-4 items-center justify-center text-muted-foreground">
-      <Minus className="h-3 w-3" />
-    </span>
-  );
-}
-
 export function RankingsTable({ teams }: RankingsTableProps) {
   const router = useRouter();
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[70px]">Rank</TableHead>
-          <TableHead>Team</TableHead>
-          <TableHead className="w-[100px] text-right">Overall</TableHead>
-          <TableHead className="hidden w-[100px] text-right md:table-cell">
-            Offensive
-          </TableHead>
-          <TableHead className="hidden w-[100px] text-right md:table-cell">
-            Defensive
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {teams.map((team) => {
-          const confConfig = confederationConfig[team.confederation];
-          return (
-            <TableRow
+    <div className="overflow-x-auto rounded border border-gray-200">
+      <table className="tr-table">
+        <thead>
+          <tr>
+            <th className="w-[50px]">Rank</th>
+            <th>Team</th>
+            <th className="w-[70px]">Conf</th>
+            <th className="text-right w-[80px]">Overall</th>
+            <th className="text-right w-[80px] hidden md:table-cell">Off</th>
+            <th className="text-right w-[80px] hidden md:table-cell">Def</th>
+          </tr>
+        </thead>
+        <tbody>
+          {teams.map((team) => (
+            <tr
               key={team.id}
               className="cursor-pointer"
               onClick={() => router.push(`/team/${team.slug}`)}
             >
-              <TableCell>
-                <div className="flex items-center gap-1">
-                  <span className="font-mono text-sm font-semibold tabular-nums">
-                    {team.currentRank}
-                  </span>
-                  <RankChangeIndicator />
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2.5">
-                  <span className="text-lg leading-none" aria-hidden="true">
-                    {fifaCodeToFlag(team.fifaCode)}
-                  </span>
-                  <span className="font-medium">{team.name}</span>
-                  {confConfig && (
-                    <Badge
-                      className={cn(
-                        "text-[10px] font-semibold",
-                        confConfig.className
-                      )}
-                    >
-                      {confConfig.label}
-                    </Badge>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell className="text-right">
-                <span className="font-mono text-sm tabular-nums">
+              <td>
+                <span className="font-semibold tabular-nums">
+                  {team.currentRank}
+                </span>
+              </td>
+              <td>
+                <span className="mr-1.5" aria-hidden="true">
+                  {fifaCodeToFlag(team.fifaCode)}
+                </span>
+                <span className="font-medium">{team.name}</span>
+              </td>
+              <td>
+                <span className={cn("text-[11px] font-semibold", confederationColors[team.confederation])}>
+                  {team.confederation}
+                </span>
+              </td>
+              <td className="text-right">
+                <span className="font-mono font-semibold tabular-nums">
                   {team.currentOverallRating.toFixed(1)}
                 </span>
-              </TableCell>
-              <TableCell className="hidden text-right md:table-cell">
-                <span className="font-mono text-sm tabular-nums text-muted-foreground">
+              </td>
+              <td className="text-right hidden md:table-cell">
+                <span className="font-mono tabular-nums text-gray-500">
                   {team.currentOffensiveRating.toFixed(1)}
                 </span>
-              </TableCell>
-              <TableCell className="hidden text-right md:table-cell">
-                <span className="font-mono text-sm tabular-nums text-muted-foreground">
+              </td>
+              <td className="text-right hidden md:table-cell">
+                <span className="font-mono tabular-nums text-gray-500">
                   {team.currentDefensiveRating.toFixed(1)}
                 </span>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
