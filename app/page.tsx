@@ -11,11 +11,17 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const teams = await prisma.team.findMany({
-    where: { currentRank: { gt: 0 } },
-    orderBy: { currentRank: "asc" },
-    take: 50,
-  });
+  let teams: Awaited<ReturnType<typeof prisma.team.findMany>> = [];
+
+  try {
+    teams = await prisma.team.findMany({
+      where: { currentRank: { gt: 0 } },
+      orderBy: { currentRank: "asc" },
+      take: 50,
+    });
+  } catch {
+    // DB not reachable or empty — render empty state
+  }
 
   const lastUpdated = teams[0]?.updatedAt ?? new Date();
 
@@ -30,17 +36,29 @@ export default async function HomePage() {
             Combining match-based Elo ratings with player club performance
           </p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Last updated:{" "}
-          {lastUpdated.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </p>
+        {teams.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            Last updated:{" "}
+            {lastUpdated.toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
+        )}
       </div>
 
-      <RankingsTable teams={teams} />
+      {teams.length > 0 ? (
+        <RankingsTable teams={teams} />
+      ) : (
+        <div className="rounded-lg border border-dashed p-12 text-center">
+          <h2 className="text-lg font-semibold">No rankings data yet</h2>
+          <p className="mt-2 text-muted-foreground">
+            Rankings will appear here once match data has been imported and
+            processed through the Elo rating engine.
+          </p>
+        </div>
+      )}
 
       <div className="text-center">
         <a
