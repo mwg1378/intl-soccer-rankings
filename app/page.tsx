@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { RankingsTable } from "@/components/rankings/rankings-table";
 import type { Metadata } from "next";
 
-export const revalidate = 3600; // ISR: regenerate every hour
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "International Soccer Rankings",
