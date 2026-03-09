@@ -36,8 +36,23 @@ const GROUP_HOST: Record<string, string> = {
   D: "United States",
 };
 
-// USA hosts all knockout matches from QF onward, and ~75% of R32/R16
-const USA_WC_NAME = "United States";
+// Knockout match → host country (derived from MATCH_SCHEDULE venues)
+// Mexico: Estadio Azteca (Mexico City), BBVA Stadium (Monterrey)
+// Canada: BMO Field (Toronto), BC Place (Vancouver)
+// All other knockout venues are in the US
+const KNOCKOUT_MATCH_COUNTRY: Record<number, string> = {
+  79: "Mexico",   // R32 — Mexico City
+  85: "Mexico",   // R32 — Monterrey
+  92: "Mexico",   // R16 — Mexico City
+  84: "Canada",   // R32 — Toronto
+  87: "Canada",   // R32 — Vancouver
+  96: "Canada",   // R16 — Vancouver
+  // All other matches (73-88 R32, 89-96 R16, 97-104 QF/SF/Final) are in the US
+};
+
+function getKnockoutHost(matchNum: number): string {
+  return KNOCKOUT_MATCH_COUNTRY[matchNum] ?? "United States";
+}
 
 // --- Types ---
 
@@ -548,30 +563,21 @@ export function runSimulation(
     const matchWinners = new Map<number, string>(); // matchNum → winner team name
     const matchLosers = new Map<number, string>();
 
-    // Helper: simulate a knockout match with host advantage.
-    // If USA is playing and the match is in the US, USA gets home advantage.
-    // For R32/R16 (~75% in US), we always give USA home advantage since
-    // they'd likely be scheduled at a US venue. For QF+, all are in the US.
-    function koMatch(
-      name1: string, name2: string, stage: "r32" | "r16" | "qf" | "sf" | "final"
-    ): string {
+    // Helper: simulate a knockout match with venue-based host advantage.
+    // Each knockout match has a fixed venue. If a host nation is playing
+    // in their own country, they get home advantage.
+    function koMatch(name1: string, name2: string, matchNum: number): string {
       const r1 = teamDataMap.get(dbName(name1))!.ratings;
       const r2 = teamDataMap.get(dbName(name2))!.ratings;
 
-      // Host nations get home advantage:
-      // - USA: all knockout rounds (hosts 12/16 R32, 6/8 R16, and all QF+)
-      // - Mexico/Canada: only R32 (each hosts 2 R32 matches)
-      const hosts = stage === "r32"
-        ? [USA_WC_NAME, "Mexico", "Canada"]
-        : [USA_WC_NAME]; // QF+ all in USA
+      const hostCountry = getKnockoutHost(matchNum);
+      const hostPlaying = name1 === hostCountry || name2 === hostCountry;
 
-      for (const host of hosts) {
-        if (name1 === host || name2 === host) {
-          const [homeName, awayName] = name1 === host ? [name1, name2] : [name2, name1];
-          const homeR = teamDataMap.get(dbName(homeName))!.ratings;
-          const awayR = teamDataMap.get(dbName(awayName))!.ratings;
-          return simulateKnockoutMatch(homeR, awayR, homeName, awayName, false);
-        }
+      if (hostPlaying) {
+        const [homeName, awayName] = name1 === hostCountry ? [name1, name2] : [name2, name1];
+        const homeR = teamDataMap.get(dbName(homeName))!.ratings;
+        const awayR = teamDataMap.get(dbName(awayName))!.ratings;
+        return simulateKnockoutMatch(homeR, awayR, homeName, awayName, false);
       }
 
       return simulateKnockoutMatch(r1, r2, name1, name2, true);
@@ -608,8 +614,8 @@ export function runSimulation(
       if (homeTd) getOrCreateAdvCounter(homeTd.slug).r32++;
       if (awayTd) getOrCreateAdvCounter(awayTd.slug).r32++;
 
-      // Simulate with host advantage
-      const winner = koMatch(homeName, awayName, "r32");
+      // Simulate with venue-based host advantage
+      const winner = koMatch(homeName, awayName, m.num);
       const loser = winner === homeName ? awayName : homeName;
       matchWinners.set(m.num, winner);
       matchLosers.set(m.num, loser);
@@ -626,7 +632,7 @@ export function runSimulation(
       if (homeTd) getOrCreateAdvCounter(homeTd.slug).r16++;
       if (awayTd) getOrCreateAdvCounter(awayTd.slug).r16++;
 
-      const winner = koMatch(homeName, awayName, "r16");
+      const winner = koMatch(homeName, awayName, m.num);
       matchWinners.set(m.num, winner);
       matchLosers.set(m.num, winner === homeName ? awayName : homeName);
     }
@@ -642,7 +648,7 @@ export function runSimulation(
       if (homeTd) getOrCreateAdvCounter(homeTd.slug).qf++;
       if (awayTd) getOrCreateAdvCounter(awayTd.slug).qf++;
 
-      const winner = koMatch(homeName, awayName, "qf");
+      const winner = koMatch(homeName, awayName, m.num);
       matchWinners.set(m.num, winner);
       matchLosers.set(m.num, winner === homeName ? awayName : homeName);
     }
@@ -658,7 +664,7 @@ export function runSimulation(
       if (homeTd) getOrCreateAdvCounter(homeTd.slug).sf++;
       if (awayTd) getOrCreateAdvCounter(awayTd.slug).sf++;
 
-      const winner = koMatch(homeName, awayName, "sf");
+      const winner = koMatch(homeName, awayName, m.num);
       matchWinners.set(m.num, winner);
       matchLosers.set(m.num, winner === homeName ? awayName : homeName);
     }
@@ -673,7 +679,7 @@ export function runSimulation(
         if (homeTd) getOrCreateAdvCounter(homeTd.slug).final++;
         if (awayTd) getOrCreateAdvCounter(awayTd.slug).final++;
 
-        const winner = koMatch(homeName, awayName, "final");
+        const winner = koMatch(homeName, awayName, FINAL_MATCH.num);
         const td = teamDataMap.get(dbName(winner));
         if (td) getOrCreateAdvCounter(td.slug).champion++;
       }
