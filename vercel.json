@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/daily-match-ingest",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-player-stats",
+      "schedule": "0 4 * * 1"
+    },
+    {
+      "path": "/api/cron/weekly-roster-update",
+      "schedule": "0 5 * * 1"
+    },
+    {
+      "path": "/api/cron/annual-league-coefficients",
+      "schedule": "0 0 1 7 *"
+    },
+    {
+      "path": "/api/cron/monthly-snapshot-cleanup",
+      "schedule": "0 0 1 * *"
+    }
+  ]
+}
