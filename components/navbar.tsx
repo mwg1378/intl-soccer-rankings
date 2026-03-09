@@ -8,6 +8,7 @@ import { Trophy } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Rankings" },
+  { href: "/world-cup", label: "World Cup" },
   { href: "/predict", label: "Predict" },
   { href: "/methodology", label: "Methodology" },
 ];

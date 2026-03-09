@@ -25,15 +25,23 @@ export async function GET(request: NextRequest) {
   const orderField = validSortFields.includes(sortBy) ? sortBy : "currentRank";
   const orderDir = orderField === "currentRank" ? "asc" : "desc";
 
-  const [teams, total] = await Promise.all([
-    prisma.team.findMany({
-      where,
-      orderBy: { [orderField]: orderDir },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
-    prisma.team.count({ where }),
-  ]);
+  try {
+    const [teams, total] = await Promise.all([
+      prisma.team.findMany({
+        where,
+        orderBy: { [orderField]: orderDir },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.team.count({ where }),
+    ]);
 
-  return NextResponse.json({ teams, total, page, pageSize });
+    return NextResponse.json({ teams, total, page, pageSize });
+  } catch (error) {
+    console.error("Rankings API error:", error);
+    return NextResponse.json(
+      { error: "Database error", details: String(error) },
+      { status: 500 }
+    );
+  }
 }

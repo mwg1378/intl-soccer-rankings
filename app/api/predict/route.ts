@@ -7,7 +7,6 @@ export async function GET(request: NextRequest) {
   const homeTeamId = searchParams.get("homeTeamId");
   const awayTeamId = searchParams.get("awayTeamId");
   const venue = searchParams.get("venue") ?? "NEUTRAL";
-  const importance = searchParams.get("importance") ?? "FRIENDLY";
 
   if (!homeTeamId || !awayTeamId) {
     return NextResponse.json(
@@ -32,36 +31,42 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Team not found" }, { status: 404 });
   }
 
-  // Get average ratings across all ranked teams for normalization
-  const avgResult = await prisma.team.aggregate({
+  // Compute mean and std of raw Elo ratings across all ranked teams
+  const allTeams = await prisma.team.findMany({
     where: { currentRank: { gt: 0 } },
-    _avg: {
-      currentOffensiveRating: true,
-      currentDefensiveRating: true,
-    },
+    select: { eloOffensive: true, eloDefensive: true },
   });
 
-  const avgOff = avgResult._avg.currentOffensiveRating ?? 1500;
-  const avgDef = avgResult._avg.currentDefensiveRating ?? 1500;
+  const n = allTeams.length;
+  const avgOff = allTeams.reduce((s, t) => s + t.eloOffensive, 0) / n;
+  const avgDef = allTeams.reduce((s, t) => s + t.eloDefensive, 0) / n;
+  const stdOff = Math.sqrt(
+    allTeams.reduce((s, t) => s + (t.eloOffensive - avgOff) ** 2, 0) / n
+  );
+  const stdDef = Math.sqrt(
+    allTeams.reduce((s, t) => s + (t.eloDefensive - avgDef) ** 2, 0) / n
+  );
 
   const neutralVenue = venue === "NEUTRAL";
 
-  // If venue is AWAY, swap perspective (away team is effectively "home")
+  // Use raw Elo ratings for predictions (more variance = better discrimination)
   const effectiveHome = venue === "AWAY" ? awayTeam : homeTeam;
   const effectiveAway = venue === "AWAY" ? homeTeam : awayTeam;
 
   const result = predictMatch({
     homeTeam: {
-      offensive: effectiveHome.currentOffensiveRating,
-      defensive: effectiveHome.currentDefensiveRating,
+      offensive: effectiveHome.eloOffensive,
+      defensive: effectiveHome.eloDefensive,
     },
     awayTeam: {
-      offensive: effectiveAway.currentOffensiveRating,
-      defensive: effectiveAway.currentDefensiveRating,
+      offensive: effectiveAway.eloOffensive,
+      defensive: effectiveAway.eloDefensive,
     },
     neutralVenue,
     avgOffensive: avgOff,
     avgDefensive: avgDef,
+    stdOffensive: stdOff,
+    stdDefensive: stdDef,
   });
 
   // If we swapped for AWAY venue, swap the results back

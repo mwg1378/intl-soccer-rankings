@@ -214,6 +214,16 @@ model LeagueCoefficient {
   @@unique([league, season])
 }
 
+model WorldCupSimulation {
+  id                  String   @id @default(uuid())
+  createdAt           DateTime @default(now())
+  iterations          Int
+  groupOdds           Json     // { [teamSlug]: { group, probFirst, probSecond, probThird, probFourth, probAdvance, avgPoints, avgGD } }
+  bracketOdds         Json     // { [matchNum]: { description, teams: { [teamSlug]: probability } } }
+  advancementOdds     Json     // { [teamSlug]: { name, probQualify, probGroup, probR32, probR16, probQF, probSF, probFinal, probChampion } }
+  qualifierOdds       Json     // { [path]: { teams: { [teamSlug]: probability } } }
+}
+
 model PredictionCache {
   id                String          @id @default(uuid())
   homeTeamId        String

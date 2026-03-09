@@ -1,8 +1,9 @@
 /**
  * Prediction Engine — Dixon-Coles + Poisson score prediction model.
  *
- * Given two teams' offensive and defensive ratings, generates match-level
- * score probabilities including a full scoreline probability matrix.
+ * Uses a log-linear model with z-score standardized ratings to compute
+ * expected goals, then applies Poisson + Dixon-Coles corrections for
+ * the full scoreline probability matrix.
  */
 
 export interface TeamRatings {
@@ -16,6 +17,8 @@ export interface PredictionInput {
   neutralVenue: boolean;
   avgOffensive?: number;
   avgDefensive?: number;
+  stdOffensive?: number;
+  stdDefensive?: number;
 }
 
 export interface ScoreProbability {
@@ -38,13 +41,18 @@ export interface PredictionResult {
 const BASELINE_GOALS = 1.35;
 
 // Home advantage multiplier for expected goals
-const HOME_ADVANTAGE = 1.25;
+const HOME_ADVANTAGE = 1.22;
+
+// Log-linear sensitivity parameter. Controls how much rating differences
+// translate into expected goal differences. Calibrated against historical
+// World Cup / tournament results. Higher = more decisive favorites.
+const SENSITIVITY = 0.36;
 
 // Dixon-Coles rho parameter (typically slightly negative)
 const RHO = -0.06;
 
 // Diagonal inflation factor for draws
-const DIAGONAL_INFLATION = 1.09;
+const DIAGONAL_INFLATION = 1.08;
 
 // Maximum goals to compute in the matrix
 const MAX_GOALS = 10;
@@ -88,29 +96,47 @@ function dixonColesTau(
 }
 
 /**
- * Generate a full match prediction.
+ * Generate a full match prediction using a log-linear z-score model.
+ *
+ * The expected goals for each team are computed as:
+ *   lambda_home = BASELINE * exp(c * (zOff_home + zDef_away)) * homeAdv
+ *   lambda_away = BASELINE * exp(c * (zOff_away + zDef_home))
+ *
+ * where z-scores normalize ratings to standard deviations from the mean.
+ * In our Elo system, higher defensive = worse defense, so positive zDef
+ * means more goals conceded, which correctly combines with positive zOff
+ * (better offense) to increase expected goals.
  */
 export function predictMatch(input: PredictionInput): PredictionResult {
   const avgOff = input.avgOffensive ?? 1500;
   const avgDef = input.avgDefensive ?? 1500;
+  // Use provided std, or estimate from typical Elo spread
+  const stdOff = input.stdOffensive ?? 250;
+  const stdDef = input.stdDefensive ?? 180;
 
-  // Calculate expected goals
+  // Z-score standardization
+  const zOffHome = (input.homeTeam.offensive - avgOff) / stdOff;
+  const zDefHome = (input.homeTeam.defensive - avgDef) / stdDef;
+  const zOffAway = (input.awayTeam.offensive - avgOff) / stdOff;
+  const zDefAway = (input.awayTeam.defensive - avgDef) / stdDef;
+
+  // Home advantage
   const homeAdvMultiplier = input.neutralVenue ? 1.0 : HOME_ADVANTAGE;
 
+  // Log-linear expected goals
+  // Home xG: good home offense (zOffHome > 0) + bad away defense (zDefAway > 0)
   let lambdaHome =
     BASELINE_GOALS *
-    (input.homeTeam.offensive / avgOff) *
-    (input.awayTeam.defensive / avgDef) *
+    Math.exp(SENSITIVITY * (zOffHome + zDefAway)) *
     homeAdvMultiplier;
 
+  // Away xG: good away offense (zOffAway > 0) + bad home defense (zDefHome > 0)
   let lambdaAway =
-    BASELINE_GOALS *
-    (input.awayTeam.offensive / avgOff) *
-    (input.homeTeam.defensive / avgDef);
+    BASELINE_GOALS * Math.exp(SENSITIVITY * (zOffAway + zDefHome));
 
   // Clamp expected goals to reasonable range
-  lambdaHome = Math.max(0.2, Math.min(lambdaHome, 5.0));
-  lambdaAway = Math.max(0.2, Math.min(lambdaAway, 5.0));
+  lambdaHome = Math.max(0.15, Math.min(lambdaHome, 6.0));
+  lambdaAway = Math.max(0.15, Math.min(lambdaAway, 6.0));
 
   // Build score probability matrix
   const matrix: number[][] = Array.from({ length: MAX_GOALS + 1 }, () =>
