@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { GroupStageTable } from "@/components/world-cup/group-stage-table";
 import { QualifierOdds } from "@/components/world-cup/qualifier-odds";
-import { UEFA_PLAYOFFS, FIFA_PLAYOFFS } from "@/lib/world-cup-data";
+import { UEFA_PLAYOFFS, FIFA_PLAYOFFS, dbName } from "@/lib/world-cup-data";
 
 export const dynamic = "force-dynamic";
 
@@ -39,16 +39,17 @@ export default async function GroupStagePage() {
   }>;
 
   // Build set of playoff team names (keyed by target group)
+  // Use dbName() to resolve WC names (e.g. "Czechia") to DB names ("Czech Republic")
   const playoffTeamsByGroup: Record<string, string[]> = {};
   for (const [, path] of Object.entries(UEFA_PLAYOFFS)) {
     playoffTeamsByGroup[path.targetGroup] = [
       ...path.semi1, ...path.semi2,
-    ];
+    ].map(dbName);
   }
   for (const [, path] of Object.entries(FIFA_PLAYOFFS)) {
     playoffTeamsByGroup[path.targetGroup] = [
       ...path.semi, path.finalOpponent,
-    ];
+    ].map(dbName);
   }
 
   return (
