@@ -1,14 +1,235 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector]
+}
+
+enum Confederation {
+  UEFA
+  CONMEBOL
+  CONCACAF
+  CAF
+  AFC
+  OFC
+}
+
+enum MatchImportance {
+  FRIENDLY
+  QUALIFIER
+  NATIONS_LEAGUE
+  TOURNAMENT_GROUP
+  TOURNAMENT_KNOCKOUT
+}
+
+enum Position {
+  GK
+  DEF
+  MID
+  FWD
+}
+
+enum Venue {
+  HOME
+  AWAY
+  NEUTRAL
+}
+
+enum RosterRole {
+  STARTER
+  ROTATION
+  BENCH
+}
+
+model Team {
+  id                    String   @id @default(uuid())
+  name                  String
+  slug                  String   @unique
+  fifaCode              String   @unique @db.VarChar(3)
+  confederation         Confederation
+  flagUrl               String?
+  currentOverallRating  Float    @default(1500)
+  currentOffensiveRating Float   @default(1500)
+  currentDefensiveRating Float   @default(1500)
+  currentRank           Int      @default(0)
+  eloOffensive          Float    @default(1500)
+  eloDefensive          Float    @default(1500)
+  rosterOffensive       Float    @default(1500)
+  rosterDefensive       Float    @default(1500)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  homeMatches           Match[]            @relation("HomeTeam")
+  awayMatches           Match[]            @relation("AwayTeam")
+  rankingSnapshots      RankingSnapshot[]
+  roster                TeamRoster[]
+  homePredictions       PredictionCache[]  @relation("HomePrediction")
+  awayPredictions       PredictionCache[]  @relation("AwayPrediction")
+
+  @@index([confederation])
+  @@index([currentRank])
+}
+
+model Match {
+  id                    String          @id @default(uuid())
+  date                  DateTime        @db.Date
+  homeTeamId            String
+  homeTeam              Team            @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId            String
+  awayTeam              Team            @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeScore             Int
+  awayScore             Int
+  homeScoreExtraTime    Int?
+  awayScoreExtraTime    Int?
+  homeScorePenalties    Int?
+  awayScorePenalties    Int?
+  tournament            String
+  tournamentStage       String?
+  venue                 String?
+  neutralVenue          Boolean         @default(false)
+  matchImportance       MatchImportance
+  homeEloOffBefore      Float?
+  homeEloDefBefore      Float?
+  awayEloOffBefore      Float?
+  awayEloDefBefore      Float?
+  homeEloOffAfter       Float?
+  homeEloDefAfter       Float?
+  awayEloOffAfter       Float?
+  awayEloDefAfter       Float?
+  source                String?
+  createdAt             DateTime        @default(now())
+
+  @@index([date])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+  @@index([tournament])
+}
+
+model RankingSnapshot {
+  id               String   @id @default(uuid())
+  teamId           String
+  team             Team     @relation(fields: [teamId], references: [id])
+  date             DateTime @db.Date
+  rank             Int
+  overallRating    Float
+  offensiveRating  Float
+  defensiveRating  Float
+  eloOffensive     Float
+  eloDefensive     Float
+  rosterOffensive  Float
+  rosterDefensive  Float
+
+  @@unique([teamId, date])
+  @@index([date])
+}
+
+model Player {
+  id                String    @id @default(uuid())
+  name              String
+  slug              String    @unique
+  nationality       String
+  secondNationality String?
+  dateOfBirth       DateTime? @db.Date
+  position          Position
+  detailedPosition  String?
+  currentClub       String?
+  currentLeague     String?
+  marketValue       Int?
+  fbrefId           String?
+  transfermarktId   String?
+  updatedAt         DateTime  @updatedAt
+
+  seasonStats       PlayerSeasonStats[]
+  teamRosters       TeamRoster[]
+
+  @@index([nationality])
+  @@index([position])
+}
+
+model PlayerSeasonStats {
+  id                        String   @id @default(uuid())
+  playerId                  String
+  player                    Player   @relation(fields: [playerId], references: [id])
+  season                    String
+  league                    String
+  leagueQualityCoefficient  Float    @default(1.0)
+  minutesPlayed             Int      @default(0)
+  appearances               Int      @default(0)
+  goals                     Int      @default(0)
+  assists                   Int      @default(0)
+  npxG                      Float?
+  xA                        Float?
+  shotCreatingActions        Int?
+  goalCreatingActions        Int?
+  progressivePasses          Int?
+  progressiveCarries         Int?
+  tacklesPlusInterceptions   Int?
+  blocks                    Int?
+  aerialsWon                Int?
+  passCompletionPct         Float?
+  cleanSheets               Int?
+  savesPct                  Float?
+  psxgMinusGA               Float?
+  crossesStoppedPct         Float?
+  launchPassCompletionPct   Float?
+  compositeRating           Float?
+  offensiveSubRating        Float?
+  defensiveSubRating        Float?
+  source                    String?
+  updatedAt                 DateTime @updatedAt
+
+  @@unique([playerId, season, league])
+  @@index([season])
+}
+
+model TeamRoster {
+  id                String     @id @default(uuid())
+  teamId            String
+  team              Team       @relation(fields: [teamId], references: [id])
+  playerId          String
+  player            Player     @relation(fields: [playerId], references: [id])
+  asOfDate          DateTime   @db.Date
+  isStartingXI      Boolean    @default(false)
+  rosterRole        RosterRole @default(BENCH)
+  caps              Int        @default(0)
+  internationalGoals Int       @default(0)
+
+  @@unique([teamId, playerId, asOfDate])
+  @@index([teamId])
+  @@index([playerId])
+}
+
+model LeagueCoefficient {
+  id          String   @id @default(uuid())
+  league      String
+  season      String
+  coefficient Float
+  derivedFrom String?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([league, season])
+}
+
+model PredictionCache {
+  id                String          @id @default(uuid())
+  homeTeamId        String
+  homeTeam          Team            @relation("HomePrediction", fields: [homeTeamId], references: [id])
+  awayTeamId        String
+  awayTeam          Team            @relation("AwayPrediction", fields: [awayTeamId], references: [id])
+  venue             Venue
+  matchImportance   MatchImportance
+  homeExpectedGoals Float
+  awayExpectedGoals Float
+  homeWinProb       Float
+  drawProb          Float
+  awayWinProb       Float
+  scoreMatrix       Json
+  ratingsAsOf       DateTime        @db.Date
+  createdAt         DateTime        @default(now())
+
+  @@index([homeTeamId, awayTeamId])
 }
