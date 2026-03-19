@@ -4,6 +4,11 @@
  * Each team maintains two Elo sub-ratings (Offensive and Defensive).
  * Match results adjust both sub-ratings with a 60/40 split based on
  * the scoring pattern of the match.
+ *
+ * Methodology notes:
+ * - Log-based goal diff multiplier (Pomeroy-style information content)
+ * - Confederation-specific home advantage
+ * - Annual mean reversion toward 1500 (5% per year between cycles)
  */
 
 import type { MatchImportance } from "@/app/generated/prisma/client";
@@ -27,6 +32,23 @@ const TOURNAMENT_K: Record<string, number> = {
   "World Cup knockout": 55,
 };
 
+// --- Confederation-specific home advantage ---
+// Derived from empirical research on international match home advantage.
+// South American and African qualifiers have larger home effects (altitude,
+// travel, climate). UEFA home advantage is more modest.
+const CONFEDERATION_HOME_ADVANTAGE: Record<string, number> = {
+  CONMEBOL: 120,
+  CAF: 115,
+  AFC: 110,
+  CONCACAF: 110,
+  UEFA: 90,
+  OFC: 100,
+};
+
+// Annual mean reversion rate: pull ratings 5% toward 1500 each year
+const MEAN_REVERSION_RATE = 0.05;
+const MEAN_RATING = 1500;
+
 export interface TeamElo {
   offensive: number;
   defensive: number;
@@ -41,6 +63,7 @@ export interface MatchInput {
   tournament?: string;
   tournamentStage?: string | null;
   neutralVenue: boolean;
+  homeConfederation?: string;
 }
 
 export interface EloResult {
@@ -74,28 +97,35 @@ export function getKFactor(
 }
 
 /**
- * Goal difference multiplier.
- * 1-goal win: 1.0
- * 2-goal win: 1 + (diff - 1) * 0.5 = 1.5
- * 3+ goal win: 1 + (diff - 1) * 0.75, capped at 3.0
+ * Goal difference multiplier using log-based information content.
+ * Larger margins carry more information but with diminishing returns.
+ * log(1 + diff) better matches the predictive value of different margins
+ * than a linear multiplier — a 5-0 is informative but not 5x as
+ * informative as 1-0 (the losing team takes more risks at large deficits).
  */
 export function goalDiffMultiplier(goalDiff: number): number {
   const absDiff = Math.abs(goalDiff);
-  if (absDiff <= 1) return 1.0;
-  if (absDiff === 2) return 1.5;
-  return Math.min(1 + (absDiff - 1) * 0.75, 3.0);
+  if (absDiff <= 0) return 1.0;
+  return Math.min(1 + Math.log(absDiff + 1) * 0.85, 3.0);
 }
 
 /**
  * Home advantage bonus in Elo points.
+ * Varies by confederation — South American and African qualifiers have
+ * significantly higher home advantage due to altitude, travel distance,
+ * climate, and crowd intensity.
  */
 export function homeAdvantage(
   neutralVenue: boolean,
-  importance: MatchImportance
+  importance: MatchImportance,
+  homeConfederation?: string
 ): number {
   if (neutralVenue) return 0;
-  if (importance === "FRIENDLY") return 75;
-  return 100;
+  const baseAdvantage = homeConfederation
+    ? (CONFEDERATION_HOME_ADVANTAGE[homeConfederation] ?? 100)
+    : 100;
+  if (importance === "FRIENDLY") return baseAdvantage * 0.75;
+  return baseAdvantage;
 }
 
 /**
@@ -150,7 +180,7 @@ export function calculateElo(
     match.tournamentStage
   );
   const G = goalDiffMultiplier(match.homeScore - match.awayScore);
-  const ha = homeAdvantage(match.neutralVenue, match.matchImportance);
+  const ha = homeAdvantage(match.neutralVenue, match.matchImportance, match.homeConfederation);
 
   // Combined ratings for expected result calculation
   const homeOverall = (homeElo.offensive + (3000 - homeElo.defensive)) / 2 + ha;
@@ -215,5 +245,17 @@ export function combinedRating(
     offensive,
     defensive,
     overall: overallRating(offensive, defensive),
+  };
+}
+
+/**
+ * Apply annual mean reversion — pull ratings toward 1500 by MEAN_REVERSION_RATE.
+ * Should be called once per year (e.g., Jan 1) to account for squad turnover
+ * between international cycles. Prevents stale ratings from dominating.
+ */
+export function applyMeanReversion(elo: TeamElo): TeamElo {
+  return {
+    offensive: elo.offensive + (MEAN_RATING - elo.offensive) * MEAN_REVERSION_RATE,
+    defensive: elo.defensive + (MEAN_RATING - elo.defensive) * MEAN_REVERSION_RATE,
   };
 }

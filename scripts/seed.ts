@@ -22,6 +22,7 @@ import {
   calculateElo,
   overallRating,
   combinedRating,
+  applyMeanReversion,
   type TeamElo,
 } from "../lib/ranking-engine";
 
@@ -340,9 +341,19 @@ async function main() {
 
   let processedCount = 0;
   let lastSnapshotDate = "";
+  let lastYear = "";
   const matchBatch: Array<Parameters<typeof prisma.match.create>[0]["data"]> = [];
 
   for (const m of matches) {
+    // Apply annual mean reversion at year boundaries
+    const matchYear = m.date.substring(0, 4);
+    if (matchYear !== lastYear && lastYear !== "") {
+      for (const [name, elo] of eloState) {
+        eloState.set(name, applyMeanReversion(elo));
+      }
+    }
+    lastYear = matchYear;
+
     const homeId = teamMap.get(m.home_team)!;
     const awayId = teamMap.get(m.away_team)!;
     const homeElo = eloState.get(m.home_team)!;
@@ -380,6 +391,7 @@ async function main() {
       tournament: m.tournament,
       tournamentStage: null,
       neutralVenue: m.neutral === "TRUE",
+      homeConfederation: guessConfederation(m.home_team),
     });
 
     // Prepare match record
@@ -502,9 +514,19 @@ async function main() {
   }
 
   let lastMonth = "";
+  let snapLastYear = "";
   let snapshotCount = 0;
 
   for (const m of matches) {
+    // Apply annual mean reversion at year boundaries
+    const snapYear = m.date.substring(0, 4);
+    if (snapYear !== snapLastYear && snapLastYear !== "") {
+      for (const [name, elo] of snapshotElo) {
+        snapshotElo.set(name, applyMeanReversion(elo));
+      }
+    }
+    snapLastYear = snapYear;
+
     const homeScore = parseInt(m.home_score, 10);
     const awayScore = parseInt(m.away_score, 10);
     if (isNaN(homeScore) || isNaN(awayScore)) continue;
@@ -531,6 +553,7 @@ async function main() {
       tournament: m.tournament,
       tournamentStage: null,
       neutralVenue: m.neutral === "TRUE",
+      homeConfederation: guessConfederation(m.home_team),
     });
 
     snapshotElo.set(m.home_team, result.homeElo);

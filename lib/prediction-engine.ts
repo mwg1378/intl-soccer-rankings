@@ -15,6 +15,7 @@ export interface PredictionInput {
   homeTeam: TeamRatings;
   awayTeam: TeamRatings;
   neutralVenue: boolean;
+  matchImportance?: "FRIENDLY" | "QUALIFIER" | "NATIONS_LEAGUE" | "TOURNAMENT_GROUP" | "TOURNAMENT_KNOCKOUT";
   avgOffensive?: number;
   avgDefensive?: number;
   stdOffensive?: number;
@@ -37,8 +38,16 @@ export interface PredictionResult {
   topScorelines: ScoreProbability[];
 }
 
-// Average goals per team in international matches
-const BASELINE_GOALS = 1.35;
+// Baseline goals per team varies by match context.
+// Tournament knockouts are more conservative; friendlies are more open.
+const BASELINE_GOALS: Record<string, number> = {
+  FRIENDLY: 1.42,
+  NATIONS_LEAGUE: 1.38,
+  QUALIFIER: 1.32,
+  TOURNAMENT_GROUP: 1.30,
+  TOURNAMENT_KNOCKOUT: 1.18,
+};
+const DEFAULT_BASELINE = 1.35;
 
 // Home advantage multiplier for expected goals
 const HOME_ADVANTAGE = 1.22;
@@ -51,8 +60,16 @@ const SENSITIVITY = 0.36;
 // Dixon-Coles rho parameter (typically slightly negative)
 const RHO = -0.06;
 
-// Diagonal inflation factor for draws
-const DIAGONAL_INFLATION = 1.08;
+// Diagonal inflation factor for draws — varies by context.
+// Knockout matches (where teams must win) have fewer draws.
+const DIAGONAL_INFLATION: Record<string, number> = {
+  FRIENDLY: 1.10,
+  NATIONS_LEAGUE: 1.08,
+  QUALIFIER: 1.08,
+  TOURNAMENT_GROUP: 1.10,
+  TOURNAMENT_KNOCKOUT: 1.02,
+};
+const DEFAULT_DIAGONAL = 1.08;
 
 // Maximum goals to compute in the matrix
 const MAX_GOALS = 10;
@@ -120,19 +137,24 @@ export function predictMatch(input: PredictionInput): PredictionResult {
   const zOffAway = (input.awayTeam.offensive - avgOff) / stdOff;
   const zDefAway = (input.awayTeam.defensive - avgDef) / stdDef;
 
+  // Context-dependent baseline goals and diagonal inflation
+  const importance = input.matchImportance ?? "TOURNAMENT_GROUP";
+  const baseline = BASELINE_GOALS[importance] ?? DEFAULT_BASELINE;
+  const diagonal = DIAGONAL_INFLATION[importance] ?? DEFAULT_DIAGONAL;
+
   // Home advantage
   const homeAdvMultiplier = input.neutralVenue ? 1.0 : HOME_ADVANTAGE;
 
   // Log-linear expected goals
   // Home xG: good home offense (zOffHome > 0) + bad away defense (zDefAway > 0)
   let lambdaHome =
-    BASELINE_GOALS *
+    baseline *
     Math.exp(SENSITIVITY * (zOffHome + zDefAway)) *
     homeAdvMultiplier;
 
   // Away xG: good away offense (zOffAway > 0) + bad home defense (zDefHome > 0)
   let lambdaAway =
-    BASELINE_GOALS * Math.exp(SENSITIVITY * (zOffAway + zDefHome));
+    baseline * Math.exp(SENSITIVITY * (zOffAway + zDefHome));
 
   // Clamp expected goals to reasonable range
   lambdaHome = Math.max(0.15, Math.min(lambdaHome, 6.0));
@@ -152,9 +174,9 @@ export function predictMatch(input: PredictionInput): PredictionResult {
         poissonPmf(a, lambdaAway) *
         dixonColesTau(h, a, lambdaHome, lambdaAway, RHO);
 
-      // Diagonal inflation for draws
+      // Diagonal inflation for draws (context-dependent)
       if (h === a) {
-        p *= DIAGONAL_INFLATION;
+        p *= diagonal;
       }
 
       matrix[h][a] = p;

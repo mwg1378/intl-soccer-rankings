@@ -7,6 +7,9 @@ export async function GET(request: NextRequest) {
   const homeTeamId = searchParams.get("homeTeamId");
   const awayTeamId = searchParams.get("awayTeamId");
   const venue = searchParams.get("venue") ?? "NEUTRAL";
+  const matchImportance = searchParams.get("matchImportance") as
+    | "FRIENDLY" | "QUALIFIER" | "NATIONS_LEAGUE" | "TOURNAMENT_GROUP" | "TOURNAMENT_KNOCKOUT"
+    | null;
 
   if (!homeTeamId || !awayTeamId) {
     return NextResponse.json(
@@ -63,6 +66,7 @@ export async function GET(request: NextRequest) {
       defensive: effectiveAway.eloDefensive,
     },
     neutralVenue,
+    matchImportance: matchImportance ?? undefined,
     avgOffensive: avgOff,
     avgDefensive: avgDef,
     stdOffensive: stdOff,

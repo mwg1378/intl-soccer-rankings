@@ -106,12 +106,14 @@ interface AdvancementCounter {
 function sampleScore(
   homeRatings: TeamRatings,
   awayRatings: TeamRatings,
-  neutralVenue: boolean
+  neutralVenue: boolean,
+  matchImportance: "TOURNAMENT_GROUP" | "TOURNAMENT_KNOCKOUT" = "TOURNAMENT_GROUP"
 ): { homeGoals: number; awayGoals: number } {
   const pred = predictMatch({
     homeTeam: homeRatings,
     awayTeam: awayRatings,
     neutralVenue,
+    matchImportance,
     avgOffensive: ratingStats.avgOff,
     avgDefensive: ratingStats.avgDef,
     stdOffensive: ratingStats.stdOff,
@@ -145,28 +147,37 @@ function simulateKnockoutMatch(
   awayName: string,
   neutralVenue = true
 ): string {
-  const { homeGoals, awayGoals } = sampleScore(homeRatings, awayRatings, neutralVenue);
+  const { homeGoals, awayGoals } = sampleScore(homeRatings, awayRatings, neutralVenue, "TOURNAMENT_KNOCKOUT");
   if (homeGoals > awayGoals) return homeName;
   if (awayGoals > homeGoals) return awayName;
 
-  // Extra time: ~30 min with reduced scoring (~0.33x of 90 min rate)
+  // Extra time: ~30 min with reduced scoring. Empirically ~0.27x of 90 min
+  // rate in World Cups (fatigue + tactical conservatism).
   const etPred = predictMatch({
     homeTeam: homeRatings,
     awayTeam: awayRatings,
     neutralVenue,
+    matchImportance: "TOURNAMENT_KNOCKOUT",
     avgOffensive: ratingStats.avgOff,
     avgDefensive: ratingStats.avgDef,
     stdOffensive: ratingStats.stdOff,
     stdDefensive: ratingStats.stdDef,
   });
-  const etHomeGoals = sampleFromPoisson(etPred.homeExpectedGoals * 0.33);
-  const etAwayGoals = sampleFromPoisson(etPred.awayExpectedGoals * 0.33);
+  const etHomeGoals = sampleFromPoisson(etPred.homeExpectedGoals * 0.27);
+  const etAwayGoals = sampleFromPoisson(etPred.awayExpectedGoals * 0.27);
   if (etHomeGoals > etAwayGoals) return homeName;
   if (etAwayGoals > etHomeGoals) return awayName;
 
-  // Penalties: ~50/50 with slight home crowd bias
-  const penaltyHomeAdvantage = neutralVenue ? 0.50 : 0.54;
-  return Math.random() < penaltyHomeAdvantage ? homeName : awayName;
+  // Penalties: higher-rated teams have a slight edge (better keepers,
+  // composure under pressure). Base is ~50/50, shifted by rating gap.
+  const homeOverall = (homeRatings.offensive + (3000 - homeRatings.defensive)) / 2;
+  const awayOverall = (awayRatings.offensive + (3000 - awayRatings.defensive)) / 2;
+  const ratingGap = homeOverall - awayOverall; // positive = home is stronger
+  // Sigmoid-based edge: ±200 Elo gap → ~4% swing
+  const qualityEdge = 0.08 / (1 + Math.exp(-ratingGap / 200)) - 0.04;
+  const crowdEdge = neutralVenue ? 0.0 : 0.04;
+  const penaltyHomeProb = 0.50 + qualityEdge + crowdEdge;
+  return Math.random() < penaltyHomeProb ? homeName : awayName;
 }
 
 function sampleFromPoisson(lambda: number): number {

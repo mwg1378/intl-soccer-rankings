@@ -81,6 +81,7 @@ export async function GET(request: NextRequest) {
           tournament: match.tournament,
           tournamentStage: match.tournamentStage,
           neutralVenue: match.neutralVenue,
+          homeConfederation: homeTeam.confederation,
         }
       );
 
