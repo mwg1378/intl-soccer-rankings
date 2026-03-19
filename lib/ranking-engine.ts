@@ -7,8 +7,8 @@
  *
  * Methodology notes:
  * - Log-based goal diff multiplier (Pomeroy-style information content)
- * - Confederation-specific home advantage
- * - Annual mean reversion toward 1500 (5% per year between cycles)
+ * - Confederation quality adjustment for display/prediction ratings
+ * - Annual mean reversion toward 1500 (3% per year between cycles)
  */
 
 import type { MatchImportance } from "@/app/generated/prisma/client";
@@ -32,21 +32,9 @@ const TOURNAMENT_K: Record<string, number> = {
   "World Cup knockout": 55,
 };
 
-// --- Confederation-specific home advantage ---
-// Derived from empirical research on international match home advantage.
-// South American and African qualifiers have larger home effects (altitude,
-// travel, climate). UEFA home advantage is more modest.
-const CONFEDERATION_HOME_ADVANTAGE: Record<string, number> = {
-  CONMEBOL: 120,
-  CAF: 115,
-  AFC: 110,
-  CONCACAF: 110,
-  UEFA: 90,
-  OFC: 100,
-};
-
-// Annual mean reversion rate: pull ratings 5% toward 1500 each year
-const MEAN_REVERSION_RATE = 0.05;
+// Annual mean reversion rate: pull ratings 3% toward 1500 each year.
+// Accounts for squad turnover between cycles without over-compressing.
+const MEAN_REVERSION_RATE = 0.03;
 const MEAN_RATING = 1500;
 
 export interface TeamElo {
@@ -111,9 +99,9 @@ export function goalDiffMultiplier(goalDiff: number): number {
 
 /**
  * Home advantage bonus in Elo points.
- * Varies by confederation — South American and African qualifiers have
- * significantly higher home advantage due to altitude, travel distance,
- * climate, and crowd intensity.
+ * Flat value avoids confederation inflation (where top teams in weaker
+ * confederations accumulate inflated ratings from beating weak opponents
+ * at amplified home advantage).
  */
 export function homeAdvantage(
   neutralVenue: boolean,
@@ -121,11 +109,8 @@ export function homeAdvantage(
   homeConfederation?: string
 ): number {
   if (neutralVenue) return 0;
-  const baseAdvantage = homeConfederation
-    ? (CONFEDERATION_HOME_ADVANTAGE[homeConfederation] ?? 100)
-    : 100;
-  if (importance === "FRIENDLY") return baseAdvantage * 0.75;
-  return baseAdvantage;
+  if (importance === "FRIENDLY") return 75;
+  return 100;
 }
 
 /**
@@ -231,16 +216,42 @@ export function overallRating(offensive: number, defensive: number): number {
 }
 
 /**
- * Combine Elo-based and roster-based ratings (70/30 split).
+ * Confederation quality factors — scale the deviation from 1500 to correct
+ * for "closed-loop" inflation in weaker confederations. Teams in AFC/CAF
+ * accumulate inflated Elo from beating many weak intra-confederation
+ * opponents, while UEFA/CONMEBOL teams face tougher competition.
+ *
+ * Derived from historical inter-confederation match performance and
+ * World Cup results. Applied to display/prediction ratings, not raw Elo.
+ */
+const CONFEDERATION_QUALITY: Record<string, number> = {
+  UEFA: 1.0,
+  CONMEBOL: 0.98,
+  CONCACAF: 0.90,
+  CAF: 0.85,
+  AFC: 0.84,
+  OFC: 0.78,
+};
+
+/**
+ * Combine Elo-based and roster-based ratings (70/30 split),
+ * then apply confederation quality adjustment.
  */
 export function combinedRating(
   eloOff: number,
   eloDef: number,
   rosterOff: number,
-  rosterDef: number
+  rosterDef: number,
+  confederation?: string
 ): { offensive: number; defensive: number; overall: number } {
-  const offensive = 0.7 * eloOff + 0.3 * rosterOff;
-  const defensive = 0.7 * eloDef + 0.3 * rosterDef;
+  const rawOff = 0.7 * eloOff + 0.3 * rosterOff;
+  const rawDef = 0.7 * eloDef + 0.3 * rosterDef;
+
+  // Apply confederation quality factor to the deviation from mean
+  const confQ = confederation ? (CONFEDERATION_QUALITY[confederation] ?? 0.90) : 1.0;
+  const offensive = MEAN_RATING + (rawOff - MEAN_RATING) * confQ;
+  const defensive = MEAN_RATING + (rawDef - MEAN_RATING) * confQ;
+
   return {
     offensive,
     defensive,

@@ -119,13 +119,15 @@ export async function GET(request: NextRequest) {
         eloResult.homeElo.offensive,
         eloResult.homeElo.defensive,
         homeTeam.rosterOffensive,
-        homeTeam.rosterDefensive
+        homeTeam.rosterDefensive,
+        homeTeam.confederation
       );
       const awayRating = combinedRating(
         eloResult.awayElo.offensive,
         eloResult.awayElo.defensive,
         awayTeam.rosterOffensive,
-        awayTeam.rosterDefensive
+        awayTeam.rosterDefensive,
+        awayTeam.confederation
       );
 
       await prisma.team.update({

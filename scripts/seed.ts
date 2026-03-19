@@ -422,11 +422,9 @@ async function main() {
     eloState.set(m.home_team, result.homeElo);
     eloState.set(m.away_team, result.awayElo);
 
-    // Flush batch
+    // Flush batch using bulk insert
     if (matchBatch.length >= BATCH_SIZE) {
-      for (const data of matchBatch) {
-        await prisma.match.create({ data });
-      }
+      await prisma.match.createMany({ data: matchBatch as any });
       matchBatch.length = 0;
     }
 
@@ -447,9 +445,7 @@ async function main() {
 
   // Flush remaining matches
   if (matchBatch.length > 0) {
-    for (const data of matchBatch) {
-      await prisma.match.create({ data });
-    }
+    await prisma.match.createMany({ data: matchBatch as any });
     matchBatch.length = 0;
   }
 
@@ -469,7 +465,7 @@ async function main() {
 
   for (const [name, id] of teamMap) {
     const elo = eloState.get(name)!;
-    const rating = combinedRating(elo.offensive, elo.defensive, 1500, 1500);
+    const rating = combinedRating(elo.offensive, elo.defensive, 1500, 1500, guessConfederation(name));
 
     teamRatings.push({
       id,
@@ -577,7 +573,7 @@ async function main() {
 
         for (const [name, id] of teamMap) {
           const elo = snapshotElo.get(name)!;
-          const r = combinedRating(elo.offensive, elo.defensive, 1500, 1500);
+          const r = combinedRating(elo.offensive, elo.defensive, 1500, 1500, guessConfederation(name));
           ratings.push({
             name,
             id,
@@ -592,23 +588,23 @@ async function main() {
         ratings.sort((a, b) => b.overall - a.overall);
 
         // Only snapshot top 100 teams (to keep DB size reasonable for monthly)
+        const snapshotBatch = [];
         for (let i = 0; i < Math.min(100, ratings.length); i++) {
           const r = ratings[i];
-          await prisma.rankingSnapshot.create({
-            data: {
-              teamId: r.id,
-              date: snapshotDate,
-              rank: i + 1,
-              overallRating: r.overall,
-              offensiveRating: r.off,
-              defensiveRating: r.def,
-              eloOffensive: r.eloOff,
-              eloDefensive: r.eloDef,
-              rosterOffensive: 1500,
-              rosterDefensive: 1500,
-            },
+          snapshotBatch.push({
+            teamId: r.id,
+            date: snapshotDate,
+            rank: i + 1,
+            overallRating: r.overall,
+            offensiveRating: r.off,
+            defensiveRating: r.def,
+            eloOffensive: r.eloOff,
+            eloDefensive: r.eloDef,
+            rosterOffensive: 1500,
+            rosterDefensive: 1500,
           });
         }
+        await prisma.rankingSnapshot.createMany({ data: snapshotBatch });
         snapshotCount++;
       }
       lastMonth = month;
@@ -618,23 +614,23 @@ async function main() {
   // Create final snapshot for current date
   const now = new Date();
   now.setUTCHours(0, 0, 0, 0);
+  const finalSnapshotBatch = [];
   for (let i = 0; i < Math.min(100, teamRatings.length); i++) {
     const t = teamRatings[i];
-    await prisma.rankingSnapshot.create({
-      data: {
-        teamId: t.id,
-        date: now,
-        rank: i + 1,
-        overallRating: t.overall,
-        offensiveRating: t.offensive,
-        defensiveRating: t.defensive,
-        eloOffensive: t.eloOff,
-        eloDefensive: t.eloDef,
-        rosterOffensive: 1500,
-        rosterDefensive: 1500,
-      },
+    finalSnapshotBatch.push({
+      teamId: t.id,
+      date: now,
+      rank: i + 1,
+      overallRating: t.overall,
+      offensiveRating: t.offensive,
+      defensiveRating: t.defensive,
+      eloOffensive: t.eloOff,
+      eloDefensive: t.eloDef,
+      rosterOffensive: 1500,
+      rosterDefensive: 1500,
     });
   }
+  await prisma.rankingSnapshot.createMany({ data: finalSnapshotBatch });
   snapshotCount++;
 
   console.log(`   Created ${snapshotCount} monthly snapshots\n`);

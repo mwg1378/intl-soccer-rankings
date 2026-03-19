@@ -67,7 +67,9 @@ async function main() {
   console.log(`   Rating stats: avgOff=${avgOff.toFixed(1)}, avgDef=${avgDef.toFixed(1)}, stdOff=${stdOff.toFixed(1)}, stdDef=${stdDef.toFixed(1)}`);
   setRatingStats({ avgOff, avgDef, stdOff, stdDef });
 
-  // Build team data map: dbName → TeamData (using raw Elo ratings)
+  // Build team data map: dbName → TeamData
+  // Use confederation-adjusted ratings (currentOffensiveRating/currentDefensiveRating)
+  // instead of raw Elo to account for confederation quality differences.
   const teamDataMap = new Map<string, {
     name: string;
     dbName: string;
@@ -81,8 +83,8 @@ async function main() {
       dbName: t.name,
       slug: t.slug,
       ratings: {
-        offensive: t.eloOffensive,
-        defensive: t.eloDefensive,
+        offensive: t.currentOffensiveRating,
+        defensive: t.currentDefensiveRating,
       },
     });
   }
