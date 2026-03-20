@@ -183,9 +183,14 @@ export function calculateElo(
 
   const [W_home, W_away] = matchResult(match);
 
+  // Goal diff multiplier applies only to POSITIVE deltas (decisive wins
+  // are rewarded, but blowout losses are NOT extra-penalized). The margin
+  // of a large loss says more about the winner than the loser.
   const G = goalDiffMultiplier(match.homeScore - match.awayScore);
-  let homeDelta = K * G * (W_home - We_home);
-  let awayDelta = K * G * (W_away - We_away);
+  const homeRaw = W_home - We_home;
+  const awayRaw = W_away - We_away;
+  let homeDelta = K * (homeRaw > 0 ? G : 1) * homeRaw;
+  let awayDelta = K * (awayRaw > 0 ? G : 1) * awayRaw;
 
   // FIFA knockout loss protection: teams that earn negative points
   // in knockout rounds of final competitions don't lose any points.

@@ -9,9 +9,9 @@ interface Match {
   opponentName: string;
   opponentSlug: string;
   tournament: string;
-  venue: string;
-  homeScore: number;
-  awayScore: number;
+  venue: string; // "H", "A", or "N"
+  homeScore: number; // team's goals (already mapped by team page)
+  awayScore: number; // opponent's goals (already mapped by team page)
   isHome: boolean;
   eloChange: number | null;
 }
@@ -21,10 +21,10 @@ interface MatchHistoryProps {
 }
 
 function getResult(match: Match): "W" | "D" | "L" {
-  const teamScore = match.isHome ? match.homeScore : match.awayScore;
-  const opponentScore = match.isHome ? match.awayScore : match.homeScore;
-  if (teamScore > opponentScore) return "W";
-  if (teamScore === opponentScore) return "D";
+  // homeScore/awayScore are already mapped to teamGoals/opponentGoals
+  // by the team page before passing to this component.
+  if (match.homeScore > match.awayScore) return "W";
+  if (match.homeScore === match.awayScore) return "D";
   return "L";
 }
 
@@ -87,7 +87,7 @@ export function MatchHistory({ matches }: MatchHistoryProps) {
                 <td className="hidden sm:table-cell tabular-nums">
                   {match.homeScore}&ndash;{match.awayScore}
                   <span className="ml-1.5 text-xs text-gray-400">
-                    ({match.isHome ? "H" : "A"})
+                    ({match.venue})
                   </span>
                 </td>
                 <td className="hidden md:table-cell text-gray-400">
