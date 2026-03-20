@@ -87,6 +87,10 @@ export interface RankingsTeam {
   currentOverallRating: number;
   currentOffensiveRating: number;
   currentDefensiveRating: number;
+  eloOffensive: number;
+  eloDefensive: number;
+  rosterOffensive: number;
+  rosterDefensive: number;
   currentRank: number;
   updatedAt: Date | string;
 }
@@ -109,6 +113,8 @@ export function RankingsTable({ teams }: RankingsTableProps) {
             <th className="text-right w-[80px]">Overall</th>
             <th className="text-right w-[80px] hidden md:table-cell">Off</th>
             <th className="text-right w-[80px] hidden md:table-cell">Def</th>
+            <th className="text-right w-[60px] hidden lg:table-cell">Elo</th>
+            <th className="text-right w-[60px] hidden lg:table-cell">Roster</th>
           </tr>
         </thead>
         <tbody>
@@ -147,6 +153,18 @@ export function RankingsTable({ teams }: RankingsTableProps) {
               <td className="text-right hidden md:table-cell">
                 <span className="font-mono tabular-nums text-gray-500">
                   {team.currentDefensiveRating.toFixed(1)}
+                </span>
+              </td>
+              <td className="text-right hidden lg:table-cell">
+                <span className="font-mono tabular-nums text-gray-400 text-xs">
+                  {((team.eloOffensive + (3000 - team.eloDefensive)) / 2).toFixed(0)}
+                </span>
+              </td>
+              <td className="text-right hidden lg:table-cell">
+                <span className="font-mono tabular-nums text-gray-400 text-xs">
+                  {team.rosterOffensive !== 1500 || team.rosterDefensive !== 1500
+                    ? ((team.rosterOffensive + (3000 - team.rosterDefensive)) / 2).toFixed(0)
+                    : "—"}
                 </span>
               </td>
             </tr>
