@@ -16,6 +16,7 @@ export interface PredictionInput {
   awayTeam: TeamRatings;
   neutralVenue: boolean;
   matchImportance?: "FRIENDLY" | "QUALIFIER" | "NATIONS_LEAGUE" | "TOURNAMENT_GROUP" | "TOURNAMENT_KNOCKOUT";
+  homeAdvantage?: number; // per-team xG multiplier (default 1.22)
   avgOffensive?: number;
   avgDefensive?: number;
   stdOffensive?: number;
@@ -145,8 +146,8 @@ export function predictMatch(input: PredictionInput): PredictionResult {
   const baseline = BASELINE_GOALS[importance] ?? DEFAULT_BASELINE;
   const diagonal = DIAGONAL_INFLATION[importance] ?? DEFAULT_DIAGONAL;
 
-  // Home advantage
-  const homeAdvMultiplier = input.neutralVenue ? 1.0 : HOME_ADVANTAGE;
+  // Per-team home advantage (Bayesian estimate, or flat 1.22 fallback)
+  const homeAdvMultiplier = input.neutralVenue ? 1.0 : (input.homeAdvantage ?? HOME_ADVANTAGE);
 
   // Log-linear expected goals
   // Home xG: good home offense (zOffHome > 0) + bad away defense (zDefAway > 0)

@@ -60,6 +60,7 @@ model Team {
   eloDefensive          Float    @default(1500)
   rosterOffensive       Float    @default(1500)
   rosterDefensive       Float    @default(1500)
+  homeAdvantage         Float    @default(1.22)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 

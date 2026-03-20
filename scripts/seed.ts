@@ -23,11 +23,17 @@ import {
   overallRating,
   combinedRating,
   applyMeanReversion,
+  applyWinRateReversion,
+  applyHomeAwayReversion,
+  getWinRate,
+  computeHomeAdvantage,
   type TeamElo,
+  type WinRateState,
+  type HomeAwayState,
 } from "../lib/ranking-engine";
 
 // --- Config ---
-const START_DATE = "1998-01-01"; // Elo burn-in starts here
+const START_DATE = "2018-06-01"; // Aligned with FIFA's 2018 fresh start
 const DISPLAY_DATE = "2002-06-01"; // Rankings displayed from here
 const SNAPSHOT_INTERVAL_DAYS = 30; // Create ranking snapshots monthly
 const BATCH_SIZE = 500; // DB batch size for inserts
@@ -333,10 +339,18 @@ async function main() {
   // 3. Process matches through Elo engine
   console.log("3. Processing matches through Elo engine...");
 
-  // In-memory Elo state for speed
+  // In-memory state for speed
   const eloState = new Map<string, TeamElo>();
+  const winRateState = new Map<string, WinRateState>();
+  const homeAwayState = new Map<string, HomeAwayState>();
   for (const [name] of teamMap) {
     eloState.set(name, { offensive: 1500, defensive: 1500 });
+    winRateState.set(name, { wins: 0, total: 0 });
+    homeAwayState.set(name, {
+      homeGoalsScored: 0, homeGoalsConceded: 0,
+      awayGoalsScored: 0, awayGoalsConceded: 0,
+      homeMatches: 0, awayMatches: 0,
+    });
   }
 
   let processedCount = 0;
@@ -350,6 +364,12 @@ async function main() {
     if (matchYear !== lastYear && lastYear !== "") {
       for (const [name, elo] of eloState) {
         eloState.set(name, applyMeanReversion(elo));
+      }
+      for (const [name, wr] of winRateState) {
+        winRateState.set(name, applyWinRateReversion(wr));
+      }
+      for (const [name, ha] of homeAwayState) {
+        homeAwayState.set(name, applyHomeAwayReversion(ha));
       }
     }
     lastYear = matchYear;
@@ -381,7 +401,13 @@ async function main() {
 
     const importance = tournamentToImportance(m.tournament);
 
-    // Calculate new Elo
+    // Get running win rates for adaptive goal diff
+    const homeWR = getWinRate(winRateState.get(m.home_team)!);
+    const awayWR = getWinRate(winRateState.get(m.away_team)!);
+
+    // Calculate new Elo with per-team adaptive multiplier + home advantage
+    const isNeutral = m.neutral === "TRUE";
+    const homeHA = computeHomeAdvantage(homeAwayState.get(m.home_team)!);
     const result = calculateElo(homeElo, awayElo, {
       homeScore,
       awayScore,
@@ -390,9 +416,33 @@ async function main() {
       matchImportance: importance as never,
       tournament: m.tournament,
       tournamentStage: null,
-      neutralVenue: m.neutral === "TRUE",
+      neutralVenue: isNeutral,
       homeConfederation: guessConfederation(m.home_team),
-    });
+    }, homeWR, awayWR, homeHA);
+
+    // Update win rate tracking
+    const homeWins = homeScore > awayScore ? 1 : homeScore === awayScore ? 0.5 : 0;
+    const awayWins = awayScore > homeScore ? 1 : homeScore === awayScore ? 0.5 : 0;
+    // Adjust for PSO
+    const homeWRState = winRateState.get(m.home_team)!;
+    const awayWRState = winRateState.get(m.away_team)!;
+    homeWRState.wins += homeScorePenalties != null && homeScorePenalties > (awayScorePenalties ?? 0) ? 0.75 : homeWins;
+    homeWRState.total += 1;
+    awayWRState.wins += awayScorePenalties != null && awayScorePenalties > (homeScorePenalties ?? 0) ? 0.75 : awayWins;
+    awayWRState.total += 1;
+
+    // Update home/away goal tracking (skip neutral venues)
+    if (!isNeutral) {
+      const homeHA = homeAwayState.get(m.home_team)!;
+      homeHA.homeGoalsScored += homeScore;
+      homeHA.homeGoalsConceded += awayScore;
+      homeHA.homeMatches += 1;
+
+      const awayHA = homeAwayState.get(m.away_team)!;
+      awayHA.awayGoalsScored += awayScore;
+      awayHA.awayGoalsConceded += homeScore;
+      awayHA.awayMatches += 1;
+    }
 
     // Prepare match record
     matchBatch.push({
@@ -483,6 +533,7 @@ async function main() {
 
   for (let i = 0; i < teamRatings.length; i++) {
     const t = teamRatings[i];
+    const ha = computeHomeAdvantage(homeAwayState.get(t.name)!);
     await prisma.team.update({
       where: { id: t.id },
       data: {
@@ -494,6 +545,7 @@ async function main() {
         currentRank: i + 1,
         rosterOffensive: 1500,
         rosterDefensive: 1500,
+        homeAdvantage: ha,
       },
     });
   }

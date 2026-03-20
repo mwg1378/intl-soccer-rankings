@@ -7,7 +7,6 @@
  *
  * Key FIFA alignment:
  * - 600-point scaling factor (not 400)
- * - No goal difference multiplier (prevents blowout inflation)
  * - No home advantage in Elo (home advantage lives in prediction engine)
  * - Knockout loss protection (teams don't lose points in KO rounds)
  * - PSO loser treated as draw (W=0.5), winner gets W=0.75
@@ -15,15 +14,15 @@
  *
  * Our additions beyond FIFA:
  * - Offensive/defensive sub-rating split (feeds prediction model)
+ * - Adaptive goal diff multiplier (scales with record lopsidedness)
+ * - Per-team home advantage (Bayesian estimate from match history)
  * - Confederation quality adjustment on display ratings
- * - Annual mean reversion (3% toward 1500)
+ * - Annual mean reversion (8% toward 1500)
  */
 
 import type { MatchImportance } from "@/app/generated/prisma/client";
 
 // --- I values (match importance) aligned with FIFA ---
-// FIFA uses 5/10 for friendlies, but our CSV doesn't distinguish
-// calendar vs non-calendar friendlies, so we use 10 as default.
 const K_VALUES: Record<string, number> = {
   FRIENDLY: 10,
   NATIONS_LEAGUE: 15,
@@ -32,7 +31,6 @@ const K_VALUES: Record<string, number> = {
   TOURNAMENT_KNOCKOUT: 40,
 };
 
-// More granular I values for specific tournament stages
 const TOURNAMENT_K: Record<string, number> = {
   "Continental qualifier": 25,
   "World Cup qualifier": 25,
@@ -42,9 +40,14 @@ const TOURNAMENT_K: Record<string, number> = {
   "World Cup knockout": 60,
 };
 
-// Annual mean reversion rate: pull ratings 3% toward 1500 each year.
-const MEAN_REVERSION_RATE = 0.03;
+const MEAN_REVERSION_RATE = 0.08;
 const MEAN_RATING = 1500;
+
+// Home advantage Bayesian prior
+const HOME_ADVANTAGE_PRIOR = 1.22; // global mean
+const HOME_ADVANTAGE_PRIOR_WEIGHT = 30; // equivalent sample size
+const HOME_ADVANTAGE_MIN = 0.80;
+const HOME_ADVANTAGE_MAX = 2.00;
 
 export interface TeamElo {
   offensive: number;
@@ -76,7 +79,6 @@ export function getKFactor(
   tournament?: string,
   stage?: string | null
 ): number {
-  // Try granular tournament K first
   if (tournament && stage) {
     const isWorldCup = tournament.toLowerCase().includes("world cup");
     const isKnockout =
@@ -95,9 +97,7 @@ export function getKFactor(
 
 /**
  * Expected result using the FIFA Elo formula.
- * Uses 600-point scaling (FIFA standard) instead of traditional 400.
- * This makes the system less volatile — a 200-point gap produces a
- * smaller expected advantage than in standard Elo.
+ * Uses 600-point scaling (FIFA standard).
  */
 export function expectedResult(
   teamRating: number,
@@ -107,17 +107,12 @@ export function expectedResult(
 }
 
 /**
- * Determine match result values.
- * Returns [homeW, awayW] where W is 1 (win), 0.5 (draw), 0 (loss).
- *
  * FIFA PSO rule: winner gets 0.75, LOSER gets 0.5 (treated as draw).
- * This is more generous to the loser than standard Elo (which gives 0.25).
  */
 export function matchResult(match: MatchInput): [number, number] {
   if (match.homeScore > match.awayScore) return [1, 0];
   if (match.homeScore < match.awayScore) return [0, 1];
 
-  // Draw in regular time — check penalties
   if (
     match.homeScorePenalties != null &&
     match.awayScorePenalties != null
@@ -132,20 +127,36 @@ export function matchResult(match: MatchInput): [number, number] {
 }
 
 /**
- * Mild goal difference multiplier using log scaling.
- * A 5-0 win is more informative than a 1-0 win, but not 5x as much.
- * Capped at 1.5 to prevent blowout inflation (FIFA uses no multiplier
- * at all; we use a conservative one as a middle ground).
+ * Raw goal difference multiplier (log-based, max 1.25x).
  */
-export function goalDiffMultiplier(goalDiff: number): number {
+function rawGoalDiffMultiplier(goalDiff: number): number {
   const absDiff = Math.abs(goalDiff);
   if (absDiff <= 1) return 1.0;
-  return Math.min(1 + Math.log(absDiff) * 0.25, 1.5);
+  return Math.min(1 + Math.log(absDiff) * 0.12, 1.25);
 }
 
 /**
- * Check if a match is in a knockout round of a final competition.
+ * Adaptive goal difference multiplier — scales with how lopsided a
+ * team's record is.
+ *
+ * For a team with ~50% win rate, W/L record itself is the strongest
+ * signal; goal difference adds noise. For a team that wins 90%,
+ * margin differentiates them from another 90% team.
+ *
+ * extremity = |winRate - 0.5| * 2  (0 = balanced, 1 = lopsided)
+ * G = 1.0 + (rawG - 1.0) * extremity^1.5
  */
+export function adaptiveGoalDiffMultiplier(
+  goalDiff: number,
+  winRate: number
+): number {
+  const rawG = rawGoalDiffMultiplier(goalDiff);
+  if (rawG === 1.0) return 1.0;
+
+  const extremity = Math.abs(winRate - 0.5) * 2; // 0..1
+  return 1.0 + (rawG - 1.0) * Math.pow(extremity, 1.5);
+}
+
 function isKnockoutRound(match: MatchInput): boolean {
   return match.matchImportance === "TOURNAMENT_KNOCKOUT";
 }
@@ -153,19 +164,22 @@ function isKnockoutRound(match: MatchInput): boolean {
 /**
  * Calculate new Elo ratings after a match.
  *
- * Key FIFA rules applied:
- * - No home advantage in Elo (home advantage is for predictions only)
- * - Knockout loss protection: teams can't lose points in KO rounds
- * - 600-point scaling, FIFA-aligned I values, PSO loser = draw
+ * Home advantage is incorporated into the EXPECTED result calculation.
+ * The home team's rating is boosted by their home advantage (in Elo points)
+ * when computing expectations. This means:
+ * - Bolivia beating Brazil at home (huge HA) gets LESS credit than neutral
+ * - Bolivia losing away gets LESS penalty (opponent had big HA)
+ * - A team playing at USA (small HA) is barely affected
  *
- * Our additions beyond FIFA:
- * - Offensive/defensive split (60/40 based on scoring pattern)
- * - Mild goal difference multiplier (capped at 1.5x)
+ * Each team gets its own goal diff multiplier based on their running win rate.
  */
 export function calculateElo(
   homeElo: TeamElo,
   awayElo: TeamElo,
-  match: MatchInput
+  match: MatchInput,
+  homeWinRate = 0.5,
+  awayWinRate = 0.5,
+  homeTeamHA = HOME_ADVANTAGE_PRIOR
 ): EloResult {
   const K = getKFactor(
     match.matchImportance,
@@ -173,76 +187,57 @@ export function calculateElo(
     match.tournamentStage
   );
 
-  // No home advantage in Elo — ratings reflect pure team strength.
-  // Home advantage is modeled separately in the prediction engine.
   const homeOverall = (homeElo.offensive + (3000 - homeElo.defensive)) / 2;
   const awayOverall = (awayElo.offensive + (3000 - awayElo.defensive)) / 2;
 
-  const We_home = expectedResult(homeOverall, awayOverall);
+  // Apply home advantage as an Elo bonus for expected result calculation.
+  // Convert xG multiplier to Elo points. Moderate scaling so extreme HA
+  // teams (Bolivia 1.82x) aren't over-penalized for home wins.
+  // 1.22x → +30 pts, 1.82x → +90 pts, 1.09x → +13 pts
+  const haEloBonus = match.neutralVenue ? 0 : Math.log(homeTeamHA) * 150;
+
+  const We_home = expectedResult(homeOverall + haEloBonus, awayOverall);
   const We_away = 1 - We_home;
 
   const [W_home, W_away] = matchResult(match);
 
-  // Goal diff multiplier applies only to POSITIVE deltas (decisive wins
-  // are rewarded, but blowout losses are NOT extra-penalized). The margin
-  // of a large loss says more about the winner than the loser.
-  const G = goalDiffMultiplier(match.homeScore - match.awayScore);
-  const homeRaw = W_home - We_home;
-  const awayRaw = W_away - We_away;
-  let homeDelta = K * (homeRaw > 0 ? G : 1) * homeRaw;
-  let awayDelta = K * (awayRaw > 0 ? G : 1) * awayRaw;
+  // Per-team adaptive multiplier
+  const goalDiff = match.homeScore - match.awayScore;
+  const G_home = adaptiveGoalDiffMultiplier(goalDiff, homeWinRate);
+  const G_away = adaptiveGoalDiffMultiplier(-goalDiff, awayWinRate);
 
-  // FIFA knockout loss protection: teams that earn negative points
-  // in knockout rounds of final competitions don't lose any points.
+  let homeDelta = K * G_home * (W_home - We_home);
+  let awayDelta = K * G_away * (W_away - We_away);
+
+  // FIFA knockout loss protection
   if (isKnockoutRound(match)) {
     if (homeDelta < 0) homeDelta = 0;
     if (awayDelta < 0) awayDelta = 0;
   }
 
-  // Determine offensive/defensive split based on scoring pattern
-  const homeScored = match.homeScore;
-  const awayScored = match.awayScore;
-
-  // If team scored more than conceded: 60% off, 40% def
-  // If team conceded more or drew: 40% off, 60% def
-  const homeOffSplit =
-    homeScored > awayScored ? 0.6 : homeScored === awayScored ? 0.4 : 0.4;
-  const homeDefSplit = 1 - homeOffSplit;
-
-  const awayOffSplit =
-    awayScored > homeScored ? 0.6 : awayScored === homeScored ? 0.4 : 0.4;
-  const awayDefSplit = 1 - awayOffSplit;
+  // 50/50 off/def split (avoids systematic bias against losing teams)
+  const split = 0.5;
 
   return {
     homeElo: {
-      offensive: homeElo.offensive + homeDelta * homeOffSplit,
-      defensive: homeElo.defensive - homeDelta * homeDefSplit,
+      offensive: homeElo.offensive + homeDelta * split,
+      defensive: homeElo.defensive - homeDelta * split,
     },
     awayElo: {
-      offensive: awayElo.offensive + awayDelta * awayOffSplit,
-      defensive: awayElo.defensive - awayDelta * awayDefSplit,
+      offensive: awayElo.offensive + awayDelta * split,
+      defensive: awayElo.defensive - awayDelta * split,
     },
   };
 }
 
 /**
  * Compute overall rating from offensive and defensive ratings.
- * Defensive is inverted (lower = better defense).
  */
 export function overallRating(offensive: number, defensive: number): number {
   return (offensive + (3000 - defensive)) / 2;
 }
 
-/**
- * Confederation quality factors — scale the deviation from 1500 to correct
- * for "closed-loop" inflation in weaker confederations. Teams in AFC/CAF
- * accumulate inflated Elo from beating many weak intra-confederation
- * opponents, while UEFA/CONMEBOL teams face tougher competition.
- *
- * Note: FIFA explicitly has NO confederation weighting, but they accept
- * the resulting inflation. We apply a mild correction because our system
- * is used for predictions where accuracy matters more than parity.
- */
+// --- Confederation quality factors ---
 const CONFEDERATION_QUALITY: Record<string, number> = {
   UEFA: 1.0,
   CONMEBOL: 1.0,
@@ -253,8 +248,7 @@ const CONFEDERATION_QUALITY: Record<string, number> = {
 };
 
 /**
- * Combine Elo-based and roster-based ratings (70/30 split),
- * then apply confederation quality adjustment.
+ * Combine Elo + roster ratings (70/30 split) with confederation adjustment.
  */
 export function combinedRating(
   eloOff: number,
@@ -266,26 +260,89 @@ export function combinedRating(
   const rawOff = 0.7 * eloOff + 0.3 * rosterOff;
   const rawDef = 0.7 * eloDef + 0.3 * rosterDef;
 
-  // Apply confederation quality factor to the deviation from mean
   const confQ = confederation ? (CONFEDERATION_QUALITY[confederation] ?? 0.90) : 1.0;
   const offensive = MEAN_RATING + (rawOff - MEAN_RATING) * confQ;
   const defensive = MEAN_RATING + (rawDef - MEAN_RATING) * confQ;
 
-  return {
-    offensive,
-    defensive,
-    overall: overallRating(offensive, defensive),
-  };
+  return { offensive, defensive, overall: overallRating(offensive, defensive) };
 }
 
 /**
- * Apply annual mean reversion — pull ratings toward 1500 by MEAN_REVERSION_RATE.
- * Should be called once per year (e.g., Jan 1) to account for squad turnover
- * between international cycles.
+ * Apply annual mean reversion — pull ratings toward 1500.
  */
 export function applyMeanReversion(elo: TeamElo): TeamElo {
   return {
     offensive: elo.offensive + (MEAN_RATING - elo.offensive) * MEAN_REVERSION_RATE,
     defensive: elo.defensive + (MEAN_RATING - elo.defensive) * MEAN_REVERSION_RATE,
+  };
+}
+
+// --- Running win rate tracking ---
+
+export interface WinRateState {
+  wins: number;
+  total: number;
+}
+
+export function getWinRate(state: WinRateState): number {
+  if (state.total < 10) return 0.5; // not enough data
+  return state.wins / state.total;
+}
+
+export function applyWinRateReversion(state: WinRateState): WinRateState {
+  // Pull 15% toward 0.5 annually
+  return {
+    wins: state.wins * 0.85 + state.total * 0.5 * 0.15,
+    total: state.total, // keep total stable
+  };
+}
+
+// --- Home advantage computation ---
+
+export interface HomeAwayState {
+  homeGoalsScored: number;
+  homeGoalsConceded: number;
+  awayGoalsScored: number;
+  awayGoalsConceded: number;
+  homeMatches: number;
+  awayMatches: number;
+}
+
+/**
+ * Bayesian home advantage estimate.
+ * Prior: 1.22x (global mean), weight of 30 matches.
+ * Observed: ratio of home goals-per-game to away goals-per-game.
+ * Clamped to [0.8, 2.0].
+ */
+export function computeHomeAdvantage(state: HomeAwayState): number {
+  if (state.homeMatches < 3 || state.awayMatches < 3) {
+    return HOME_ADVANTAGE_PRIOR;
+  }
+
+  const homeGPG = state.homeGoalsScored / state.homeMatches;
+  const awayGPG = state.awayGoalsScored / state.awayMatches;
+
+  if (awayGPG < 0.01) return HOME_ADVANTAGE_PRIOR; // avoid division by zero
+
+  const observedRatio = homeGPG / awayGPG;
+  const n = Math.min(state.homeMatches, state.awayMatches);
+
+  const posterior =
+    (HOME_ADVANTAGE_PRIOR_WEIGHT * HOME_ADVANTAGE_PRIOR + n * observedRatio) /
+    (HOME_ADVANTAGE_PRIOR_WEIGHT + n);
+
+  return Math.max(HOME_ADVANTAGE_MIN, Math.min(HOME_ADVANTAGE_MAX, posterior));
+}
+
+export function applyHomeAwayReversion(state: HomeAwayState): HomeAwayState {
+  // Decay historical home/away stats by 15% annually (same as win rate)
+  const decay = 0.85;
+  return {
+    homeGoalsScored: state.homeGoalsScored * decay,
+    homeGoalsConceded: state.homeGoalsConceded * decay,
+    awayGoalsScored: state.awayGoalsScored * decay,
+    awayGoalsConceded: state.awayGoalsConceded * decay,
+    homeMatches: state.homeMatches * decay,
+    awayMatches: state.awayMatches * decay,
   };
 }

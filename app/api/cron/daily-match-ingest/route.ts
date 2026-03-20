@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       });
       if (existing) continue;
 
-      // Calculate new Elo ratings
+      // Calculate new Elo ratings (with per-team home advantage)
       const eloResult = calculateElo(
         { offensive: homeTeam.eloOffensive, defensive: homeTeam.eloDefensive },
         { offensive: awayTeam.eloOffensive, defensive: awayTeam.eloDefensive },
@@ -82,7 +82,10 @@ export async function GET(request: NextRequest) {
           tournamentStage: match.tournamentStage,
           neutralVenue: match.neutralVenue,
           homeConfederation: homeTeam.confederation,
-        }
+        },
+        0.5, // homeWinRate — approximate for daily cron
+        0.5, // awayWinRate
+        homeTeam.homeAdvantage
       );
 
       // Insert match with before/after Elo
