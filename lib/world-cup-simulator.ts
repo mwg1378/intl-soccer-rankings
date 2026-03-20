@@ -515,15 +515,17 @@ export function runSimulation(
       }
     }
 
-    // Mark playoff teams' qualification
+    // Mark playoff teams' qualification (only the winners)
+    const playoffWinnerNames = new Set<string>();
     for (const [, winner] of playoffResults) {
+      playoffWinnerNames.add(winner);
       const td = teamDataMap.get(dbName(winner))!;
       getOrCreateAdvCounter(td.slug).qualify++;
     }
-    // Confirmed teams always qualify
+    // Confirmed teams always qualify (exclude playoff winners to avoid double-counting)
     for (const t of qualified48) {
-      if (!playoffResults.has(t)) {
-        // This is a confirmed team
+      if (!playoffWinnerNames.has(t)) {
+        // This is a confirmed team (not a playoff winner)
         const td = teamDataMap.get(dbName(t));
         if (td) getOrCreateAdvCounter(td.slug).qualify++;
       }
