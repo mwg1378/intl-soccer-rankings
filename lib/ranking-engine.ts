@@ -237,18 +237,22 @@ export function overallRating(offensive: number, defensive: number): number {
   return (offensive + (3000 - defensive)) / 2;
 }
 
-// --- Confederation quality factors ---
-const CONFEDERATION_QUALITY: Record<string, number> = {
-  UEFA: 1.0,
-  CONMEBOL: 1.0,
-  CONCACAF: 0.88,
-  CAF: 0.78,
-  AFC: 0.77,
-  OFC: 0.70,
+// --- Confederation strength penalty ---
+// Flat Elo point deduction for teams in weaker confederations.
+// Teams in CAF/AFC accumulate inflated Elo from intra-confederation play.
+// A flat penalty (not compression toward mean) correctly penalizes BOTH
+// above-average and below-average teams from weak confederations.
+const CONFEDERATION_PENALTY: Record<string, number> = {
+  UEFA: 0,
+  CONMEBOL: 0,
+  CONCACAF: 15,
+  CAF: 30,
+  AFC: 30,
+  OFC: 40,
 };
 
 /**
- * Combine Elo + roster ratings (70/30 split) with confederation adjustment.
+ * Combine Elo + roster ratings (70/30 split) with confederation penalty.
  */
 export function combinedRating(
   eloOff: number,
@@ -260,9 +264,10 @@ export function combinedRating(
   const rawOff = 0.7 * eloOff + 0.3 * rosterOff;
   const rawDef = 0.7 * eloDef + 0.3 * rosterDef;
 
-  const confQ = confederation ? (CONFEDERATION_QUALITY[confederation] ?? 0.90) : 1.0;
-  const offensive = MEAN_RATING + (rawOff - MEAN_RATING) * confQ;
-  const defensive = MEAN_RATING + (rawDef - MEAN_RATING) * confQ;
+  // Flat penalty: subtract from offensive, add to defensive (both worsen the overall)
+  const penalty = confederation ? (CONFEDERATION_PENALTY[confederation] ?? 15) : 0;
+  const offensive = rawOff - penalty;
+  const defensive = rawDef + penalty;
 
   return { offensive, defensive, overall: overallRating(offensive, defensive) };
 }

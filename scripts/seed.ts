@@ -34,7 +34,8 @@ import {
 
 // --- Config ---
 const START_DATE = "2018-06-01"; // Aligned with FIFA's 2018 fresh start
-const DISPLAY_DATE = "2002-06-01"; // Rankings displayed from here
+const DISPLAY_DATE = "2018-06-01"; // Rankings displayed from here
+const MIN_MATCHES_FOR_RANKING = 20; // Teams with fewer matches get rank 0 (unranked)
 const SNAPSHOT_INTERVAL_DAYS = 30; // Create ranking snapshots monthly
 const BATCH_SIZE = 500; // DB batch size for inserts
 
@@ -343,9 +344,11 @@ async function main() {
   const eloState = new Map<string, TeamElo>();
   const winRateState = new Map<string, WinRateState>();
   const homeAwayState = new Map<string, HomeAwayState>();
+  const matchCountState = new Map<string, number>(); // actual count, never decayed
   for (const [name] of teamMap) {
     eloState.set(name, { offensive: 1500, defensive: 1500 });
     winRateState.set(name, { wins: 0, total: 0 });
+    matchCountState.set(name, 0);
     homeAwayState.set(name, {
       homeGoalsScored: 0, homeGoalsConceded: 0,
       awayGoalsScored: 0, awayGoalsConceded: 0,
@@ -431,6 +434,10 @@ async function main() {
     awayWRState.wins += awayScorePenalties != null && awayScorePenalties > (homeScorePenalties ?? 0) ? 0.75 : awayWins;
     awayWRState.total += 1;
 
+    // Increment actual match counts (never decayed, used for ranking threshold)
+    matchCountState.set(m.home_team, (matchCountState.get(m.home_team) ?? 0) + 1);
+    matchCountState.set(m.away_team, (matchCountState.get(m.away_team) ?? 0) + 1);
+
     // Update home/away goal tracking (skip neutral venues)
     if (!isNeutral) {
       const homeHA = homeAwayState.get(m.home_team)!;
@@ -511,6 +518,7 @@ async function main() {
     defensive: number;
     eloOff: number;
     eloDef: number;
+    matchCount: number;
   }> = [];
 
   for (const [name, id] of teamMap) {
@@ -525,14 +533,19 @@ async function main() {
       defensive: rating.defensive,
       eloOff: elo.offensive,
       eloDef: elo.defensive,
+      matchCount: matchCountState.get(name) ?? 0,
     });
   }
 
-  // Sort by overall rating (descending) for ranking
-  teamRatings.sort((a, b) => b.overall - a.overall);
+  // Only rank teams with enough matches; sort by overall rating
+  const ranked = teamRatings.filter((t) => t.matchCount >= MIN_MATCHES_FOR_RANKING);
+  const unranked = teamRatings.filter((t) => t.matchCount < MIN_MATCHES_FOR_RANKING);
+  ranked.sort((a, b) => b.overall - a.overall);
 
-  for (let i = 0; i < teamRatings.length; i++) {
-    const t = teamRatings[i];
+  console.log(`   ${ranked.length} ranked teams, ${unranked.length} unranked (<${MIN_MATCHES_FOR_RANKING} matches)`);
+
+  for (let i = 0; i < ranked.length; i++) {
+    const t = ranked[i];
     const ha = computeHomeAdvantage(homeAwayState.get(t.name)!);
     await prisma.team.update({
       where: { id: t.id },
@@ -543,6 +556,24 @@ async function main() {
         currentDefensiveRating: t.defensive,
         currentOverallRating: t.overall,
         currentRank: i + 1,
+        rosterOffensive: 1500,
+        rosterDefensive: 1500,
+        homeAdvantage: ha,
+      },
+    });
+  }
+  // Unranked teams get rank 0
+  for (const t of unranked) {
+    const ha = computeHomeAdvantage(homeAwayState.get(t.name)!);
+    await prisma.team.update({
+      where: { id: t.id },
+      data: {
+        eloOffensive: t.eloOff,
+        eloDefensive: t.eloDef,
+        currentOffensiveRating: t.offensive,
+        currentDefensiveRating: t.defensive,
+        currentOverallRating: t.overall,
+        currentRank: 0,
         rosterOffensive: 1500,
         rosterDefensive: 1500,
         homeAdvantage: ha,
