@@ -240,11 +240,11 @@ export function overallRating(offensive: number, defensive: number): number {
  */
 const CONFEDERATION_QUALITY: Record<string, number> = {
   UEFA: 1.0,
-  CONMEBOL: 0.98,
-  CONCACAF: 0.90,
-  CAF: 0.85,
-  AFC: 0.84,
-  OFC: 0.78,
+  CONMEBOL: 1.0,
+  CONCACAF: 0.88,
+  CAF: 0.78,
+  AFC: 0.77,
+  OFC: 0.70,
 };
 
 /**

@@ -54,16 +54,17 @@ async function main() {
     console.warn(`   WARNING: Missing teams: ${missing.join(", ")}`);
   }
 
-  // Compute rating stats across ALL ranked teams for z-score normalization
+  // Compute rating stats from confederation-adjusted ratings (same scale
+  // as the ratings fed to the simulator — avoids z-score mismatch).
   const allRankedTeams = await prisma.team.findMany({
     where: { currentRank: { gt: 0 } },
-    select: { eloOffensive: true, eloDefensive: true },
+    select: { currentOffensiveRating: true, currentDefensiveRating: true },
   });
   const n = allRankedTeams.length;
-  const avgOff = allRankedTeams.reduce((s, t) => s + t.eloOffensive, 0) / n;
-  const avgDef = allRankedTeams.reduce((s, t) => s + t.eloDefensive, 0) / n;
-  const stdOff = Math.sqrt(allRankedTeams.reduce((s, t) => s + (t.eloOffensive - avgOff) ** 2, 0) / n);
-  const stdDef = Math.sqrt(allRankedTeams.reduce((s, t) => s + (t.eloDefensive - avgDef) ** 2, 0) / n);
+  const avgOff = allRankedTeams.reduce((s, t) => s + t.currentOffensiveRating, 0) / n;
+  const avgDef = allRankedTeams.reduce((s, t) => s + t.currentDefensiveRating, 0) / n;
+  const stdOff = Math.sqrt(allRankedTeams.reduce((s, t) => s + (t.currentOffensiveRating - avgOff) ** 2, 0) / n);
+  const stdDef = Math.sqrt(allRankedTeams.reduce((s, t) => s + (t.currentDefensiveRating - avgDef) ** 2, 0) / n);
   console.log(`   Rating stats: avgOff=${avgOff.toFixed(1)}, avgDef=${avgDef.toFixed(1)}, stdOff=${stdOff.toFixed(1)}, stdDef=${stdDef.toFixed(1)}`);
   setRatingStats({ avgOff, avgDef, stdOff, stdDef });
 

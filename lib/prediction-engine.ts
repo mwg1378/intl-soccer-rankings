@@ -53,9 +53,12 @@ const DEFAULT_BASELINE = 1.35;
 const HOME_ADVANTAGE = 1.22;
 
 // Log-linear sensitivity parameter. Controls how much rating differences
-// translate into expected goal differences. Calibrated against historical
-// World Cup / tournament results. Higher = more decisive favorites.
-const SENSITIVITY = 0.36;
+// translate into expected goal differences. Higher = more decisive favorites.
+// Calibrated against FanDuel WC 2026 futures odds. The effective sensitivity
+// is SENSITIVITY / stdDev, so this value accounts for the rating distribution.
+// With confederation-adjusted ratings (stdOff ~107), 0.30 balances top-team
+// concentration with long-shot tail. Calibrated against FanDuel 2026 WC futures.
+const SENSITIVITY = 0.30;
 
 // Dixon-Coles rho parameter (typically slightly negative)
 const RHO = -0.06;
