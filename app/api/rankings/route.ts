@@ -4,10 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
-  const pageSize = Math.min(
-    100,
-    Math.max(1, parseInt(searchParams.get("pageSize") ?? "50", 10))
-  );
+  const rawPageSize = searchParams.get("pageSize");
+  const pageSize = rawPageSize === "all"
+    ? 999
+    : Math.min(200, Math.max(1, parseInt(rawPageSize ?? "50", 10)));
   const confederation = searchParams.get("confederation");
   const sortBy = searchParams.get("sortBy") ?? "currentRank";
 
@@ -26,17 +26,14 @@ export async function GET(request: NextRequest) {
   const orderDir = orderField === "currentRank" ? "asc" : "desc";
 
   try {
-    const [teams, total] = await Promise.all([
-      prisma.team.findMany({
-        where,
-        orderBy: { [orderField]: orderDir },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
-      prisma.team.count({ where }),
-    ]);
+    const teams = await prisma.team.findMany({
+      where,
+      orderBy: { [orderField]: orderDir },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
 
-    return NextResponse.json({ teams, total, page, pageSize });
+    return NextResponse.json({ teams, total: teams.length, page, pageSize });
   } catch (error) {
     console.error("Rankings API error:", error);
     return NextResponse.json(

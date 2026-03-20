@@ -14,7 +14,7 @@ export default function RankingsPage() {
   const [confederation, setConfederation] = useState<Confederation>("ALL");
 
   const params = new URLSearchParams({
-    pageSize: "500",
+    pageSize: "all",
     ...(confederation !== "ALL" && { confederation }),
   });
 
