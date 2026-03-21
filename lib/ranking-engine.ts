@@ -261,8 +261,9 @@ export function combinedRating(
   rosterDef: number,
   confederation?: string
 ): { offensive: number; defensive: number; overall: number } {
-  const rawOff = 0.7 * eloOff + 0.3 * rosterOff;
-  const rawDef = 0.7 * eloDef + 0.3 * rosterDef;
+  // 50/50 blend: match history (Elo) + squad quality (Razali roster ratings)
+  const rawOff = 0.5 * eloOff + 0.5 * rosterOff;
+  const rawDef = 0.5 * eloDef + 0.5 * rosterDef;
 
   // Flat penalty: subtract from offensive, add to defensive (both worsen the overall)
   const penalty = confederation ? (CONFEDERATION_PENALTY[confederation] ?? 15) : 0;

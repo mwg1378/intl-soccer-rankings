@@ -44,3 +44,6 @@ next-env.d.ts
 
 # supabase
 .supabase
+
+# FIFA/EA FC player rating data (large CSV, download from Kaggle)
+scripts/data/fifa-ratings/

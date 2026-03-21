@@ -31,10 +31,11 @@ import {
   type WinRateState,
   type HomeAwayState,
 } from "../lib/ranking-engine";
+import { yearToEdition } from "../lib/razali-engine";
 
 // --- Config ---
-const START_DATE = "2018-06-01"; // Aligned with FIFA's 2018 fresh start
-const DISPLAY_DATE = "2018-06-01"; // Rankings displayed from here
+const START_DATE = "2014-01-01"; // Extended back to 2014 for more match history
+const DISPLAY_DATE = "2014-06-01"; // Rankings displayed from 2014 World Cup
 const MIN_MATCHES_FOR_RANKING = 20; // Teams with fewer matches get rank 0 (unranked)
 const SNAPSHOT_INTERVAL_DAYS = 30; // Create ranking snapshots monthly
 const BATCH_SIZE = 500; // DB batch size for inserts
@@ -293,6 +294,7 @@ async function main() {
   await prisma.playerSeasonStats.deleteMany();
   await prisma.player.deleteMany();
   await prisma.leagueCoefficient.deleteMany();
+  await prisma.teamSeasonRazali.deleteMany();
   await prisma.team.deleteMany();
 
   // Create teams
@@ -344,7 +346,7 @@ async function main() {
   const eloState = new Map<string, TeamElo>();
   const winRateState = new Map<string, WinRateState>();
   const homeAwayState = new Map<string, HomeAwayState>();
-  const matchCountState = new Map<string, number>(); // actual count, never decayed
+  const matchCountState = new Map<string, number>();
   for (const [name] of teamMap) {
     eloState.set(name, { offensive: 1500, defensive: 1500 });
     winRateState.set(name, { wins: 0, total: 0 });
@@ -374,6 +376,7 @@ async function main() {
       for (const [name, ha] of homeAwayState) {
         homeAwayState.set(name, applyHomeAwayReversion(ha));
       }
+      // Razali roster ratings are applied post-seed via fetch-rosters.ts
     }
     lastYear = matchYear;
 

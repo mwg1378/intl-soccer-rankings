@@ -70,9 +70,51 @@ model Team {
   roster                TeamRoster[]
   homePredictions       PredictionCache[]  @relation("HomePrediction")
   awayPredictions       PredictionCache[]  @relation("AwayPrediction")
+  razaliSeasons         TeamSeasonRazali[]
 
   @@index([confederation])
   @@index([currentRank])
+}
+
+model TeamSeasonRazali {
+  id              String @id @default(uuid())
+  teamId          String
+  team            Team   @relation(fields: [teamId], references: [id])
+  fifaEdition     Int
+  fwdAttacking    Float  @default(0)
+  fwdSkill        Float  @default(0)
+  fwdMovement     Float  @default(0)
+  fwdPower        Float  @default(0)
+  fwdMentality    Float  @default(0)
+  fwdDefending    Float  @default(0)
+  fwdGoalkeeping  Float  @default(0)
+  midAttacking    Float  @default(0)
+  midSkill        Float  @default(0)
+  midMovement     Float  @default(0)
+  midPower        Float  @default(0)
+  midMentality    Float  @default(0)
+  midDefending    Float  @default(0)
+  midGoalkeeping  Float  @default(0)
+  defAttacking    Float  @default(0)
+  defSkill        Float  @default(0)
+  defMovement     Float  @default(0)
+  defPower        Float  @default(0)
+  defMentality    Float  @default(0)
+  defDefending    Float  @default(0)
+  defGoalkeeping  Float  @default(0)
+  gkAttacking     Float  @default(0)
+  gkSkill         Float  @default(0)
+  gkMovement      Float  @default(0)
+  gkPower         Float  @default(0)
+  gkMentality     Float  @default(0)
+  gkDefending     Float  @default(0)
+  gkGoalkeeping   Float  @default(0)
+  razaliOffensive Float  @default(1500)
+  razaliDefensive Float  @default(1500)
+  playerCount     Int    @default(0)
+
+  @@unique([teamId, fifaEdition])
+  @@index([fifaEdition])
 }
 
 model Match {
