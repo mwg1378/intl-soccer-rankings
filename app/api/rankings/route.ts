@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
     "currentOverallRating",
     "currentOffensiveRating",
     "currentDefensiveRating",
+    "eloOffensive",
+    "rosterOffensive",
   ];
   const orderField = validSortFields.includes(sortBy) ? sortBy : "currentRank";
   const orderDir = orderField === "currentRank" ? "asc" : "desc";
