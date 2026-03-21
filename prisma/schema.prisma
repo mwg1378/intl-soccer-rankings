@@ -61,6 +61,9 @@ model Team {
   rosterOffensive       Float    @default(1500)
   rosterDefensive       Float    @default(1500)
   homeAdvantage         Float    @default(1.22)
+  piHome                Float    @default(0)
+  piAway                Float    @default(0)
+  piOverall             Float    @default(0)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 

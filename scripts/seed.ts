@@ -32,6 +32,13 @@ import {
   type HomeAwayState,
 } from "../lib/ranking-engine";
 import { yearToEdition } from "../lib/razali-engine";
+import {
+  updatePiRatings,
+  applyPiMeanReversion,
+  piOverall,
+  DEFAULT_PI_PARAMS,
+  type PiTeamRatings,
+} from "../lib/pi-ratings";
 
 // --- Config ---
 const START_DATE = "2014-01-01"; // Extended back to 2014 for more match history
@@ -344,11 +351,13 @@ async function main() {
 
   // In-memory state for speed
   const eloState = new Map<string, TeamElo>();
+  const piState = new Map<string, PiTeamRatings>();
   const winRateState = new Map<string, WinRateState>();
   const homeAwayState = new Map<string, HomeAwayState>();
   const matchCountState = new Map<string, number>();
   for (const [name] of teamMap) {
     eloState.set(name, { offensive: 1500, defensive: 1500 });
+    piState.set(name, { home: 0, away: 0 });
     winRateState.set(name, { wins: 0, total: 0 });
     matchCountState.set(name, 0);
     homeAwayState.set(name, {
@@ -369,6 +378,9 @@ async function main() {
     if (matchYear !== lastYear && lastYear !== "") {
       for (const [name, elo] of eloState) {
         eloState.set(name, applyMeanReversion(elo));
+      }
+      for (const [name, pi] of piState) {
+        piState.set(name, applyPiMeanReversion(pi, 0.08));
       }
       for (const [name, wr] of winRateState) {
         winRateState.set(name, applyWinRateReversion(wr));
@@ -425,6 +437,13 @@ async function main() {
       neutralVenue: isNeutral,
       homeConfederation: guessConfederation(m.home_team),
     }, homeWR, awayWR, homeHA);
+
+    // Update pi-ratings
+    const homePi = piState.get(m.home_team)!;
+    const awayPi = piState.get(m.away_team)!;
+    const piResult = updatePiRatings(homePi, awayPi, homeScore, awayScore, DEFAULT_PI_PARAMS, isNeutral);
+    piState.set(m.home_team, piResult.homeTeam);
+    piState.set(m.away_team, piResult.awayTeam);
 
     // Update win rate tracking
     const homeWins = homeScore > awayScore ? 1 : homeScore === awayScore ? 0.5 : 0;
@@ -562,6 +581,9 @@ async function main() {
         rosterOffensive: 1500,
         rosterDefensive: 1500,
         homeAdvantage: ha,
+        piHome: (piState.get(t.name) ?? { home: 0 }).home,
+        piAway: (piState.get(t.name) ?? { away: 0 }).away,
+        piOverall: piOverall(piState.get(t.name) ?? { home: 0, away: 0 }),
       },
     });
   }
@@ -580,6 +602,9 @@ async function main() {
         rosterOffensive: 1500,
         rosterDefensive: 1500,
         homeAdvantage: ha,
+        piHome: (piState.get(t.name) ?? { home: 0 }).home,
+        piAway: (piState.get(t.name) ?? { away: 0 }).away,
+        piOverall: piOverall(piState.get(t.name) ?? { home: 0, away: 0 }),
       },
     });
   }
