@@ -60,6 +60,8 @@ model Team {
   eloDefensive          Float    @default(1500)
   rosterOffensive       Float    @default(1500)
   rosterDefensive       Float    @default(1500)
+  btRating              Float    @default(1500)
+  btRank                Int      @default(0)
   homeAdvantage         Float    @default(1.22)
   piHome                Float    @default(0)
   piAway                Float    @default(0)
@@ -168,6 +170,8 @@ model RankingSnapshot {
   eloDefensive     Float
   rosterOffensive  Float
   rosterDefensive  Float
+  btRating         Float?
+  btRank           Int?
 
   @@unique([teamId, date])
   @@index([date])

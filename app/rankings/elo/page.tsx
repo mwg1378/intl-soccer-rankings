@@ -64,12 +64,20 @@ export default function EloRankingsPage() {
         <p className="text-sm text-gray-400">
           Rankings based purely on match results (no roster component)
         </p>
-        <a
-          href="/rankings"
-          className="text-xs text-gray-400 hover:text-gray-700 underline-offset-4 hover:underline"
-        >
-          View combined rankings &rarr;
-        </a>
+        <div className="flex gap-3">
+          <a
+            href="/rankings"
+            className="text-xs text-gray-400 hover:text-gray-700 underline-offset-4 hover:underline"
+          >
+            Combined rankings &rarr;
+          </a>
+          <a
+            href="/rankings/bt"
+            className="text-xs text-gray-400 hover:text-gray-700 underline-offset-4 hover:underline"
+          >
+            Bradley-Terry rankings &rarr;
+          </a>
+        </div>
       </div>
 
       <ConfederationFilter

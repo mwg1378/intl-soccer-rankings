@@ -39,6 +39,11 @@ import {
   DEFAULT_PI_PARAMS,
   type PiTeamRatings,
 } from "../lib/pi-ratings";
+import {
+  prepareMatchesForSolver,
+  solveBradleyTerry,
+  type RawMatchInput,
+} from "../lib/bt-engine";
 
 // --- Config ---
 const START_DATE = "2014-01-01"; // Extended back to 2014 for more match history
@@ -367,6 +372,9 @@ async function main() {
     });
   }
 
+  // Collect raw match data for BT solver
+  const btRawMatches: RawMatchInput[] = [];
+
   let processedCount = 0;
   let lastSnapshotDate = "";
   let lastYear = "";
@@ -497,6 +505,21 @@ async function main() {
       source: "kaggle-martj42",
     });
 
+    // Collect for BT solver
+    btRawMatches.push({
+      homeTeamId: homeId,
+      awayTeamId: awayId,
+      homeScore,
+      awayScore,
+      homeScorePenalties,
+      awayScorePenalties,
+      date: new Date(m.date),
+      matchImportance: importance as never,
+      tournament: m.tournament,
+      tournamentStage: null,
+      neutralVenue: isNeutral,
+    });
+
     // Update in-memory Elo state
     eloState.set(m.home_team, result.homeElo);
     eloState.set(m.away_team, result.awayElo);
@@ -610,8 +633,49 @@ async function main() {
   }
   console.log(`   Updated ${teamRatings.length} teams\n`);
 
-  // 5. Create ranking snapshots at key dates
-  console.log("5. Creating ranking snapshots...");
+  // 5. Compute Bradley-Terry ratings
+  console.log("5. Computing Bradley-Terry ratings...");
+  const btNow = new Date();
+  btNow.setUTCHours(0, 0, 0, 0);
+  const { teamIds: btTeamIds, matches: btMatches } = prepareMatchesForSolver(btRawMatches, btNow);
+  const btResult = solveBradleyTerry(btTeamIds, btMatches);
+  console.log(`   BT solver converged in ${btResult.iterations} iterations (maxChange: ${btResult.maxChange.toFixed(4)})`);
+
+  // Build btRating lookup by team name
+  const btRatingByName = new Map<string, number>();
+  for (const [name, id] of teamMap) {
+    btRatingByName.set(name, btResult.ratings.get(id) ?? 1500);
+  }
+
+  // Rank teams by BT rating (only those with enough matches)
+  const btRanked = ranked
+    .map((t) => ({ ...t, btRating: btRatingByName.get(t.name) ?? 1500 }))
+    .sort((a, b) => b.btRating - a.btRating);
+
+  // Update teams with BT ratings and ranks
+  for (let i = 0; i < btRanked.length; i++) {
+    await prisma.team.update({
+      where: { id: btRanked[i].id },
+      data: {
+        btRating: btRanked[i].btRating,
+        btRank: i + 1,
+      },
+    });
+  }
+  // Unranked teams get btRank 0
+  for (const t of unranked) {
+    await prisma.team.update({
+      where: { id: t.id },
+      data: {
+        btRating: btRatingByName.get(t.name) ?? 1500,
+        btRank: 0,
+      },
+    });
+  }
+  console.log(`   Updated ${btRanked.length} teams with BT ratings\n`);
+
+  // 6. Create ranking snapshots at key dates (with BT)
+  console.log("6. Creating ranking snapshots...");
 
   // Re-process to create monthly snapshots
   // Reset Elo state
@@ -623,6 +687,8 @@ async function main() {
   let lastMonth = "";
   let snapLastYear = "";
   let snapshotCount = 0;
+  let btMatchIndex = 0; // tracks how many btRawMatches have been processed up to current snapshot
+  let btWarmStart: Map<string, number> | undefined;
 
   for (const m of matches) {
     // Apply annual mean reversion at year boundaries
@@ -665,6 +731,7 @@ async function main() {
 
     snapshotElo.set(m.home_team, result.homeElo);
     snapshotElo.set(m.away_team, result.awayElo);
+    btMatchIndex++;
 
     // Create snapshot at month boundaries (from DISPLAY_DATE onward)
     const month = m.date.substring(0, 7);
@@ -672,6 +739,14 @@ async function main() {
       if (lastMonth !== "") {
         // Create snapshot for end of previous month
         const snapshotDate = new Date(`${lastMonth}-28`);
+
+        // Run BT solver for this snapshot point (warm-started from previous)
+        const btSlice = btRawMatches.slice(0, btMatchIndex);
+        const { teamIds: snapBtTeamIds, matches: snapBtMatches } =
+          prepareMatchesForSolver(btSlice, snapshotDate);
+        const snapBtResult = solveBradleyTerry(snapBtTeamIds, snapBtMatches, { warmStart: btWarmStart });
+        btWarmStart = snapBtResult.ratings; // warm-start next month
+
         const ratings: Array<{
           name: string;
           id: string;
@@ -680,6 +755,7 @@ async function main() {
           def: number;
           eloOff: number;
           eloDef: number;
+          btRating: number;
         }> = [];
 
         for (const [name, id] of teamMap) {
@@ -693,10 +769,18 @@ async function main() {
             def: r.defensive,
             eloOff: elo.offensive,
             eloDef: elo.defensive,
+            btRating: snapBtResult.ratings.get(id) ?? 1500,
           });
         }
 
         ratings.sort((a, b) => b.overall - a.overall);
+
+        // BT ranks for this snapshot
+        const btSorted = [...ratings].sort((a, b) => b.btRating - a.btRating);
+        const btRankMap = new Map<string, number>();
+        for (let i = 0; i < btSorted.length; i++) {
+          btRankMap.set(btSorted[i].id, i + 1);
+        }
 
         // Only snapshot top 100 teams (to keep DB size reasonable for monthly)
         const snapshotBatch = [];
@@ -713,10 +797,16 @@ async function main() {
             eloDefensive: r.eloDef,
             rosterOffensive: 1500,
             rosterDefensive: 1500,
+            btRating: r.btRating,
+            btRank: btRankMap.get(r.id) ?? 0,
           });
         }
         await prisma.rankingSnapshot.createMany({ data: snapshotBatch });
         snapshotCount++;
+
+        if (snapshotCount % 24 === 0) {
+          console.log(`   Created ${snapshotCount} snapshots (${lastMonth})...`);
+        }
       }
       lastMonth = month;
     }
@@ -725,6 +815,13 @@ async function main() {
   // Create final snapshot for current date
   const now = new Date();
   now.setUTCHours(0, 0, 0, 0);
+
+  // BT ranks for final snapshot
+  const finalBtRankMap = new Map<string, number>();
+  for (let i = 0; i < btRanked.length; i++) {
+    finalBtRankMap.set(btRanked[i].id, i + 1);
+  }
+
   const finalSnapshotBatch = [];
   for (let i = 0; i < Math.min(100, teamRatings.length); i++) {
     const t = teamRatings[i];
@@ -739,6 +836,8 @@ async function main() {
       eloDefensive: t.eloDef,
       rosterOffensive: 1500,
       rosterDefensive: 1500,
+      btRating: btRatingByName.get(t.name) ?? 1500,
+      btRank: finalBtRankMap.get(t.id) ?? 0,
     });
   }
   await prisma.rankingSnapshot.createMany({ data: finalSnapshotBatch });
@@ -746,14 +845,16 @@ async function main() {
 
   console.log(`   Created ${snapshotCount} monthly snapshots\n`);
 
-  // 6. Print top 20
+  // 7. Print top 20
   console.log("=== Current Top 20 Rankings ===\n");
-  console.log("Rank  Team                     Overall   Off      Def");
-  console.log("----  ----                     -------   ---      ---");
+  console.log("Rank  Team                     Overall   Off      Def     BT Rating  BT Rank");
+  console.log("----  ----                     -------   ---      ---     ---------  -------");
   for (let i = 0; i < 20; i++) {
     const t = teamRatings[i];
+    const bt = btRatingByName.get(t.name) ?? 1500;
+    const btR = finalBtRankMap.get(t.id) ?? 0;
     console.log(
-      `${String(i + 1).padStart(4)}  ${t.name.padEnd(25)} ${t.overall.toFixed(0).padStart(7)}  ${t.offensive.toFixed(0).padStart(7)}  ${t.defensive.toFixed(0).padStart(7)}`
+      `${String(i + 1).padStart(4)}  ${t.name.padEnd(25)} ${t.overall.toFixed(0).padStart(7)}  ${t.offensive.toFixed(0).padStart(7)}  ${t.defensive.toFixed(0).padStart(7)}  ${bt.toFixed(0).padStart(9)}  ${String(btR).padStart(7)}`
     );
   }
 

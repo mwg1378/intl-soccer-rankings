@@ -23,9 +23,11 @@ export async function GET(request: NextRequest) {
     "currentDefensiveRating",
     "eloOffensive",
     "rosterOffensive",
+    "btRating",
+    "btRank",
   ];
   const orderField = validSortFields.includes(sortBy) ? sortBy : "currentRank";
-  const orderDir = orderField === "currentRank" ? "asc" : "desc";
+  const orderDir = orderField === "currentRank" || orderField === "btRank" ? "asc" : "desc";
 
   try {
     const teams = await prisma.team.findMany({

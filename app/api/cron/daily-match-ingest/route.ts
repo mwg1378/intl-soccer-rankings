@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { fetchInternationalMatches } from "@/lib/api-football";
 import { calculateElo, overallRating, combinedRating } from "@/lib/ranking-engine";
+import { prepareMatchesForSolver, solveBradleyTerry } from "@/lib/bt-engine";
 import type { MatchImportance } from "@/app/generated/prisma/client";
 
 export const maxDuration = 30;
@@ -171,11 +172,72 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // Create ranking snapshots for updated teams
+      // Re-solve Bradley-Terry ratings from recent match history
+      const sixYearsAgo = new Date();
+      sixYearsAgo.setFullYear(sixYearsAgo.getFullYear() - 6);
+
+      const recentMatches = await prisma.match.findMany({
+        where: { date: { gte: sixYearsAgo } },
+        select: {
+          homeTeamId: true,
+          awayTeamId: true,
+          homeScore: true,
+          awayScore: true,
+          homeScorePenalties: true,
+          awayScorePenalties: true,
+          date: true,
+          matchImportance: true,
+          tournament: true,
+          tournamentStage: true,
+          neutralVenue: true,
+        },
+      });
+
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
 
+      // Warm-start from current BT ratings
+      const btWarmStart = new Map<string, number>();
       for (const team of allTeams) {
+        btWarmStart.set(team.id, team.btRating);
+      }
+
+      const { teamIds: btTeamIds, matches: btMatches } =
+        prepareMatchesForSolver(recentMatches, today);
+      const btResult = solveBradleyTerry(btTeamIds, btMatches, {
+        warmStart: btWarmStart,
+      });
+
+      // Update BT ratings and ranks
+      const btSorted = allTeams
+        .map((t) => ({
+          id: t.id,
+          btRating: btResult.ratings.get(t.id) ?? t.btRating,
+        }))
+        .sort((a, b) => b.btRating - a.btRating);
+
+      for (let i = 0; i < btSorted.length; i++) {
+        await prisma.team.update({
+          where: { id: btSorted[i].id },
+          data: {
+            btRating: btSorted[i].btRating,
+            btRank: i + 1,
+          },
+        });
+      }
+
+      // Build BT rank lookup for snapshots
+      const btRankMap = new Map<string, { rating: number; rank: number }>();
+      for (let i = 0; i < btSorted.length; i++) {
+        btRankMap.set(btSorted[i].id, {
+          rating: btSorted[i].btRating,
+          rank: i + 1,
+        });
+      }
+
+      // Create ranking snapshots for updated teams
+      for (const team of allTeams) {
+        const bt = btRankMap.get(team.id);
         await prisma.rankingSnapshot.upsert({
           where: {
             teamId_date: { teamId: team.id, date: today },
@@ -189,6 +251,8 @@ export async function GET(request: NextRequest) {
             eloDefensive: team.eloDefensive,
             rosterOffensive: team.rosterOffensive,
             rosterDefensive: team.rosterDefensive,
+            btRating: bt?.rating ?? team.btRating,
+            btRank: bt?.rank ?? team.btRank,
           },
           create: {
             teamId: team.id,
@@ -201,6 +265,8 @@ export async function GET(request: NextRequest) {
             eloDefensive: team.eloDefensive,
             rosterOffensive: team.rosterOffensive,
             rosterDefensive: team.rosterDefensive,
+            btRating: bt?.rating ?? team.btRating,
+            btRank: bt?.rank ?? team.btRank,
           },
         });
       }
