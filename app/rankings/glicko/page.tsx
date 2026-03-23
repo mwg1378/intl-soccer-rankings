@@ -115,7 +115,7 @@ export default function GlickoRankingsPage() {
                     </td>
                     <td className="text-right">
                       <span className="font-mono font-semibold tabular-nums">
-                        {team.glickoRating.toFixed(0)}
+                        {team.glickoRating.toFixed(1)}
                       </span>
                     </td>
                     <td className="text-right hidden md:table-cell">
@@ -128,7 +128,7 @@ export default function GlickoRankingsPage() {
                     </td>
                     <td className="text-right hidden md:table-cell">
                       <span className="font-mono tabular-nums text-gray-400 text-xs">
-                        {team.currentOverallRating.toFixed(0)}
+                        {team.currentOverallRating.toFixed(1)}
                       </span>
                     </td>
                     <td className="text-right hidden lg:table-cell">

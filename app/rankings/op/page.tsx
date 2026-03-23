@@ -113,12 +113,12 @@ export default function OpRankingsPage() {
                     </td>
                     <td className="text-right">
                       <span className="font-mono font-semibold tabular-nums">
-                        {team.opRating.toFixed(0)}
+                        {team.opRating.toFixed(1)}
                       </span>
                     </td>
                     <td className="text-right hidden md:table-cell">
                       <span className="font-mono tabular-nums text-gray-400 text-xs">
-                        {team.currentOverallRating.toFixed(0)}
+                        {team.currentOverallRating.toFixed(1)}
                       </span>
                     </td>
                     <td className="text-right hidden md:table-cell">

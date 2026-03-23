@@ -153,7 +153,7 @@ export function RankingsTable({ teams }: RankingsTableProps) {
               </td>
               <td className="text-right">
                 <span className="font-mono font-semibold tabular-nums">
-                  {team.gridOptOverall.toFixed(0)}
+                  {team.gridOptOverall.toFixed(1)}
                 </span>
               </td>
               <td className="text-right hidden md:table-cell">

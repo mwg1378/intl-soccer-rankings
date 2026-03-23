@@ -203,7 +203,7 @@ export default function CompareRankingsPage() {
                     // For pi-based models, show decimal; for Elo-based, show integer
                     const display = k === "pi" || k === "iwPi"
                       ? rating.toFixed(2)
-                      : rating.toFixed(0);
+                      : rating.toFixed(1);
                     return (
                       <td key={k} className={cn("text-right", sortBy === k && "bg-gray-50")}>
                         <span className={cn(

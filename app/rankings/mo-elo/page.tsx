@@ -109,10 +109,10 @@ export default function MoEloRankingsPage() {
                         </span>
                       </td>
                       <td className="text-right">
-                        <span className="font-mono font-semibold tabular-nums">{team.moEloOverall.toFixed(0)}</span>
+                        <span className="font-mono font-semibold tabular-nums">{team.moEloOverall.toFixed(1)}</span>
                       </td>
                       <td className="text-right hidden md:table-cell">
-                        <span className="font-mono tabular-nums text-gray-400 text-xs">{team.eloOverall.toFixed(0)}</span>
+                        <span className="font-mono tabular-nums text-gray-400 text-xs">{team.eloOverall.toFixed(1)}</span>
                       </td>
                       <td className="text-right hidden md:table-cell">
                         <span className={cn(
