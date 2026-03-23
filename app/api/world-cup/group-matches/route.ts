@@ -6,7 +6,6 @@ import {
   UEFA_PLAYOFFS,
   FIFA_PLAYOFFS,
   dbName,
-  GROUP_HOST,
 } from "@/lib/world-cup-data";
 
 // Host nations per group (for home advantage)
