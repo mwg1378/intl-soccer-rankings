@@ -55,11 +55,14 @@ const HOME_ADVANTAGE = 1.22;
 
 // Log-linear sensitivity parameter. Controls how much rating differences
 // translate into expected goal differences. Higher = more decisive favorites.
-// Calibrated against FanDuel WC 2026 futures odds. The effective sensitivity
-// is SENSITIVITY / stdDev, so this value accounts for the rating distribution.
-// With confederation-adjusted ratings (stdOff ~107), 0.30 balances top-team
-// concentration with long-shot tail. Calibrated against FanDuel 2026 WC futures.
-const SENSITIVITY = 0.30;
+// Calibrated against WC 2026 sportsbook consensus odds via Monte Carlo
+// simulation. In a 48-team WC with 5 knockout rounds, SENSITIVITY needs to
+// be high enough that top teams win ~70% of KO matches in regulation to match
+// market championship odds (~15% for the favorite).
+//
+// At 0.30: top teams had ~11% champion odds vs market ~15% (too flat)
+// At 0.38: produces ~15% for Spain, better market alignment
+const SENSITIVITY = 0.38;
 
 // Dixon-Coles rho parameter (typically slightly negative)
 const RHO = -0.06;

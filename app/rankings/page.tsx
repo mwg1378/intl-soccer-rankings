@@ -15,6 +15,7 @@ export default function RankingsPage() {
 
   const params = new URLSearchParams({
     pageSize: "all",
+    sortBy: "gridOptOff",
     ...(confederation !== "ALL" && { confederation }),
   });
 
@@ -28,8 +29,19 @@ export default function RankingsPage() {
       <div>
         <h1 className="text-xl font-bold">Full Rankings</h1>
         <p className="text-sm text-gray-400">
-          All FIFA member nations ranked
+          Grid-Optimized composite (70% Combined + 30% Bradley-Terry) &mdash; best alignment with betting market odds
         </p>
+        <div className="flex gap-3 mt-1">
+          <a href="/rankings/compare" className="text-xs text-gray-400 hover:text-gray-700 underline-offset-4 hover:underline">
+            Compare all 12 ranking systems &rarr;
+          </a>
+          <a href="/rankings/elo" className="text-xs text-gray-400 hover:text-gray-700 underline-offset-4 hover:underline">
+            Elo-only &rarr;
+          </a>
+          <a href="/rankings/bt" className="text-xs text-gray-400 hover:text-gray-700 underline-offset-4 hover:underline">
+            Bradley-Terry &rarr;
+          </a>
+        </div>
       </div>
 
       <ConfederationFilter

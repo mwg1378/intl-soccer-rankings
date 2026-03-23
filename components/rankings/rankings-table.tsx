@@ -92,6 +92,10 @@ export interface RankingsTeam {
   rosterOffensive: number;
   rosterDefensive: number;
   currentRank: number;
+  gridOptOff: number;
+  gridOptDef: number;
+  gridOptRank: number;
+  btRating: number;
   updatedAt: Date | string;
 }
 
@@ -110,15 +114,22 @@ export function RankingsTable({ teams }: RankingsTableProps) {
             <th className="w-[50px]">Rank</th>
             <th>Team</th>
             <th className="w-[70px]">Conf</th>
-            <th className="text-right w-[80px]">Overall</th>
-            <th className="text-right w-[80px] hidden md:table-cell">Off</th>
-            <th className="text-right w-[80px] hidden md:table-cell">Def</th>
-            <th className="text-right w-[60px] hidden lg:table-cell">Elo</th>
-            <th className="text-right w-[60px] hidden lg:table-cell">Roster</th>
+            <th className="text-right w-[80px]">Rating</th>
+            <th className="text-right w-[80px] hidden md:table-cell">Elo</th>
+            <th className="text-right w-[80px] hidden md:table-cell">BT</th>
+            <th className="text-right w-[60px] hidden lg:table-cell">Off</th>
+            <th className="text-right w-[60px] hidden lg:table-cell">Def</th>
           </tr>
         </thead>
         <tbody>
-          {teams.map((team) => (
+          {teams
+            .map((team) => ({
+              ...team,
+              gridOptOverall: (team.gridOptOff + (3000 - team.gridOptDef)) / 2,
+              eloOverall: (team.eloOffensive + (3000 - team.eloDefensive)) / 2,
+            }))
+            .sort((a, b) => b.gridOptOverall - a.gridOptOverall)
+            .map((team, i) => (
             <tr
               key={team.id}
               className="cursor-pointer"
@@ -126,7 +137,7 @@ export function RankingsTable({ teams }: RankingsTableProps) {
             >
               <td>
                 <span className="font-semibold tabular-nums">
-                  {team.currentRank}
+                  {i + 1}
                 </span>
               </td>
               <td>
@@ -142,29 +153,27 @@ export function RankingsTable({ teams }: RankingsTableProps) {
               </td>
               <td className="text-right">
                 <span className="font-mono font-semibold tabular-nums">
-                  {team.currentOverallRating.toFixed(1)}
+                  {team.gridOptOverall.toFixed(0)}
                 </span>
               </td>
               <td className="text-right hidden md:table-cell">
                 <span className="font-mono tabular-nums text-gray-500">
-                  {team.currentOffensiveRating.toFixed(1)}
+                  {team.eloOverall.toFixed(0)}
                 </span>
               </td>
               <td className="text-right hidden md:table-cell">
                 <span className="font-mono tabular-nums text-gray-500">
-                  {team.currentDefensiveRating.toFixed(1)}
+                  {team.btRating.toFixed(0)}
                 </span>
               </td>
               <td className="text-right hidden lg:table-cell">
                 <span className="font-mono tabular-nums text-gray-400 text-xs">
-                  {((team.eloOffensive + (3000 - team.eloDefensive)) / 2).toFixed(0)}
+                  {team.gridOptOff.toFixed(0)}
                 </span>
               </td>
               <td className="text-right hidden lg:table-cell">
                 <span className="font-mono tabular-nums text-gray-400 text-xs">
-                  {team.rosterOffensive !== 1500 || team.rosterDefensive !== 1500
-                    ? ((team.rosterOffensive + (3000 - team.rosterDefensive)) / 2).toFixed(0)
-                    : "—"}
+                  {team.gridOptDef.toFixed(0)}
                 </span>
               </td>
             </tr>
