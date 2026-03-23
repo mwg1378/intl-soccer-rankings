@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { href: "/world-cup/groups", label: "Group Stage" },
-  { href: "/world-cup/bracket", label: "Bracket" },
+  { href: "/world-cup/groups", label: "Table" },
+  { href: "/world-cup/matches", label: "Group Matches" },
+  { href: "/world-cup/bracket", label: "Knockout" },
   { href: "/world-cup/advancement", label: "Advancement" },
 ];
 
