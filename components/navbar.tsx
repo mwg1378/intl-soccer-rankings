@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/", label: "Rankings" },
+  { href: "/rankings/compare", label: "Rankings" },
   { href: "/world-cup", label: "World Cup 2026" },
   { href: "/predict", label: "Predictions" },
   { href: "/methodology", label: "Methodology" },
@@ -29,7 +29,8 @@ export function Navbar() {
               className={cn(
                 "px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors",
                 (pathname === link.href ||
-                  (link.href !== "/" && pathname.startsWith(link.href)))
+                  (link.href === "/rankings/compare" && pathname.startsWith("/rankings")) ||
+                  (link.href !== "/" && link.href !== "/rankings/compare" && pathname.startsWith(link.href)))
                   ? "text-[#40C28A]"
                   : "text-white/70 hover:text-white"
               )}
