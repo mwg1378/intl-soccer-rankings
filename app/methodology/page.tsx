@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Methodology — International Soccer Rankings",
   description:
-    "How our international soccer ranking system works: Elo ratings, roster-based strength, and Dixon-Coles score predictions.",
+    "How our international soccer ranking system works: 12 ranking models backtested against tournament results, market-optimized composites, and Dixon-Coles match predictions.",
 };
 
 export default function MethodologyPage() {
@@ -12,7 +12,7 @@ export default function MethodologyPage() {
       <div>
         <h1 className="text-xl font-bold">Methodology</h1>
         <p className="text-sm text-gray-400">
-          How we rank international soccer teams and predict match outcomes
+          How we rank international soccer teams, predict match outcomes, and simulate the World Cup
         </p>
       </div>
 
@@ -22,107 +22,187 @@ export default function MethodologyPage() {
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
           <p>
-            Our ranking system is a hybrid of two independently strong
-            approaches, optimized for predicting major tournament outcomes:
+            We maintain <strong>12 ranking models</strong> spanning Elo variants,
+            Bayesian ratings, pairwise solvers, ordinal regression, and
+            market-optimized composites. Each model was backtested against 1,952
+            matches across 22 major tournaments and World Cup qualifiers (2013&ndash;2024).
           </p>
-          <ol>
-            <li>
-              <strong>Match-Based Elo Ratings (70% weight)</strong> — A modified
-              Elo system processing all international &quot;A&quot; matches back to 1998,
-              with offensive/defensive sub-ratings, goal difference multipliers,
-              home advantage, and match importance weighting.
-            </li>
-            <li>
-              <strong>Roster-Based Strength Estimate (30% weight)</strong> — An
-              aggregation of individual player quality derived from club
-              performance data across 30+ leagues, weighted by position.
-            </li>
-          </ol>
           <p>
-            This mirrors the general architecture used by FiveThirtyEight&apos;s SPI
-            system but with a more granular player model and a separate
-            offensive/defensive decomposition at every level.
+            Our <strong>primary ranking</strong> is the <strong>Grid-Optimized Blend</strong>:
+            a 70/30 weighted average of the Combined rating and Bradley-Terry rating.
+            This composite was selected by running 5,000-iteration Monte Carlo World Cup
+            simulations with each of 9 individual models, comparing the resulting
+            championship probabilities against sportsbook consensus odds (FanDuel,
+            DraftKings, bet365), and grid-searching optimal blend weights to minimize
+            mean squared error vs. the market.
+          </p>
+          <p>
+            Market alignment: <strong>MSE = 0.000274</strong>, Spearman rank correlation{" "}
+            <strong>r = 0.907</strong>, 100% overlap with the sportsbooks&apos; top 5 favorites.
           </p>
         </div>
       </section>
 
       <section className="overflow-hidden rounded border border-gray-200">
         <div className="bg-[#1a2b4a] px-4 py-2">
-          <h2 className="text-sm font-semibold text-white">Component 1: Match-Based Elo</h2>
+          <h2 className="text-sm font-semibold text-white">Individual Rating Models (9)</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
+          <h4>Elo (FIFA-aligned)</h4>
           <p>
-            Each team maintains two Elo sub-ratings &mdash;{" "}
-            <strong>Offensive Elo</strong> and <strong>Defensive Elo</strong>{" "}
-            &mdash; rather than a single number.
+            Modified Elo processing all international matches from 2014 onward.
+            Uses <strong>600-point scaling</strong> (FIFA standard, not 400),
+            offensive/defensive sub-ratings with a <strong>50/50 split</strong>,
+            and adaptive goal-difference multipliers that scale with a team&apos;s
+            win rate lopsidedness.
           </p>
-          <h4>Core Formula</h4>
-          <pre className="font-mono text-sm bg-gray-50 p-3 rounded">
-            R_new = R_old + K * G * (W - W_e)
+          <pre className="font-mono text-xs bg-gray-50 p-3 rounded">
+{`R_new = R_old + K * G * (W - W_e)
+W_e = 1 / (1 + 10^((R_opp - R_team) / 600))
+
+K values:  Friendly=10, Nations League=15, Qualifier=25
+           Tournament Group=35, Tournament KO=40, WC KO=60
+
+PSO: Winner W=0.75, Loser W=0.5 (treated as draw)
+Knockout loss protection: negative deltas clamped to 0
+Annual mean reversion: 8% pull toward 1500`}
           </pre>
-          <ul>
-            <li>
-              <strong>K (importance weight):</strong> Ranges from 15 (friendlies)
-              to 55 (World Cup knockouts)
-            </li>
-            <li>
-              <strong>G (goal difference multiplier):</strong> 1.0 for 1-goal wins,
-              up to 3.0 for large margins
-            </li>
-            <li>
-              <strong>W:</strong> 1 (win), 0.5 (draw), 0 (loss). Penalty shootouts:
-              0.75/0.25
-            </li>
-            <li>
-              <strong>W_e (expected result):</strong> 1 / (1 + 10^((R_opp -
-              R_team) / 400))
-            </li>
-          </ul>
-          <h4>Home Advantage</h4>
+
+          <h4>Bradley-Terry (Equilibrium MLE)</h4>
           <p>
-            +100 Elo points for competitive home matches, +75 for friendlies.
-            Neutral venues receive no bonus.
+            Batch Newton-Raphson solver finding ratings where each team&apos;s weighted
+            expected wins equal their weighted actual wins. Uses 2-year half-life
+            time decay, empirical scoreline W-values (sigmoid fit on 49,000+ matches),
+            and fixed 50-point home bonus. Single rating per team (not off/def split).
           </p>
-          <h4>Offensive/Defensive Split</h4>
+
+          <h4>Glicko-2</h4>
           <p>
-            After each match, the adjustment is applied to both sub-ratings with
-            a 60/40 split based on the scoring pattern. A 2-0 win adjusts
-            Offensive Elo by 60% and Defensive Elo by 40%.
+            Bayesian rating with uncertainty tracking (rating deviation) and volatility.
+            Teams with fewer matches have wider confidence intervals. Per-match updates
+            via the full Glicko-2 algorithm (Illinois method for volatility estimation).
+            Best individual accuracy in backtesting: <strong>59.3%</strong>.
+          </p>
+
+          <h4>Berrar k-NN</h4>
+          <p>
+            Elo base rating augmented with k-nearest-neighbor adjustments: when predicting
+            a match, each team&apos;s recent results against opponents of similar strength
+            modify the prediction. Uses 10 nearest neighbors with a distance kernel.
+          </p>
+
+          <h4>Pi-Ratings (Constantinou &amp; Fenton, 2013)</h4>
+          <p>
+            Separate home/away ratings with log-scaled error updates and
+            cross-context learning (home results nudge away rating and vice versa).
+          </p>
+
+          <h4>Importance-Weighted Pi-Ratings</h4>
+          <p>
+            Pi-ratings with match importance scaling: World Cup knockout matches
+            produce 3x larger updates than friendlies. Best composite score in
+            backtesting: <strong>Brier = 0.536</strong>.
+          </p>
+
+          <h4>Margin-Optimized Elo</h4>
+          <p>
+            Elo variant with heavy goal-difference multiplier: G = 1 + 0.5 &middot; ln(1 + |gd|).
+            Emphasizes margin of victory for better score prediction.
+          </p>
+
+          <h4>Ordered Probit</h4>
+          <p>
+            Models goal difference directly as an ordinal outcome with latent team
+            strengths and threshold cutpoints. Best margin prediction in backtesting.
+          </p>
+
+          <h4>Combined (Elo + Roster)</h4>
+          <p>
+            50/50 blend of match-based Elo and EA FC squad quality ratings (Razali/Yeung
+            methodology: 35 player attributes &rarr; 7 clusters &rarr; 4 positions &rarr;
+            offensive/defensive decomposition). Confederation penalty applied
+            (UEFA/CONMEBOL: 0, CONCACAF: 15, CAF/AFC: 30, OFC: 40 Elo points).
           </p>
         </div>
       </section>
 
       <section className="overflow-hidden rounded border border-gray-200">
         <div className="bg-[#1a2b4a] px-4 py-2">
-          <h2 className="text-sm font-semibold text-white">Component 2: Roster-Based Strength</h2>
+          <h2 className="text-sm font-semibold text-white">Composite Rankings (3)</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
           <p>
-            Each national team&apos;s squad is rated by aggregating individual player
-            scores derived from club performance. Player ratings are
-            position-dependent, using metrics like:
+            Composites were optimized by comparing Monte Carlo World Cup championship
+            probabilities against sportsbook consensus odds.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Composite</th>
+                <th>Formula</th>
+                <th>MSE vs Market</th>
+                <th>Corr</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Grid-Optimized</strong></td>
+                <td>70% Combined + 30% BT</td>
+                <td>0.000274</td>
+                <td>0.907</td>
+              </tr>
+              <tr>
+                <td>Top-3 Equal</td>
+                <td>33% Combined + 33% BT + 33% OP</td>
+                <td>0.000438</td>
+                <td>0.877</td>
+              </tr>
+              <tr>
+                <td>Backtested+Market</td>
+                <td>50% IW Pi + 50% Combined</td>
+                <td>0.000484</td>
+                <td>0.808</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded border border-gray-200">
+        <div className="bg-[#1a2b4a] px-4 py-2">
+          <h2 className="text-sm font-semibold text-white">Backtesting</h2>
+        </div>
+        <div className="prose prose-neutral max-w-none p-4 text-sm">
+          <p>
+            All models were evaluated via <strong>walk-forward backtesting</strong> across
+            22 tournament windows totaling 1,952 test matches:
           </p>
           <ul>
-            <li>
-              <strong>Forwards:</strong> npxG/90, xA/90, shot-creating actions,
-              progressive carries
-            </li>
-            <li>
-              <strong>Midfielders:</strong> Progressive passes, xA/90, tackles +
-              interceptions
-            </li>
-            <li>
-              <strong>Defenders:</strong> Tackles + interceptions, aerial duels,
-              progressive passes, clean sheets
-            </li>
-            <li>
-              <strong>Goalkeepers:</strong> PSxG-GA/90, save %, distribution
-            </li>
+            <li>World Cup 2014, 2018, 2022</li>
+            <li>Euro 2016, 2020, 2024</li>
+            <li>Copa Am&eacute;rica 2015&ndash;2024 (5 editions)</li>
+            <li>AFCON 2015&ndash;2023 (5 editions)</li>
+            <li>Asian Cup 2015, 2019, 2023</li>
+            <li>World Cup Qualifiers (3 cycles)</li>
           </ul>
           <p>
-            All per-90 stats are multiplied by a league quality coefficient
-            (e.g., Premier League: 1.00, La Liga: 0.98, MLS: 0.72) derived from
-            continental competition results.
+            For each window, models train on all matches before the tournament,
+            then predict each tournament match. Metrics:
+          </p>
+          <ul>
+            <li><strong>Brier score:</strong> Squared error on 3-way outcome probabilities (H/D/A)</li>
+            <li><strong>Margin MAE:</strong> Absolute error on predicted goal difference</li>
+            <li><strong>Goals MAE:</strong> Absolute error on predicted total goals</li>
+          </ul>
+          <p>
+            Penalty shootout matches are treated as <strong>draws</strong> for evaluation
+            (the model predicts regulation-time outcome). World Cup matches are
+            weighted <strong>3x</strong> in all metrics.
+          </p>
+          <p>
+            Composite score: 60% Brier + 25% Margin MAE + 15% Goals MAE
+            (min-max normalized across models per tournament, then match-weighted
+            average across all windows).
           </p>
         </div>
       </section>
@@ -133,46 +213,90 @@ export default function MethodologyPage() {
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
           <p>
-            Match predictions use a <strong>Dixon-Coles + Poisson</strong> model:
+            Match predictions use a <strong>Dixon-Coles + Poisson</strong> log-linear model:
           </p>
-          <ol>
-            <li>
-              Calculate expected goals for each team based on offensive/defensive
-              ratings
-            </li>
-            <li>
-              Generate a Poisson probability matrix for each possible scoreline
-            </li>
-            <li>
-              Apply Dixon-Coles correction to adjust low-scoring outcomes (0-0,
-              1-0, 0-1, 1-1)
-            </li>
-            <li>
-              Apply diagonal inflation (~9%) to correct for underestimated draw
-              probabilities
-            </li>
-          </ol>
+          <pre className="font-mono text-xs bg-gray-50 p-3 rounded">
+{`z_off = (team_off - avg_off) / std_off
+z_def = (team_def - avg_def) / std_def
+
+λ_home = baseline * exp(0.38 * (z_off_home + z_def_away)) * HA
+λ_away = baseline * exp(0.38 * (z_off_away + z_def_home))
+
+Baseline goals: Friendly=1.42, Qualifier=1.32,
+                Group=1.30, Knockout=1.18
+Home advantage: per-team Bayesian estimate (default 1.22x)
+Dixon-Coles rho: -0.06 (adjusts 0-0, 1-0, 0-1, 1-1)
+Diagonal inflation: 2-10% (context-dependent draw boost)
+Sensitivity: 0.38 (calibrated to match WC sportsbook odds)`}
+          </pre>
           <p>
-            The output is a full matrix of P(home_score, away_score) for all
-            plausible scorelines, summed to produce win/draw/loss probabilities.
+            Output: full scoreline probability matrix (up to 10&times;10 goals),
+            summed to produce win/draw/loss probabilities and expected goals.
           </p>
         </div>
       </section>
 
       <section className="overflow-hidden rounded border border-gray-200">
         <div className="bg-[#1a2b4a] px-4 py-2">
-          <h2 className="text-sm font-semibold text-white">Final Rating</h2>
+          <h2 className="text-sm font-semibold text-white">World Cup Simulation</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
-          <pre className="font-mono text-sm bg-gray-50 p-3 rounded">
-{`Team_Offensive = 0.70 * Elo_Offensive + 0.30 * Roster_Offensive
-Team_Defensive = 0.70 * Elo_Defensive + 0.30 * Roster_Defensive
-Team_Overall = (Team_Offensive + (3000 - Team_Defensive)) / 2`}
+          <p>
+            World Cup 2026 odds are produced via{" "}
+            <strong>100,000 Monte Carlo simulations</strong> of the full tournament:
+          </p>
+          <ol>
+            <li>
+              <strong>Playoffs:</strong> Simulate 4 UEFA and 2 FIFA intercontinental
+              playoff paths (single-leg semi + final)
+            </li>
+            <li>
+              <strong>Group stage:</strong> Round-robin within 12 groups of 4.
+              Host nations (US, Mexico, Canada) receive their per-team home
+              advantage when playing in their country
+            </li>
+            <li>
+              <strong>3rd-place qualifying:</strong> Best 8 of 12 third-place teams
+              advance, assigned to R32 slots via constraint satisfaction
+            </li>
+            <li>
+              <strong>Knockout rounds:</strong> R32 &rarr; R16 &rarr; QF &rarr; SF &rarr; Final.
+              Drawn matches go to extra time (0.27x scoring rate) then penalties
+            </li>
+            <li>
+              <strong>Penalty model:</strong> Base 50% + quality edge (sigmoid of
+              Elo gap, &plusmn;150 Elo = &plusmn;8%) + 4% crowd advantage for
+              non-neutral venues
+            </li>
+          </ol>
+          <p>
+            Ratings used: <strong>Grid-Optimized</strong> (70% Combined + 30% BT).
+            Per-team home advantage: Mexico 1.30x, US 1.33x, Canada 1.51x
+            (Bayesian estimates from match history).
+          </p>
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded border border-gray-200">
+        <div className="bg-[#1a2b4a] px-4 py-2">
+          <h2 className="text-sm font-semibold text-white">Home Advantage</h2>
+        </div>
+        <div className="prose prose-neutral max-w-none p-4 text-sm">
+          <p>
+            Per-team home advantage is a <strong>Bayesian estimate</strong> from
+            each team&apos;s home vs. away goal-scoring ratio:
+          </p>
+          <pre className="font-mono text-xs bg-gray-50 p-3 rounded">
+{`Prior: 1.22x (global mean), weight of 30 equivalent matches
+Observed: home goals/game ÷ away goals/game
+Posterior: (prior_weight * prior + n * observed) / (prior_weight + n)
+Clamped to [0.80, 2.00]
+Annual decay: 15%`}
           </pre>
           <p>
-            The defensive rating is inverted (lower = better defense), then
-            combined with the offensive rating to produce the overall score that
-            determines ranking order.
+            Applied as an xG multiplier in the prediction engine. Converted to
+            Elo points for the Elo expected result calculation:
+            HA_bonus = ln(homeAdvantage) &times; 150.
           </p>
         </div>
       </section>
@@ -184,22 +308,29 @@ Team_Overall = (Team_Offensive + (3000 - Team_Defensive)) / 2`}
         <div className="prose prose-neutral max-w-none p-4 text-sm">
           <ul>
             <li>
-              <strong>Match results:</strong> Kaggle international football
-              results dataset (1872&ndash;present) + API-Football for recent matches
+              <strong>Match results:</strong> Kaggle international football results
+              dataset (49,000+ matches, 1872&ndash;present)
             </li>
             <li>
-              <strong>Player statistics:</strong> FBref (via web scraping) for
-              Big 5 leagues + 15 additional leagues
+              <strong>Penalty shootouts:</strong> Kaggle shootouts dataset (665 PSO records)
             </li>
             <li>
-              <strong>Rosters & market values:</strong> Transfermarkt datasets
+              <strong>Squad quality:</strong> EA FC 24 player ratings (180,000+ players,
+              35 attributes per player) via stefanoleone992/ea-sports-fc-24 dataset
+            </li>
+            <li>
+              <strong>Betting market odds:</strong> Consensus from FanDuel, DraftKings,
+              bet365 (March 2026) for WC 2026 championship futures
             </li>
           </ul>
           <h4>References</h4>
           <ul>
-            <li>Dixon, M.J. & Coles, S.G. (1997). Modelling Association Football Scores and Inefficiencies in the Football Betting Market</li>
+            <li>Dixon, M.J. &amp; Coles, S.G. (1997). Modelling Association Football Scores and Inefficiencies in the Football Betting Market</li>
+            <li>Constantinou, A.C. &amp; Fenton, N.E. (2013). Determining the number of goals in association football using Pi-ratings</li>
+            <li>Glickman, M.E. (2001). Dynamic paired comparison models with stochastic variances</li>
+            <li>Berrar, D. et al. (2019). Incorporating domain knowledge in machine learning for soccer outcome prediction</li>
+            <li>Razali, N. &amp; Yeung, C.Y. (2023). Framework of interpretable match results prediction in football with FIFA ratings</li>
             <li>Elo, A. (1978). The Rating of Chessplayers, Past and Present</li>
-            <li>FiveThirtyEight SPI Methodology</li>
           </ul>
         </div>
       </section>

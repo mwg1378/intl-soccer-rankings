@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "International Soccer Rankings",
   description:
-    "A data-driven international men's soccer ranking system combining player club performance with match outcomes, featuring score-level probability predictions for any matchup.",
+    "Data-driven international soccer rankings powered by 12 backtested models (Elo, Glicko-2, Bradley-Terry, and more), optimized against betting market odds. Includes Dixon-Coles match predictions and 100K-iteration Monte Carlo World Cup 2026 simulations.",
 };
 
 export default function RootLayout({
