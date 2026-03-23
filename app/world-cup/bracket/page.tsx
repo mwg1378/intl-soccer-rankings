@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { BracketTable } from "@/components/world-cup/bracket-table";
+import { KnockoutBracket } from "@/components/world-cup/knockout-bracket";
 
 export const dynamic = "force-dynamic";
 
@@ -39,14 +39,13 @@ export default async function BracketPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Round of 32 Bracket Probabilities</h2>
+        <h2 className="text-xl font-semibold">Knockout: Who Plays Where</h2>
         <p className="text-sm text-gray-400">
-          Probability each team appears in each R32 bracket slot. Especially
-          interesting for 3rd-place team assignments which vary based on which
-          groups produce qualifying 3rd-place teams.
+          Probability each team appears in each knockout bracket slot, based on
+          group finishing position and 3rd-place assignment simulations.
         </p>
       </div>
-      <BracketTable bracketOdds={bracketOdds} groupOdds={groupOdds} />
+      <KnockoutBracket bracketOdds={bracketOdds} groupOdds={groupOdds} />
       <p className="text-xs text-gray-400 text-center">
         Based on {sim.iterations.toLocaleString()} Monte Carlo simulations |
         Last updated {sim.createdAt.toLocaleDateString("en-US", {

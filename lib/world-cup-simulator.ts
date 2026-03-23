@@ -437,10 +437,21 @@ export function runSimulation(
     qualifierCounters.set(`FIFA_${pathId}`, new Map());
   }
 
-  // Initialize bracket counters for each R32 match
+  // Initialize bracket counters for ALL knockout matches (R32, R16, QF, SF, 3P, Final)
   for (const m of R32_MATCHES) {
     bracketCounters.set(String(m.num), new Map());
   }
+  for (const m of R16_MATCHES) {
+    bracketCounters.set(String(m.num), new Map());
+  }
+  for (const m of QF_MATCHES) {
+    bracketCounters.set(String(m.num), new Map());
+  }
+  for (const m of SF_MATCHES) {
+    bracketCounters.set(String(m.num), new Map());
+  }
+  bracketCounters.set(String(THIRD_PLACE_MATCH.num), new Map());
+  bracketCounters.set(String(FINAL_MATCH.num), new Map());
 
   // All possible team slugs
   const allTeamSlugs = new Set<string>();
@@ -652,6 +663,10 @@ export function runSimulation(
       const awayTd = teamDataMap.get(dbName(awayName));
       if (homeTd) getOrCreateAdvCounter(homeTd.slug).r16++;
       if (awayTd) getOrCreateAdvCounter(awayTd.slug).r16++;
+      // Record bracket slot appearance
+      const bc16 = bracketCounters.get(String(m.num))!;
+      if (homeTd) bc16.set(homeTd.slug, (bc16.get(homeTd.slug) ?? 0) + 1);
+      if (awayTd) bc16.set(awayTd.slug, (bc16.get(awayTd.slug) ?? 0) + 1);
 
       const winner = koMatch(homeName, awayName, m.num);
       matchWinners.set(m.num, winner);
@@ -668,6 +683,9 @@ export function runSimulation(
       const awayTd = teamDataMap.get(dbName(awayName));
       if (homeTd) getOrCreateAdvCounter(homeTd.slug).qf++;
       if (awayTd) getOrCreateAdvCounter(awayTd.slug).qf++;
+      const bcqf = bracketCounters.get(String(m.num))!;
+      if (homeTd) bcqf.set(homeTd.slug, (bcqf.get(homeTd.slug) ?? 0) + 1);
+      if (awayTd) bcqf.set(awayTd.slug, (bcqf.get(awayTd.slug) ?? 0) + 1);
 
       const winner = koMatch(homeName, awayName, m.num);
       matchWinners.set(m.num, winner);
@@ -684,10 +702,26 @@ export function runSimulation(
       const awayTd = teamDataMap.get(dbName(awayName));
       if (homeTd) getOrCreateAdvCounter(homeTd.slug).sf++;
       if (awayTd) getOrCreateAdvCounter(awayTd.slug).sf++;
+      const bcsf = bracketCounters.get(String(m.num))!;
+      if (homeTd) bcsf.set(homeTd.slug, (bcsf.get(homeTd.slug) ?? 0) + 1);
+      if (awayTd) bcsf.set(awayTd.slug, (bcsf.get(awayTd.slug) ?? 0) + 1);
 
       const winner = koMatch(homeName, awayName, m.num);
       matchWinners.set(m.num, winner);
       matchLosers.set(m.num, winner === homeName ? awayName : homeName);
+    }
+
+    // 3rd Place Match
+    {
+      const homeName = matchLosers.get(THIRD_PLACE_MATCH.homeLoss);
+      const awayName = matchLosers.get(THIRD_PLACE_MATCH.awayLoss);
+      if (homeName && awayName) {
+        const bc3p = bracketCounters.get(String(THIRD_PLACE_MATCH.num))!;
+        const homeTd = teamDataMap.get(dbName(homeName));
+        const awayTd = teamDataMap.get(dbName(awayName));
+        if (homeTd) bc3p.set(homeTd.slug, (bc3p.get(homeTd.slug) ?? 0) + 1);
+        if (awayTd) bc3p.set(awayTd.slug, (bc3p.get(awayTd.slug) ?? 0) + 1);
+      }
     }
 
     // Final
@@ -699,6 +733,9 @@ export function runSimulation(
         const awayTd = teamDataMap.get(dbName(awayName));
         if (homeTd) getOrCreateAdvCounter(homeTd.slug).final++;
         if (awayTd) getOrCreateAdvCounter(awayTd.slug).final++;
+        const bcf = bracketCounters.get(String(FINAL_MATCH.num))!;
+        if (homeTd) bcf.set(homeTd.slug, (bcf.get(homeTd.slug) ?? 0) + 1);
+        if (awayTd) bcf.set(awayTd.slug, (bcf.get(awayTd.slug) ?? 0) + 1);
 
         const winner = koMatch(homeName, awayName, FINAL_MATCH.num);
         const td = teamDataMap.get(dbName(winner));
@@ -795,8 +832,9 @@ export function runSimulation(
     };
   }
 
-  // Bracket odds (R32 matches)
-  const r32Descriptions: Record<number, string> = {
+  // Bracket odds (ALL knockout matches)
+  const matchDescriptions: Record<number, string> = {
+    // R32
     73: "2nd Grp A vs 2nd Grp B",
     74: "1st Grp E vs 3rd Place",
     75: "1st Grp F vs 2nd Grp C",
@@ -813,6 +851,26 @@ export function runSimulation(
     86: "1st Grp J vs 2nd Grp H",
     87: "1st Grp K vs 3rd Place",
     88: "2nd Grp D vs 2nd Grp G",
+    // R16
+    89: "W74 vs W77 (L-QF1)",
+    90: "W73 vs W75 (L-QF1)",
+    91: "W76 vs W78 (L-QF3)",
+    92: "W79 vs W80 (L-QF3)",
+    93: "W81 vs W82 (R-QF2)",
+    94: "W83 vs W84 (R-QF2)",
+    95: "W85 vs W86 (R-QF4)",
+    96: "W87 vs W88 (R-QF4)",
+    // QF
+    97: "QF1 (Left Upper)",
+    98: "QF2 (Right Upper)",
+    99: "QF3 (Left Lower)",
+    100: "QF4 (Right Lower)",
+    // SF
+    101: "SF1 — QF1 vs QF2",
+    102: "SF2 — QF3 vs QF4",
+    // 3rd Place & Final
+    103: "Third Place Match",
+    104: "Final",
   };
 
   for (const [matchNum, counter] of bracketCounters) {
@@ -821,7 +879,7 @@ export function runSimulation(
       teams[slug] = count / iterations;
     }
     bracketOddsResult[matchNum] = {
-      description: r32Descriptions[parseInt(matchNum)] ?? `Match ${matchNum}`,
+      description: matchDescriptions[parseInt(matchNum)] ?? `Match ${matchNum}`,
       teams,
     };
   }
