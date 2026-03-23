@@ -47,3 +47,5 @@ next-env.d.ts
 
 # FIFA/EA FC player rating data (large CSV, download from Kaggle)
 scripts/data/fifa-ratings/
+backtest/results/
+backtest/catboost_info/

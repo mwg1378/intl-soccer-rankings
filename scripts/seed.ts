@@ -44,6 +44,41 @@ import {
   solveBradleyTerry,
   type RawMatchInput,
 } from "../lib/bt-engine";
+import {
+  processMatch as processGlickoMatch,
+  initGlicko,
+  glickoToDisplay,
+  rdToDisplay,
+  applyGlickoReversion,
+  type GlickoState,
+} from "../lib/glicko2-engine";
+import {
+  processBerrarMatch,
+  initBerrar,
+  applyBerrarReversion,
+  type BerrarState,
+} from "../lib/berrar-engine";
+import {
+  processOpMatch,
+  initOp,
+  opToDisplay,
+  applyOpReversion,
+  type OpState,
+} from "../lib/ordered-probit-engine";
+import {
+  updateIwPiRatings,
+  initIwPi,
+  iwPiOverall,
+  applyIwPiMeanReversion,
+  type IwPiTeamRatings,
+} from "../lib/iw-pi-engine";
+import {
+  processMoEloMatch,
+  initMoElo,
+  moEloOverall,
+  applyMoEloReversion,
+  type MoEloState,
+} from "../lib/mo-elo-engine";
 
 // --- Config ---
 const START_DATE = "2014-01-01"; // Extended back to 2014 for more match history
@@ -372,6 +407,20 @@ async function main() {
     });
   }
 
+  // New model states
+  const glickoState = new Map<string, GlickoState>();
+  const berrarState = new Map<string, BerrarState>();
+  const opState = new Map<string, OpState>();
+  const iwPiState = new Map<string, IwPiTeamRatings>();
+  const moEloState = new Map<string, MoEloState>();
+  for (const [name] of teamMap) {
+    glickoState.set(name, initGlicko());
+    berrarState.set(name, initBerrar());
+    opState.set(name, initOp());
+    iwPiState.set(name, initIwPi());
+    moEloState.set(name, initMoElo());
+  }
+
   // Collect raw match data for BT solver
   const btRawMatches: RawMatchInput[] = [];
 
@@ -395,6 +444,21 @@ async function main() {
       }
       for (const [name, ha] of homeAwayState) {
         homeAwayState.set(name, applyHomeAwayReversion(ha));
+      }
+      for (const [name, g] of glickoState) {
+        glickoState.set(name, applyGlickoReversion(g));
+      }
+      for (const [name, b] of berrarState) {
+        berrarState.set(name, applyBerrarReversion(b));
+      }
+      for (const [name, o] of opState) {
+        opState.set(name, applyOpReversion(o));
+      }
+      for (const [name, iwp] of iwPiState) {
+        iwPiState.set(name, applyIwPiMeanReversion(iwp));
+      }
+      for (const [name, mo] of moEloState) {
+        moEloState.set(name, applyMoEloReversion(mo));
       }
       // Razali roster ratings are applied post-seed via fetch-rosters.ts
     }
@@ -452,6 +516,41 @@ async function main() {
     const piResult = updatePiRatings(homePi, awayPi, homeScore, awayScore, DEFAULT_PI_PARAMS, isNeutral);
     piState.set(m.home_team, piResult.homeTeam);
     piState.set(m.away_team, piResult.awayTeam);
+
+    // Update Glicko-2
+    const homeGlicko = glickoState.get(m.home_team)!;
+    const awayGlicko = glickoState.get(m.away_team)!;
+    const glickoResult = processGlickoMatch(homeGlicko, awayGlicko, homeScore, awayScore, homeScorePenalties, awayScorePenalties);
+    glickoState.set(m.home_team, glickoResult.home);
+    glickoState.set(m.away_team, glickoResult.away);
+
+    // Update Berrar k-NN
+    const homeBerrar = berrarState.get(m.home_team)!;
+    const awayBerrar = berrarState.get(m.away_team)!;
+    const berrarResult = processBerrarMatch(homeBerrar, awayBerrar, homeScore, awayScore, homeScorePenalties, awayScorePenalties);
+    berrarState.set(m.home_team, berrarResult.home);
+    berrarState.set(m.away_team, berrarResult.away);
+
+    // Update Ordered Probit
+    const homeOp = opState.get(m.home_team)!;
+    const awayOp = opState.get(m.away_team)!;
+    const opResult = processOpMatch(homeOp, awayOp, homeScore, awayScore, isNeutral);
+    opState.set(m.home_team, opResult.home);
+    opState.set(m.away_team, opResult.away);
+
+    // Update Importance-Weighted Pi
+    const homeIwPi = iwPiState.get(m.home_team)!;
+    const awayIwPi = iwPiState.get(m.away_team)!;
+    const iwPiResult = updateIwPiRatings(homeIwPi, awayIwPi, homeScore, awayScore, isNeutral, importance);
+    iwPiState.set(m.home_team, iwPiResult.homeTeam);
+    iwPiState.set(m.away_team, iwPiResult.awayTeam);
+
+    // Update Margin-Optimized Elo
+    const homeMoElo = moEloState.get(m.home_team)!;
+    const awayMoElo = moEloState.get(m.away_team)!;
+    const moEloResult = processMoEloMatch(homeMoElo, awayMoElo, homeScore, awayScore, importance, isNeutral, homeScorePenalties, awayScorePenalties);
+    moEloState.set(m.home_team, moEloResult.home);
+    moEloState.set(m.away_team, moEloResult.away);
 
     // Update win rate tracking
     const homeWins = homeScore > awayScore ? 1 : homeScore === awayScore ? 0.5 : 0;
@@ -607,6 +706,15 @@ async function main() {
         piHome: (piState.get(t.name) ?? { home: 0 }).home,
         piAway: (piState.get(t.name) ?? { away: 0 }).away,
         piOverall: piOverall(piState.get(t.name) ?? { home: 0, away: 0 }),
+        glickoRating: glickoToDisplay(glickoState.get(t.name) ?? initGlicko()),
+        glickoRd: rdToDisplay(glickoState.get(t.name) ?? initGlicko()),
+        berrarRating: (berrarState.get(t.name) ?? initBerrar()).rating,
+        opRating: opToDisplay(opState.get(t.name) ?? initOp()),
+        iwPiHome: (iwPiState.get(t.name) ?? initIwPi()).home,
+        iwPiAway: (iwPiState.get(t.name) ?? initIwPi()).away,
+        iwPiOverall: iwPiOverall(iwPiState.get(t.name) ?? initIwPi()),
+        moEloOffensive: (moEloState.get(t.name) ?? initMoElo()).offensive,
+        moEloDefensive: (moEloState.get(t.name) ?? initMoElo()).defensive,
       },
     });
   }
@@ -628,6 +736,15 @@ async function main() {
         piHome: (piState.get(t.name) ?? { home: 0 }).home,
         piAway: (piState.get(t.name) ?? { away: 0 }).away,
         piOverall: piOverall(piState.get(t.name) ?? { home: 0, away: 0 }),
+        glickoRating: glickoToDisplay(glickoState.get(t.name) ?? initGlicko()),
+        glickoRd: rdToDisplay(glickoState.get(t.name) ?? initGlicko()),
+        berrarRating: (berrarState.get(t.name) ?? initBerrar()).rating,
+        opRating: opToDisplay(opState.get(t.name) ?? initOp()),
+        iwPiHome: (iwPiState.get(t.name) ?? initIwPi()).home,
+        iwPiAway: (iwPiState.get(t.name) ?? initIwPi()).away,
+        iwPiOverall: iwPiOverall(iwPiState.get(t.name) ?? initIwPi()),
+        moEloOffensive: (moEloState.get(t.name) ?? initMoElo()).offensive,
+        moEloDefensive: (moEloState.get(t.name) ?? initMoElo()).defensive,
       },
     });
   }
@@ -672,7 +789,60 @@ async function main() {
       },
     });
   }
-  console.log(`   Updated ${btRanked.length} teams with BT ratings\n`);
+  console.log(`   Updated ${btRanked.length} teams with BT ratings`);
+
+  // Compute Glicko, Berrar, OP ranks
+  console.log("   Computing Glicko-2, Berrar k-NN, and Ordered Probit ranks...");
+  const glickoRanked = ranked
+    .map(t => ({ ...t, glickoRating: glickoToDisplay(glickoState.get(t.name) ?? initGlicko()) }))
+    .sort((a, b) => b.glickoRating - a.glickoRating);
+  for (let i = 0; i < glickoRanked.length; i++) {
+    await prisma.team.update({ where: { id: glickoRanked[i].id }, data: { glickoRank: i + 1 } });
+  }
+  for (const t of unranked) {
+    await prisma.team.update({ where: { id: t.id }, data: { glickoRank: 0 } });
+  }
+
+  const berrarRanked = ranked
+    .map(t => ({ ...t, berrarRating: (berrarState.get(t.name) ?? initBerrar()).rating }))
+    .sort((a, b) => b.berrarRating - a.berrarRating);
+  for (let i = 0; i < berrarRanked.length; i++) {
+    await prisma.team.update({ where: { id: berrarRanked[i].id }, data: { berrarRank: i + 1 } });
+  }
+  for (const t of unranked) {
+    await prisma.team.update({ where: { id: t.id }, data: { berrarRank: 0 } });
+  }
+
+  const opRanked = ranked
+    .map(t => ({ ...t, opRating: opToDisplay(opState.get(t.name) ?? initOp()) }))
+    .sort((a, b) => b.opRating - a.opRating);
+  for (let i = 0; i < opRanked.length; i++) {
+    await prisma.team.update({ where: { id: opRanked[i].id }, data: { opRank: i + 1 } });
+  }
+  for (const t of unranked) {
+    await prisma.team.update({ where: { id: t.id }, data: { opRank: 0 } });
+  }
+
+  const iwPiRanked = ranked
+    .map(t => ({ ...t, iwPiOverall: iwPiOverall(iwPiState.get(t.name) ?? initIwPi()) }))
+    .sort((a, b) => b.iwPiOverall - a.iwPiOverall);
+  for (let i = 0; i < iwPiRanked.length; i++) {
+    await prisma.team.update({ where: { id: iwPiRanked[i].id }, data: { iwPiRank: i + 1 } });
+  }
+  for (const t of unranked) {
+    await prisma.team.update({ where: { id: t.id }, data: { iwPiRank: 0 } });
+  }
+
+  const moEloRanked = ranked
+    .map(t => ({ ...t, moEloOverall: moEloOverall(moEloState.get(t.name) ?? initMoElo()) }))
+    .sort((a, b) => b.moEloOverall - a.moEloOverall);
+  for (let i = 0; i < moEloRanked.length; i++) {
+    await prisma.team.update({ where: { id: moEloRanked[i].id }, data: { moEloRank: i + 1 } });
+  }
+  for (const t of unranked) {
+    await prisma.team.update({ where: { id: t.id }, data: { moEloRank: 0 } });
+  }
+  console.log(`   Updated ranks for all 5 new models\n`);
 
   // 6. Create ranking snapshots at key dates (with BT)
   console.log("6. Creating ranking snapshots...");

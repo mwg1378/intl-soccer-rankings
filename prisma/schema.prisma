@@ -66,6 +66,20 @@ model Team {
   piHome                Float    @default(0)
   piAway                Float    @default(0)
   piOverall             Float    @default(0)
+  glickoRating          Float    @default(1500)
+  glickoRd              Float    @default(350)
+  glickoRank            Int      @default(0)
+  berrarRating          Float    @default(1500)
+  berrarRank            Int      @default(0)
+  opRating              Float    @default(0)
+  opRank                Int      @default(0)
+  iwPiHome              Float    @default(0)
+  iwPiAway              Float    @default(0)
+  iwPiOverall           Float    @default(0)
+  iwPiRank              Int      @default(0)
+  moEloOffensive        Float    @default(1500)
+  moEloDefensive        Float    @default(1500)
+  moEloRank             Int      @default(0)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
@@ -172,6 +186,17 @@ model RankingSnapshot {
   rosterDefensive  Float
   btRating         Float?
   btRank           Int?
+  glickoRating     Float?
+  glickoRd         Float?
+  glickoRank       Int?
+  berrarRating     Float?
+  berrarRank       Int?
+  opRating         Float?
+  opRank           Int?
+  iwPiOverall      Float?
+  iwPiRank         Int?
+  moEloOverall     Float?
+  moEloRank        Int?
 
   @@unique([teamId, date])
   @@index([date])
