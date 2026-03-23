@@ -35,6 +35,15 @@ interface Team {
   moEloOffensive: number;
   moEloDefensive: number;
   moEloRank: number;
+  gridOptOff: number;
+  gridOptDef: number;
+  gridOptRank: number;
+  top3Off: number;
+  top3Def: number;
+  top3Rank: number;
+  btMktOff: number;
+  btMktDef: number;
+  btMktRank: number;
 }
 
 type SortKey =
@@ -46,7 +55,10 @@ type SortKey =
   | "berrar"
   | "op"
   | "iwPi"
-  | "moElo";
+  | "moElo"
+  | "gridOpt"
+  | "top3"
+  | "btMkt";
 
 const MODEL_INFO: Record<SortKey, { label: string; href: string; brier: string; acc: string }> = {
   combined: { label: "Combined", href: "/rankings", brier: "—", acc: "—" },
@@ -58,6 +70,9 @@ const MODEL_INFO: Record<SortKey, { label: string; href: string; brier: string; 
   berrar: { label: "Berrar k-NN", href: "/rankings/berrar", brier: "0.540", acc: "58.8%" },
   op: { label: "Ordered Probit", href: "/rankings/op", brier: "0.555", acc: "56.8%" },
   moElo: { label: "Margin-Opt Elo", href: "/rankings/mo-elo", brier: "0.548", acc: "57.2%" },
+  gridOpt: { label: "Grid-Opt*", href: "/rankings/compare", brier: "MSE .00027", acc: "r=.91" },
+  top3: { label: "Top-3 Equal*", href: "/rankings/compare", brier: "MSE .00044", acc: "r=.88" },
+  btMkt: { label: "BT+Market*", href: "/rankings/compare", brier: "MSE .00048", acc: "r=.81" },
 };
 
 const confederationColors: Record<string, string> = {
@@ -78,6 +93,9 @@ function getRank(team: Team, key: SortKey): number {
     case "op": return team.opRank;
     case "iwPi": return team.iwPiRank;
     case "moElo": return team.moEloRank;
+    case "gridOpt": return team.gridOptRank;
+    case "top3": return team.top3Rank;
+    case "btMkt": return team.btMktRank;
     default: return 0;
   }
 }
@@ -93,6 +111,9 @@ function getRating(team: Team, key: SortKey): number {
     case "op": return team.opRating;
     case "iwPi": return team.iwPiOverall;
     case "moElo": return (team.moEloOffensive + (3000 - team.moEloDefensive)) / 2;
+    case "gridOpt": return (team.gridOptOff + (3000 - team.gridOptDef)) / 2;
+    case "top3": return (team.top3Off + (3000 - team.top3Def)) / 2;
+    case "btMkt": return (team.btMktOff + (3000 - team.btMktDef)) / 2;
   }
 }
 
@@ -115,7 +136,7 @@ export default function CompareRankingsPage() {
     return rb - ra;
   });
 
-  const sortKeys: SortKey[] = ["combined", "elo", "bt", "pi", "iwPi", "glicko", "berrar", "op", "moElo"];
+  const sortKeys: SortKey[] = ["gridOpt", "top3", "btMkt", "combined", "elo", "bt", "pi", "iwPi", "glicko", "berrar", "op", "moElo"];
 
   return (
     <div className="space-y-6">

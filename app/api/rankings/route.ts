@@ -35,9 +35,15 @@ export async function GET(request: NextRequest) {
     "iwPiRank",
     "moEloOffensive",
     "moEloRank",
+    "gridOptOff",
+    "gridOptRank",
+    "top3Off",
+    "top3Rank",
+    "btMktOff",
+    "btMktRank",
   ];
   const orderField = validSortFields.includes(sortBy) ? sortBy : "currentRank";
-  const rankFields = ["currentRank", "btRank", "glickoRank", "berrarRank", "opRank", "iwPiRank", "moEloRank"];
+  const rankFields = ["currentRank", "btRank", "glickoRank", "berrarRank", "opRank", "iwPiRank", "moEloRank", "gridOptRank", "top3Rank", "btMktRank"];
   const orderDir = rankFields.includes(orderField) ? "asc" : "desc";
 
   try {

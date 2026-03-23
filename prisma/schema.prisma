@@ -80,6 +80,15 @@ model Team {
   moEloOffensive        Float    @default(1500)
   moEloDefensive        Float    @default(1500)
   moEloRank             Int      @default(0)
+  gridOptOff            Float    @default(1500)
+  gridOptDef            Float    @default(1500)
+  gridOptRank           Int      @default(0)
+  top3Off               Float    @default(1500)
+  top3Def               Float    @default(1500)
+  top3Rank              Int      @default(0)
+  btMktOff              Float    @default(1500)
+  btMktDef              Float    @default(1500)
+  btMktRank             Int      @default(0)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 

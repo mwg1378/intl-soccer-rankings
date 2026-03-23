@@ -79,6 +79,11 @@ import {
   applyMoEloReversion,
   type MoEloState,
 } from "../lib/mo-elo-engine";
+import {
+  gridOptimizedRating,
+  top3EqualRating,
+  backtestedMarketRating,
+} from "../lib/composite-engines";
 
 // --- Config ---
 const START_DATE = "2014-01-01"; // Extended back to 2014 for more match history
@@ -842,7 +847,60 @@ async function main() {
   for (const t of unranked) {
     await prisma.team.update({ where: { id: t.id }, data: { moEloRank: 0 } });
   }
-  console.log(`   Updated ranks for all 5 new models\n`);
+  // Compute composite ratings + ranks
+  console.log("   Computing composite market-aligned ratings...");
+  const compositeData: Array<{
+    id: string; name: string;
+    gridOpt: { offensive: number; defensive: number; overall: number };
+    top3: { offensive: number; defensive: number; overall: number };
+    btMkt: { offensive: number; defensive: number; overall: number };
+  }> = [];
+
+  for (const t of ranked) {
+    const combOff = t.offensive;
+    const combDef = t.defensive;
+    const bt = btRatingByName.get(t.name) ?? 1500;
+    const op = opToDisplay(opState.get(t.name) ?? initOp());
+    const iwPi = iwPiOverall(iwPiState.get(t.name) ?? initIwPi());
+
+    compositeData.push({
+      id: t.id, name: t.name,
+      gridOpt: gridOptimizedRating(combOff, combDef, bt),
+      top3: top3EqualRating(combOff, combDef, bt, op),
+      btMkt: backtestedMarketRating(combOff, combDef, iwPi),
+    });
+  }
+
+  // Grid-Optimized ranks
+  const gridSorted = [...compositeData].sort((a, b) => b.gridOpt.overall - a.gridOpt.overall);
+  for (let i = 0; i < gridSorted.length; i++) {
+    const c = gridSorted[i];
+    await prisma.team.update({ where: { id: c.id }, data: {
+      gridOptOff: c.gridOpt.offensive, gridOptDef: c.gridOpt.defensive, gridOptRank: i + 1,
+    }});
+  }
+  // Top-3 Equal ranks
+  const top3Sorted = [...compositeData].sort((a, b) => b.top3.overall - a.top3.overall);
+  for (let i = 0; i < top3Sorted.length; i++) {
+    const c = top3Sorted[i];
+    await prisma.team.update({ where: { id: c.id }, data: {
+      top3Off: c.top3.offensive, top3Def: c.top3.defensive, top3Rank: i + 1,
+    }});
+  }
+  // Backtested+Market ranks
+  const btMktSorted = [...compositeData].sort((a, b) => b.btMkt.overall - a.btMkt.overall);
+  for (let i = 0; i < btMktSorted.length; i++) {
+    const c = btMktSorted[i];
+    await prisma.team.update({ where: { id: c.id }, data: {
+      btMktOff: c.btMkt.offensive, btMktDef: c.btMkt.defensive, btMktRank: i + 1,
+    }});
+  }
+  for (const t of unranked) {
+    await prisma.team.update({ where: { id: t.id }, data: {
+      gridOptRank: 0, top3Rank: 0, btMktRank: 0,
+    }});
+  }
+  console.log(`   Updated ranks for all 5 individual + 3 composite models\n`);
 
   // 6. Create ranking snapshots at key dates (with BT)
   console.log("6. Creating ranking snapshots...");
