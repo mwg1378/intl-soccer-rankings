@@ -9,8 +9,13 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 const GROUP_IDS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 
 interface MatchPrediction {
+  matchNum: number;
   home: string;
   away: string;
+  date: string;
+  time: string;
+  venue: string;
+  city: string;
   homeXg: number;
   awayXg: number;
   homeWin: number;
@@ -43,7 +48,16 @@ function MatchCard({ match }: { match: MatchPrediction }) {
       "rounded border overflow-hidden",
       match.isPlayoffTeam ? "border-amber-300 bg-amber-50/30" : "border-gray-200",
     )}>
-      {/* Header: teams + xG */}
+      {/* Schedule bar */}
+      <div className={cn(
+        "px-3 py-1.5 text-[11px]",
+        match.isPlayoffTeam ? "bg-amber-100 text-amber-700" : "bg-gray-50 text-gray-500",
+      )}>
+        <span className="font-semibold">{match.date}, {match.time} ET</span>
+        <span className="mx-1">&middot;</span>
+        <span>{match.venue}, {match.city}</span>
+      </div>
+      {/* Teams + xG */}
       <div className="px-3 py-2 flex items-center justify-between">
         <div className="flex-1">
           <div className="font-semibold text-sm">{match.home}</div>
