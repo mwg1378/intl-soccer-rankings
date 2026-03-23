@@ -7,6 +7,14 @@ from backtest.data.loader import MatchRecord
 from backtest.models.base import Prediction
 
 
+def _brier_weight(match: MatchRecord) -> float:
+    """World Cup (non-qualifier) matches count 3x."""
+    t = match.tournament.lower()
+    if "world cup" in t and "qualification" not in t:
+        return 3.0
+    return 1.0
+
+
 @dataclass
 class MatchMetrics:
     """Metrics for a single match prediction."""
@@ -14,6 +22,7 @@ class MatchMetrics:
     margin_ae: float
     goals_ae: float
     correct_outcome: bool
+    weight: float = 1.0
 
 
 @dataclass
@@ -27,11 +36,24 @@ class AggregateMetrics:
 
 
 def compute_match_metrics(pred: Prediction, match: MatchRecord) -> MatchMetrics:
-    """Compute all metrics for a single prediction vs actual result."""
-    # Brier score: sum of squared errors on the 3 outcome probabilities
-    actual_h = 1.0 if match.home_win else 0.0
-    actual_d = 1.0 if match.is_draw else 0.0
-    actual_a = 1.0 if match.away_win else 0.0
+    """Compute all metrics for a single prediction vs actual result.
+
+    PSO matches are treated as draws for Brier/accuracy — the model predicts
+    regulation-time outcome, so a match that goes to penalties was a draw in
+    regulation regardless of what the CSV score says (which may include ET goals).
+    """
+    # If match went to PSO, treat as draw for outcome evaluation
+    is_pso = match.shootout_winner is not None
+    if is_pso:
+        actual_h = 0.0
+        actual_d = 1.0
+        actual_a = 0.0
+        outcome = "D"
+    else:
+        actual_h = 1.0 if match.home_win else 0.0
+        actual_d = 1.0 if match.is_draw else 0.0
+        actual_a = 1.0 if match.away_win else 0.0
+        outcome = match.outcome
 
     brier = (
         (pred.home_win_prob - actual_h) ** 2
@@ -49,29 +71,36 @@ def compute_match_metrics(pred: Prediction, match: MatchRecord) -> MatchMetrics:
     actual_total = match.home_score + match.away_score
     goals_ae = abs(pred_total - actual_total)
 
-    # Correct outcome
-    correct = pred.predicted_outcome == match.outcome
+    # Correct outcome (PSO = draw)
+    correct = pred.predicted_outcome == outcome
 
     return MatchMetrics(
         brier=brier,
         margin_ae=margin_ae,
         goals_ae=goals_ae,
         correct_outcome=correct,
+        weight=_brier_weight(match),
     )
 
 
 def aggregate_metrics(match_metrics: list[MatchMetrics]) -> AggregateMetrics:
-    """Aggregate match-level metrics into averages."""
+    """Aggregate match-level metrics into weighted averages.
+
+    World Cup matches are weighted 3x (via MatchMetrics.weight).
+    """
     if not match_metrics:
         return AggregateMetrics()
 
-    n = len(match_metrics)
+    total_w = sum(m.weight for m in match_metrics)
+    if total_w < 1e-10:
+        return AggregateMetrics(n_matches=len(match_metrics))
+
     return AggregateMetrics(
-        brier=sum(m.brier for m in match_metrics) / n,
-        margin_mae=sum(m.margin_ae for m in match_metrics) / n,
-        goals_mae=sum(m.goals_ae for m in match_metrics) / n,
-        accuracy=sum(1 for m in match_metrics if m.correct_outcome) / n,
-        n_matches=n,
+        brier=sum(m.brier * m.weight for m in match_metrics) / total_w,
+        margin_mae=sum(m.margin_ae * m.weight for m in match_metrics) / total_w,
+        goals_mae=sum(m.goals_ae * m.weight for m in match_metrics) / total_w,
+        accuracy=sum((1 if m.correct_outcome else 0) * m.weight for m in match_metrics) / total_w,
+        n_matches=len(match_metrics),
     )
 
 
