@@ -61,6 +61,7 @@ interface TeamData {
   dbName: string; // DB name
   slug: string;
   ratings: TeamRatings; // current offensive/defensive
+  homeAdvantage?: number; // per-team xG multiplier (default 1.22)
 }
 
 interface GroupStanding {
@@ -107,13 +108,15 @@ function sampleScore(
   homeRatings: TeamRatings,
   awayRatings: TeamRatings,
   neutralVenue: boolean,
-  matchImportance: "TOURNAMENT_GROUP" | "TOURNAMENT_KNOCKOUT" = "TOURNAMENT_GROUP"
+  matchImportance: "TOURNAMENT_GROUP" | "TOURNAMENT_KNOCKOUT" = "TOURNAMENT_GROUP",
+  homeAdvantage?: number,
 ): { homeGoals: number; awayGoals: number } {
   const pred = predictMatch({
     homeTeam: homeRatings,
     awayTeam: awayRatings,
     neutralVenue,
     matchImportance,
+    homeAdvantage,
     avgOffensive: ratingStats.avgOff,
     avgDefensive: ratingStats.avgDef,
     stdOffensive: ratingStats.stdOff,
@@ -145,9 +148,10 @@ function simulateKnockoutMatch(
   awayRatings: TeamRatings,
   homeName: string,
   awayName: string,
-  neutralVenue = true
+  neutralVenue = true,
+  homeAdvantage?: number,
 ): string {
-  const { homeGoals, awayGoals } = sampleScore(homeRatings, awayRatings, neutralVenue, "TOURNAMENT_KNOCKOUT");
+  const { homeGoals, awayGoals } = sampleScore(homeRatings, awayRatings, neutralVenue, "TOURNAMENT_KNOCKOUT", homeAdvantage);
   if (homeGoals > awayGoals) return homeName;
   if (awayGoals > homeGoals) return awayName;
 
@@ -158,6 +162,7 @@ function simulateKnockoutMatch(
     awayTeam: awayRatings,
     neutralVenue,
     matchImportance: "TOURNAMENT_KNOCKOUT",
+    homeAdvantage,
     avgOffensive: ratingStats.avgOff,
     avgDefensive: ratingStats.avgDef,
     stdOffensive: ratingStats.stdOff,
@@ -281,7 +286,9 @@ function simulateGroupStage(
       const home = teamMap.get(dbName(groupTeams[homeIdx]))!;
       const away = teamMap.get(dbName(groupTeams[awayIdx]))!;
       const { homeGoals, awayGoals } = sampleScore(
-        home.ratings, away.ratings, neutralVenue
+        home.ratings, away.ratings, neutralVenue,
+        "TOURNAMENT_GROUP",
+        neutralVenue ? undefined : home.homeAdvantage,
       );
 
       standings[homeIdx].gf += homeGoals;
@@ -589,9 +596,9 @@ export function runSimulation(
 
       if (hostPlaying) {
         const [homeName, awayName] = name1 === hostCountry ? [name1, name2] : [name2, name1];
-        const homeR = teamDataMap.get(dbName(homeName))!.ratings;
+        const homeTd = teamDataMap.get(dbName(homeName))!;
         const awayR = teamDataMap.get(dbName(awayName))!.ratings;
-        return simulateKnockoutMatch(homeR, awayR, homeName, awayName, false);
+        return simulateKnockoutMatch(homeTd.ratings, awayR, homeName, awayName, false, homeTd.homeAdvantage);
       }
 
       return simulateKnockoutMatch(r1, r2, name1, name2, true);

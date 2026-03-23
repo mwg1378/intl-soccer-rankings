@@ -54,28 +54,30 @@ async function main() {
     console.warn(`   WARNING: Missing teams: ${missing.join(", ")}`);
   }
 
-  // Compute rating stats from confederation-adjusted ratings (same scale
-  // as the ratings fed to the simulator — avoids z-score mismatch).
+  // Use Grid-Optimized ratings (70% Combined + 30% BT) — best market alignment
+  // (MSE=0.000274 vs sportsbook odds, Spearman r=0.907, 100% top-5 overlap).
+  console.log(`   Using Grid-Optimized ratings (70% Combined + 30% BT)`);
+
+  // Compute rating stats from grid-optimized ratings
   const allRankedTeams = await prisma.team.findMany({
-    where: { currentRank: { gt: 0 } },
-    select: { currentOffensiveRating: true, currentDefensiveRating: true },
+    where: { gridOptRank: { gt: 0 } },
+    select: { gridOptOff: true, gridOptDef: true },
   });
   const n = allRankedTeams.length;
-  const avgOff = allRankedTeams.reduce((s, t) => s + t.currentOffensiveRating, 0) / n;
-  const avgDef = allRankedTeams.reduce((s, t) => s + t.currentDefensiveRating, 0) / n;
-  const stdOff = Math.sqrt(allRankedTeams.reduce((s, t) => s + (t.currentOffensiveRating - avgOff) ** 2, 0) / n);
-  const stdDef = Math.sqrt(allRankedTeams.reduce((s, t) => s + (t.currentDefensiveRating - avgDef) ** 2, 0) / n);
+  const avgOff = allRankedTeams.reduce((s, t) => s + t.gridOptOff, 0) / n;
+  const avgDef = allRankedTeams.reduce((s, t) => s + t.gridOptDef, 0) / n;
+  const stdOff = Math.sqrt(allRankedTeams.reduce((s, t) => s + (t.gridOptOff - avgOff) ** 2, 0) / n);
+  const stdDef = Math.sqrt(allRankedTeams.reduce((s, t) => s + (t.gridOptDef - avgDef) ** 2, 0) / n);
   console.log(`   Rating stats: avgOff=${avgOff.toFixed(1)}, avgDef=${avgDef.toFixed(1)}, stdOff=${stdOff.toFixed(1)}, stdDef=${stdDef.toFixed(1)}`);
   setRatingStats({ avgOff, avgDef, stdOff, stdDef });
 
-  // Build team data map: dbName → TeamData
-  // Use confederation-adjusted ratings (currentOffensiveRating/currentDefensiveRating)
-  // instead of raw Elo to account for confederation quality differences.
+  // Build team data map using Grid-Optimized ratings + per-team home advantage
   const teamDataMap = new Map<string, {
     name: string;
     dbName: string;
     slug: string;
     ratings: { offensive: number; defensive: number };
+    homeAdvantage?: number;
   }>();
 
   for (const t of teams) {
@@ -84,9 +86,10 @@ async function main() {
       dbName: t.name,
       slug: t.slug,
       ratings: {
-        offensive: t.currentOffensiveRating,
-        defensive: t.currentDefensiveRating,
+        offensive: t.gridOptOff,
+        defensive: t.gridOptDef,
       },
+      homeAdvantage: t.homeAdvantage,
     });
   }
 
