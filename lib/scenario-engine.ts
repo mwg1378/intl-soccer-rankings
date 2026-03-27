@@ -151,7 +151,12 @@ export function maxPossiblePoints(
 }
 
 /**
- * Can a team still mathematically qualify (finish top 2)?
+ * Can a team still mathematically advance past the group stage?
+ *
+ * In the 2026 WC format, top 2 from each group qualify automatically,
+ * plus the 8 best third-place teams (out of 12 groups). So finishing
+ * 3rd is often good enough. A team is only mathematically eliminated
+ * if it cannot finish better than 4th.
  */
 export function canStillQualify(
   team: string,
@@ -160,11 +165,12 @@ export function canStillQualify(
 ): boolean {
   const teamStanding = standings.find((s) => s.team === team);
   if (!teamStanding) return false;
-  if (teamStanding.position <= 2) return true;
+  // Top 3 can potentially advance (top 2 auto-qualify, 3rd has a good chance)
+  if (teamStanding.position <= 3) return true;
 
   const maxPts = maxPossiblePoints(team, matches, teamStanding.points);
-  // If we can get more points than the 2nd-place team currently has, still possible
-  const secondPlace = standings[1];
-  if (!secondPlace) return true;
-  return maxPts >= secondPlace.points;
+  // If we can still overtake the 3rd-place team, we can still qualify
+  const thirdPlace = standings[2];
+  if (!thirdPlace) return true;
+  return maxPts >= thirdPlace.points;
 }

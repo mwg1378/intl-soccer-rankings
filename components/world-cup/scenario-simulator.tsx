@@ -163,6 +163,46 @@ export function ScenarioSimulator() {
     );
   }, []);
 
+  // "Chalk" scenario: favorites win by 1 goal
+  const handleChalk = useCallback(() => {
+    setMatches((prev) =>
+      prev.map((m) => {
+        // First listed team in the group is typically the favorite (seeded pot 1)
+        const homeFirst = teams.indexOf(m.home) < teams.indexOf(m.away);
+        return {
+          ...m,
+          homeGoals: homeFirst ? 2 : 0,
+          awayGoals: homeFirst ? 0 : 2,
+        };
+      })
+    );
+  }, [teams]);
+
+  // "Chaos" scenario: every underdog wins
+  const handleChaos = useCallback(() => {
+    setMatches((prev) =>
+      prev.map((m) => {
+        const homeFirst = teams.indexOf(m.home) < teams.indexOf(m.away);
+        return {
+          ...m,
+          homeGoals: homeFirst ? 0 : 3,
+          awayGoals: homeFirst ? 3 : 0,
+        };
+      })
+    );
+  }, [teams]);
+
+  // "All Draws" scenario
+  const handleAllDraws = useCallback(() => {
+    setMatches((prev) =>
+      prev.map((m) => ({
+        ...m,
+        homeGoals: 1,
+        awayGoals: 1,
+      }))
+    );
+  }, []);
+
   const standings = useMemo(() => computeStandings(teams, matches), [teams, matches]);
   const completed = completedMatchCount(matches);
 
@@ -199,16 +239,34 @@ export function ScenarioSimulator() {
             <h3 className="text-sm font-semibold">
               Group {selectedGroup} Matches
             </h3>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-1">
+              <button
+                onClick={handleChalk}
+                className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200"
+              >
+                Chalk
+              </button>
+              <button
+                onClick={handleChaos}
+                className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200"
+              >
+                Chaos
+              </button>
+              <button
+                onClick={handleAllDraws}
+                className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200"
+              >
+                All Draws
+              </button>
               <button
                 onClick={handleRandomize}
                 className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200"
               >
-                Randomize
+                Random
               </button>
               <button
                 onClick={handleReset}
-                className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200"
+                className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
               >
                 Reset
               </button>

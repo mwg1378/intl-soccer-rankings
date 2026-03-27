@@ -2,6 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { TeamHeader } from "@/components/team/team-header";
 import { TeamTabs } from "@/components/team/team-tabs";
+import { WorldCupCard, type WorldCupInfo } from "@/components/team/world-cup-card";
+import { GROUPS, UEFA_PLAYOFFS, FIFA_PLAYOFFS, dbName } from "@/lib/world-cup-data";
+import { GROUP_STAGE_SCHEDULE } from "@/lib/world-cup-group-schedule";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -28,7 +31,7 @@ export default async function TeamPage({ params }: PageProps) {
 
   if (!team) notFound();
 
-  const [roster, matches, snapshots] = await Promise.all([
+  const [roster, matches, snapshots, sim] = await Promise.all([
     prisma.teamRoster.findMany({
       where: { teamId: team.id },
       include: {
@@ -59,6 +62,9 @@ export default async function TeamPage({ params }: PageProps) {
       orderBy: { date: "asc" },
       select: { date: true, rank: true, overallRating: true },
     }),
+    prisma.worldCupSimulation.findFirst({
+      orderBy: { createdAt: "desc" },
+    }).catch(() => null),
   ]);
 
   const rosterData = roster.map((r) => ({
@@ -108,9 +114,69 @@ export default async function TeamPage({ params }: PageProps) {
     rating: Math.round(s.overallRating),
   }));
 
+  // Build World Cup context if this team is in the tournament
+  let wcInfo: WorldCupInfo | null = null;
+  if (sim) {
+    const advancementOdds = sim.advancementOdds as Record<string, {
+      name: string;
+      group: string;
+      probQualify: number;
+      probR32: number;
+      probSF: number;
+      probFinal: number;
+      probChampion: number;
+    }>;
+
+    const teamAdv = Object.values(advancementOdds).find(
+      (a) => a.name === team.name
+    );
+
+    if (teamAdv && teamAdv.group) {
+      // Find first match for this team
+      const teamWcNames = [team.name];
+      // Also check WC name variants
+      for (const [wcName, db] of Object.entries({ "Korea Republic": "South Korea", "Cote d'Ivoire": "Ivory Coast", "Cabo Verde": "Cape Verde", "Czechia": "Czech Republic", "Curacao": "Curaçao" })) {
+        if (db === team.name) teamWcNames.push(wcName);
+      }
+
+      const teamSchedule = GROUP_STAGE_SCHEDULE.filter(
+        (m) => teamWcNames.some((n) => m.home === n || m.away === n)
+      ).sort((a, b) => a.matchNum - b.matchNum);
+
+      const firstMatch = teamSchedule[0];
+      let firstMatchInfo = null;
+      if (firstMatch) {
+        const opponent = teamWcNames.some((n) => n === firstMatch.home)
+          ? dbName(firstMatch.away)
+          : dbName(firstMatch.home);
+        firstMatchInfo = {
+          opponent: opponent.startsWith("__") ? "TBD (Playoff)" : opponent,
+          date: firstMatch.date,
+          venue: firstMatch.venue,
+          city: firstMatch.city,
+        };
+      }
+
+      // Check if playoff team
+      const isPlayoff = teamAdv.probQualify < 0.999;
+
+      wcInfo = {
+        group: teamAdv.group,
+        champProb: teamAdv.probChampion,
+        finalProb: teamAdv.probFinal,
+        sfProb: teamAdv.probSF,
+        r32Prob: teamAdv.probR32,
+        firstMatch: firstMatchInfo,
+        isPlayoff,
+        qualifyProb: isPlayoff ? teamAdv.probQualify : undefined,
+      };
+    }
+  }
+
   return (
     <div className="space-y-6">
       <TeamHeader team={team} />
+      {wcInfo && <WorldCupCard info={wcInfo} />}
       <TeamTabs
         roster={rosterData}
         matches={matchData}
