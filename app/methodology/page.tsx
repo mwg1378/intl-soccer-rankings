@@ -182,10 +182,11 @@ Annual mean reversion: 8% pull toward 1500`}
             methodology: 35 player attributes &rarr; 7 clusters &rarr; 4 positions &rarr;
             offensive/defensive decomposition). Confederation penalty applied
             to correct for Elo inflation from intra-confederation play, derived from
-            cross-confederation competitive match analysis (782 matches, 2014&ndash;present,
-            excluding friendlies). Raw overperformance values are dampened to ~20-25%
-            to avoid overcorrection (UEFA/CONMEBOL/CONCACAF: 0, AFC: 5, OFC: 25,
-            CAF: 55 Elo points). See{" "}
+            cross-confederation competitive match analysis (2014&ndash;present, excluding
+            friendlies). Raw overperformance values are shrunk toward a prior using
+            Bayesian estimation proportional to sample size: confederations with more
+            cross-confederation matches retain more of their data-driven estimate
+            (UEFA/CONMEBOL/CONCACAF: 0, AFC: 20, OFC: 30, CAF: 55 Elo points). See{" "}
             <a href="#limitations" className="underline">Known Limitations</a> for caveats.
           </p>
           <p className="text-xs text-gray-500">
@@ -441,13 +442,14 @@ Annual decay: 15%`}
               tournament.
             </li>
             <li>
-              <strong>Confederation penalties are dampened estimates.</strong> The
-              flat Elo deductions (CAF: 55, OFC: 25, AFC: 5 points) are derived from
-              cross-confederation competitive match analysis (782 matches, 2014&ndash;present),
-              but the raw data-driven values are dampened to ~20-25% to avoid
-              overcorrection. The dampening factor and the decision to use flat penalties
-              (rather than per-team adjustments) are judgment calls. Small sample sizes
-              for OFC (56 matches) add uncertainty.
+              <strong>Confederation penalties use Bayesian shrinkage.</strong> The
+              flat Elo deductions (CAF: 55, AFC: 20, OFC: 30 points) are derived from
+              cross-confederation competitive match analysis (2014&ndash;present) with
+              Bayesian shrinkage toward a prior proportional to estimation precision.
+              CAF has the most data (565 matches, narrow CI) and retains a penalty close
+              to its raw estimate. AFC and OFC have wider confidence intervals and are
+              shrunk more toward the prior. The decision to use flat confederaton-wide
+              penalties (rather than per-team adjustments) remains a simplification.
             </li>
             <li>
               <strong>Offensive/defensive split is symmetric.</strong> Elo updates
