@@ -181,9 +181,11 @@ Annual mean reversion: 8% pull toward 1500`}
             50/50 blend of match-based Elo and EA FC squad quality ratings (Razali/Yeung
             methodology: 35 player attributes &rarr; 7 clusters &rarr; 4 positions &rarr;
             offensive/defensive decomposition). Confederation penalty applied
-            (UEFA/CONMEBOL: 0, CONCACAF: 15, CAF/AFC: 30, OFC: 40 Elo points).
-            These penalties are empirical estimates designed to correct for Elo inflation
-            from intra-confederation play against weaker opponents; see{" "}
+            to correct for Elo inflation from intra-confederation play, derived from
+            cross-confederation competitive match analysis (782 matches, 2014&ndash;present,
+            excluding friendlies). Raw overperformance values are dampened to ~20-25%
+            to avoid overcorrection (UEFA/CONMEBOL/CONCACAF: 0, AFC: 5, OFC: 25,
+            CAF: 55 Elo points). See{" "}
             <a href="#limitations" className="underline">Known Limitations</a> for caveats.
           </p>
           <p className="text-xs text-gray-500">
@@ -439,12 +441,13 @@ Annual decay: 15%`}
               tournament.
             </li>
             <li>
-              <strong>Confederation penalties are empirical, not derived.</strong> The
-              flat Elo deductions (CONCACAF: 15, CAF/AFC: 30, OFC: 40 points) correct
-              for rating inflation from intra-confederation play, but they are manually
-              estimated rather than derived from cross-confederation match analysis.
-              They are consequential (30 points can shift a team several ranks) and may
-              over- or under-correct for specific teams.
+              <strong>Confederation penalties are dampened estimates.</strong> The
+              flat Elo deductions (CAF: 55, OFC: 25, AFC: 5 points) are derived from
+              cross-confederation competitive match analysis (782 matches, 2014&ndash;present),
+              but the raw data-driven values are dampened to ~20-25% to avoid
+              overcorrection. The dampening factor and the decision to use flat penalties
+              (rather than per-team adjustments) are judgment calls. Small sample sizes
+              for OFC (56 matches) add uncertainty.
             </li>
             <li>
               <strong>Offensive/defensive split is symmetric.</strong> Elo updates
