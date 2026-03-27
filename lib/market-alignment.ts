@@ -19,9 +19,19 @@ export interface TeamComparison {
   category: "strong_agree" | "agree" | "mild_disagree" | "disagree" | "strong_disagree";
 }
 
-/** Compute 95% CI half-width for a binomial proportion from Monte Carlo */
+/**
+ * Compute 95% CI half-width using the Wilson interval.
+ * Wilson is more reliable than Wald for small p (< 0.05), which applies
+ * to most of the 48 WC teams. Returns the half-width of the interval.
+ */
 export function samplingError95(p: number, n: number): number {
-  return 1.96 * Math.sqrt(p * (1 - p) / n);
+  const z = 1.96;
+  const z2 = z * z;
+  const denom = 1 + z2 / n;
+  const center = (p + z2 / (2 * n)) / denom;
+  const margin = (z / denom) * Math.sqrt(p * (1 - p) / n + z2 / (4 * n * n));
+  // Return half-width of the Wilson interval
+  return margin;
 }
 
 export interface AlignmentMetrics {
@@ -95,7 +105,7 @@ export function compareToMarket(
       diff,
       absDiff,
       samplingError: se,
-      significant: absDiff > 2 * se, // beyond 2x the 95% CI
+      significant: absDiff > se, // beyond 95% CI (Wilson interval already includes z=1.96)
       direction: direction(diff),
       category: categorize(absDiff),
     });
