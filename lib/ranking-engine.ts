@@ -242,13 +242,22 @@ export function overallRating(offensive: number, defensive: number): number {
 // Teams in CAF/AFC accumulate inflated Elo from intra-confederation play.
 // A flat penalty (not compression toward mean) correctly penalizes BOTH
 // above-average and below-average teams from weak confederations.
+//
+// Derived from cross-confederation competitive match analysis (2014-present,
+// 782 matches, excluding friendlies). Raw data-driven values are dampened
+// to ~20-25% to avoid overcorrection. Analysis: scripts/derive-confederation-penalties.ts
+//
+// Raw data (Elo points of overperformance relative to UEFA baseline):
+//   CONMEBOL -59 (overperforms Elo), CONCACAF -38, AFC +21, OFC +115, CAF +265
+//
+// Conservative dampened penalties (rounded to 5):
 const CONFEDERATION_PENALTY: Record<string, number> = {
   UEFA: 0,
   CONMEBOL: 0,
-  CONCACAF: 15,
-  CAF: 30,
-  AFC: 30,
-  OFC: 40,
+  CONCACAF: 0,   // Data shows no penalty needed (overperforms vs Elo)
+  CAF: 55,       // Largest inflation: CAF teams win 33% in cross-conf play vs 49% Elo-expected
+  AFC: 5,        // Minimal inflation: AFC teams slightly underperform
+  OFC: 25,       // Moderate inflation, small sample (56 matches)
 };
 
 /**
