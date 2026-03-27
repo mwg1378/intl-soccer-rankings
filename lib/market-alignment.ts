@@ -13,8 +13,15 @@ export interface TeamComparison {
   polymarketProb: number;
   diff: number;           // model - consensus (positive = model higher)
   absDiff: number;
+  samplingError: number;  // 95% CI half-width for modelProb given simulation iterations
+  significant: boolean;   // is |diff| > 2 * samplingError?
   direction: "MODEL_HIGHER" | "MODEL_LOWER" | "ALIGNED";
   category: "strong_agree" | "agree" | "mild_disagree" | "disagree" | "strong_disagree";
+}
+
+/** Compute 95% CI half-width for a binomial proportion from Monte Carlo */
+export function samplingError95(p: number, n: number): number {
+  return 1.96 * Math.sqrt(p * (1 - p) / n);
 }
 
 export interface AlignmentMetrics {
@@ -57,9 +64,12 @@ function direction(diff: number): TeamComparison["direction"] {
 
 /**
  * Compare model championship probabilities against market consensus.
+ * @param modelOdds Championship probabilities from simulation
+ * @param iterations Number of Monte Carlo iterations (for confidence intervals)
  */
 export function compareToMarket(
   modelOdds: Record<string, number>,
+  iterations: number = 10000,
 ): TeamComparison[] {
   const allTeams = new Set([
     ...Object.keys(modelOdds),
@@ -74,6 +84,7 @@ export function compareToMarket(
     const pp = POLYMARKET_ODDS[team] ?? 0;
     const diff = mp - cp;
     const absDiff = Math.abs(diff);
+    const se = samplingError95(mp, iterations);
 
     comparisons.push({
       team,
@@ -83,6 +94,8 @@ export function compareToMarket(
       polymarketProb: pp,
       diff,
       absDiff,
+      samplingError: se,
+      significant: absDiff > 2 * se, // beyond 2x the 95% CI
       direction: direction(diff),
       category: categorize(absDiff),
     });

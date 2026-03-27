@@ -10,6 +10,8 @@ interface TeamComparison {
   polymarketProb: number;
   diff: number;
   absDiff: number;
+  samplingError: number;
+  significant: boolean;
   direction: "MODEL_HIGHER" | "MODEL_LOWER" | "ALIGNED";
   category: "strong_agree" | "agree" | "mild_disagree" | "disagree" | "strong_disagree";
 }
@@ -176,11 +178,15 @@ export function MarketAlignmentView({
                   >
                     <td className="text-gray-400">{i + 1}</td>
                     <td className="font-medium">{c.team}</td>
-                    <td className="text-right tabular-nums">{pct(c.modelProb)}</td>
+                    <td className="text-right tabular-nums" title={c.samplingError > 0 ? `95% CI: ±${(c.samplingError * 100).toFixed(1)}pp` : undefined}>
+                      {pct(c.modelProb)}
+                    </td>
                     <td className="text-right tabular-nums">{pct(c.consensusProb)}</td>
                     <td className="text-right tabular-nums text-gray-500 hidden md:table-cell">{pct(c.sportsbookProb)}</td>
                     <td className="text-right tabular-nums text-gray-500 hidden md:table-cell">{pct(c.polymarketProb)}</td>
-                    <td className={`text-right tabular-nums ${diff.className}`}>{diff.text}</td>
+                    <td className={`text-right tabular-nums ${diff.className}`} title={c.significant ? "Statistically significant" : "May be within sampling noise"}>
+                      {diff.text}{c.significant && c.absDiff > 0.005 ? "*" : ""}
+                    </td>
                     <td>
                       <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${badge.className}`}>
                         {badge.label}
@@ -288,6 +294,7 @@ export function MarketAlignmentView({
         <p>
           Consensus = average of sportsbook implied probability and Polymarket probability, normalized.
           Diff = model minus consensus (positive = our model is more bullish on that team).
+          * = difference is statistically significant beyond Monte Carlo sampling noise (95% CI).
         </p>
         <p className="text-yellow-600">
           Note: Our composite weights and prediction sensitivity were calibrated against these same

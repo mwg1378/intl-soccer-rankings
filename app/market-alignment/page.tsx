@@ -42,7 +42,7 @@ export default async function MarketAlignmentPage() {
     modelOdds[data.name] = data.probChampion;
   }
 
-  const comparisons = compareToMarket(modelOdds);
+  const comparisons = compareToMarket(modelOdds, sim.iterations);
   const metrics = computeMetrics(comparisons);
   const disagreements = generateDisagreementReport(comparisons);
 
