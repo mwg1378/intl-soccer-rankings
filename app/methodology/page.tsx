@@ -28,6 +28,7 @@ export default function MethodologyPage() {
           <li><a href="#simulation" className="hover:text-[#1a2b4a] hover:underline">6. World Cup Simulation</a></li>
           <li><a href="#home-advantage" className="hover:text-[#1a2b4a] hover:underline">7. Home Advantage</a></li>
           <li><a href="#data-sources" className="hover:text-[#1a2b4a] hover:underline">8. Data Sources</a></li>
+          <li><a href="#limitations" className="hover:text-[#1a2b4a] hover:underline">9. Known Limitations</a></li>
         </ol>
       </nav>
 
