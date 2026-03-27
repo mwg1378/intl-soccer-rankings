@@ -47,7 +47,7 @@ export function TeamHeader({ team }: TeamHeaderProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {ratingCards.map((card) => (
           <div key={card.label} className="overflow-hidden rounded border border-gray-200">
             <div className="bg-[#1a2b4a] px-3 py-1.5">
