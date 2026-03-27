@@ -29,26 +29,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const { homeTeam, awayTeam } = result;
 
-  const avgResult = await prisma.team.aggregate({
-    where: { currentRank: { gt: 0 } },
-    _avg: {
-      currentOffensiveRating: true,
-      currentDefensiveRating: true,
-    },
-  });
-
+  // Use raw Elo for metadata predictions (same as /api/predict)
   const prediction = predictMatch({
     homeTeam: {
-      offensive: homeTeam.currentOffensiveRating,
-      defensive: homeTeam.currentDefensiveRating,
+      offensive: homeTeam.eloOffensive,
+      defensive: homeTeam.eloDefensive,
     },
     awayTeam: {
-      offensive: awayTeam.currentOffensiveRating,
-      defensive: awayTeam.currentDefensiveRating,
+      offensive: awayTeam.eloOffensive,
+      defensive: awayTeam.eloDefensive,
     },
     neutralVenue: true,
-    avgOffensive: avgResult._avg.currentOffensiveRating ?? 1500,
-    avgDefensive: avgResult._avg.currentDefensiveRating ?? 1500,
   });
 
   const pct = (n: number) => `${Math.round(n * 100)}%`;
@@ -70,26 +61,36 @@ export default async function ShareablePredictionPage({ params }: PageProps) {
 
   const { homeTeam, awayTeam } = result;
 
-  const avgResult = await prisma.team.aggregate({
+  // Use raw Elo ratings (same as /api/predict) for consistent predictions
+  const allTeams = await prisma.team.findMany({
     where: { currentRank: { gt: 0 } },
-    _avg: {
-      currentOffensiveRating: true,
-      currentDefensiveRating: true,
-    },
+    select: { eloOffensive: true, eloDefensive: true },
   });
+
+  const n = allTeams.length;
+  const avgOff = allTeams.reduce((s, t) => s + t.eloOffensive, 0) / n;
+  const avgDef = allTeams.reduce((s, t) => s + t.eloDefensive, 0) / n;
+  const stdOff = Math.sqrt(
+    allTeams.reduce((s, t) => s + (t.eloOffensive - avgOff) ** 2, 0) / n
+  );
+  const stdDef = Math.sqrt(
+    allTeams.reduce((s, t) => s + (t.eloDefensive - avgDef) ** 2, 0) / n
+  );
 
   const prediction = predictMatch({
     homeTeam: {
-      offensive: homeTeam.currentOffensiveRating,
-      defensive: homeTeam.currentDefensiveRating,
+      offensive: homeTeam.eloOffensive,
+      defensive: homeTeam.eloDefensive,
     },
     awayTeam: {
-      offensive: awayTeam.currentOffensiveRating,
-      defensive: awayTeam.currentDefensiveRating,
+      offensive: awayTeam.eloOffensive,
+      defensive: awayTeam.eloDefensive,
     },
     neutralVenue: true,
-    avgOffensive: avgResult._avg.currentOffensiveRating ?? 1500,
-    avgDefensive: avgResult._avg.currentDefensiveRating ?? 1500,
+    avgOffensive: avgOff,
+    avgDefensive: avgDef,
+    stdOffensive: stdOff,
+    stdDefensive: stdDef,
   });
 
   return (
