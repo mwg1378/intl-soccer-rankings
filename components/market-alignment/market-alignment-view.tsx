@@ -58,15 +58,17 @@ function pct(v: number): string {
   return (v * 100).toFixed(1) + "%";
 }
 
+// Diff colors are magnitude-based (how big), with +/- sign for direction.
+// Red intensity = magnitude of disagreement, regardless of direction.
 function diffCell(diff: number): { text: string; className: string } {
   const pp = diff * 100;
   const abs = Math.abs(pp);
   if (abs < 0.5) return { text: "~", className: "text-gray-300" };
   const sign = pp > 0 ? "+" : "";
   const text = `${sign}${pp.toFixed(1)}`;
-  if (abs >= 5) return { text, className: pp > 0 ? "text-red-600 font-semibold" : "text-blue-600 font-semibold" };
-  if (abs >= 3) return { text, className: pp > 0 ? "text-red-500" : "text-blue-500" };
-  if (abs >= 1.5) return { text, className: pp > 0 ? "text-orange-500" : "text-sky-500" };
+  if (abs >= 5) return { text, className: "text-red-600 font-semibold" };
+  if (abs >= 3) return { text, className: "text-orange-600 font-medium" };
+  if (abs >= 1.5) return { text, className: "text-amber-600" };
   return { text, className: "text-gray-500" };
 }
 
@@ -286,6 +288,11 @@ export function MarketAlignmentView({
         <p>
           Consensus = average of sportsbook implied probability and Polymarket probability, normalized.
           Diff = model minus consensus (positive = our model is more bullish on that team).
+        </p>
+        <p className="text-yellow-600">
+          Note: Our composite weights and prediction sensitivity were calibrated against these same
+          market odds. The metrics above measure in-sample calibration fit, not independent validation.
+          See backtesting results for out-of-sample predictive accuracy.
         </p>
       </div>
     </div>

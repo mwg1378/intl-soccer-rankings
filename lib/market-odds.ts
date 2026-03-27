@@ -141,7 +141,9 @@ const POLYMARKET_RAW: Record<string, number> = {
 export const POLYMARKET_ODDS = normalizeOdds(POLYMARKET_RAW);
 
 // --- Consensus: average of the two sources ---
-// Where a team appears in only one source, use that source's value at half weight.
+// Teams in both sources get the average; single-source teams get their
+// full value (not halved) to avoid systematically underweighting playoff
+// teams that may only appear in one source.
 export function computeConsensusOdds(): Record<string, number> {
   const allTeams = new Set([
     ...Object.keys(SPORTSBOOK_ODDS),
@@ -155,7 +157,8 @@ export function computeConsensusOdds(): Record<string, number> {
     if (sb !== undefined && pm !== undefined) {
       raw[team] = (sb + pm) / 2;
     } else {
-      raw[team] = (sb ?? pm ?? 0) / 2;
+      // Single-source: use full value, not half
+      raw[team] = sb ?? pm ?? 0;
     }
   }
 

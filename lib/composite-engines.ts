@@ -27,7 +27,12 @@
  * | Glicko-2           | 0.000729 | 0.798       | 60%   |
  * | Pi-Ratings         | 0.000755 | 0.737       | 60%   |
  *
- * ## Composite Market Alignment
+ * ## Composite Market Alignment (in-sample calibration)
+ *
+ * NOTE: These metrics measure in-sample fit, not independent validation.
+ * The SENSITIVITY parameter (prediction-engine.ts) and composite weights
+ * were both calibrated against the same sportsbook odds measured here.
+ * See backtesting results for out-of-sample predictive accuracy.
  *
  * | Composite          | MSE      | Correlation | Top-5 |
  * |--------------------|----------|-------------|-------|
