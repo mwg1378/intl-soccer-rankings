@@ -62,7 +62,7 @@ describe("rankings API error handling", () => {
     // Should destructure error from useSWR
     expect(source).toMatch(/error.*isLoading/);
     // Should have retry config
-    expect(source).toContain("retry:");
+    expect(source).toContain("errorRetryCount:");
     // Should render error state, not just "No teams found"
     expect(source).toContain("Failed to load rankings");
   });
