@@ -111,7 +111,7 @@ export function GroupStageTable({ groupOdds, playoffTeamsByGroup = {} }: GroupSt
           );
 
           return (
-            <div key={g} className="overflow-hidden rounded border border-gray-200">
+            <div key={g} className="overflow-x-auto rounded border border-gray-200">
               <table className="tr-table">
                 <thead>
                   <tr>
