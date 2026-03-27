@@ -3,6 +3,7 @@
 import { ProbabilityBar } from "@/components/predict/probability-bar"
 import { ScoreMatrix } from "@/components/predict/score-matrix"
 import { TopScorelines, type Scoreline } from "@/components/predict/top-scorelines"
+import { GoalDistribution } from "@/components/predict/goal-distribution"
 
 export interface PredictionResult {
   homeTeam: string
@@ -70,6 +71,20 @@ export function PredictionDisplay({ prediction }: PredictionDisplayProps) {
             homeWinProb={homeWinProb}
             drawProb={drawProb}
             awayWinProb={awayWinProb}
+          />
+        </div>
+      </div>
+
+      {/* Goal Distribution */}
+      <div className="overflow-hidden rounded border border-gray-200">
+        <div className="bg-[#1a2b4a] px-4 py-2">
+          <h3 className="text-sm font-semibold text-white">Goal Distribution</h3>
+        </div>
+        <div className="p-4">
+          <GoalDistribution
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
+            scoreMatrix={scoreMatrix}
           />
         </div>
       </div>
