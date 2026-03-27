@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { TeamHeader } from "@/components/team/team-header";
 import { TeamTabs } from "@/components/team/team-tabs";
 import { WorldCupCard, type WorldCupInfo } from "@/components/team/world-cup-card";
-import { GROUPS, UEFA_PLAYOFFS, FIFA_PLAYOFFS, dbName } from "@/lib/world-cup-data";
+import { dbName } from "@/lib/world-cup-data";
 import { GROUP_STAGE_SCHEDULE } from "@/lib/world-cup-group-schedule";
 import type { Metadata } from "next";
 
