@@ -61,7 +61,13 @@ const HOME_ADVANTAGE = 1.22;
 // market championship odds (~15% for the favorite).
 //
 // At 0.30: top teams had ~11% champion odds vs market ~15% (too flat)
-// At 0.38: produces ~15% for Spain, better market alignment
+// At 0.38: produces ~12-15% for Spain depending on rating distribution
+//
+// TODO: Re-investigate — DATASCI feedback suggests the top 6 elite teams
+// are collectively undervalued by ~13pp vs market. SENSITIVITY may need to
+// increase to 0.42-0.45. Should be validated via both (1) Monte Carlo
+// championship odds vs market and (2) backtesting Brier score at different
+// values, to avoid circular calibration. See DATASCI-FEEDBACK #17.
 const SENSITIVITY = 0.38;
 
 // Dixon-Coles rho parameter (typically slightly negative)
