@@ -311,7 +311,7 @@ function MetricCard({ label, value, subtitle }: { label: string; value: string; 
     <div className="rounded-lg border bg-white p-3">
       <div className="text-xs text-gray-400">{label}</div>
       <div className="text-lg font-bold mt-0.5">{value}</div>
-      <div className="text-[10px] text-gray-300">{subtitle}</div>
+      <div className="text-[10px] text-gray-400">{subtitle}</div>
     </div>
   );
 }
