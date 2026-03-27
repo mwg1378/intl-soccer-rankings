@@ -10,7 +10,7 @@ const tabs = [
   { href: "/world-cup/bracket", label: "Knockout" },
   { href: "/world-cup/advancement", label: "Advancement" },
   { href: "/world-cup/power", label: "Power Rankings", beta: true },
-  { href: "/world-cup/odds", label: "vs Market", beta: true },
+  { href: "/market-alignment", label: "Market Odds" },
   { href: "/world-cup/scenarios", label: "What If", beta: true },
 ];
 
