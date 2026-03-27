@@ -455,10 +455,10 @@ Annual decay: 15%`}
             </li>
             <li>
               <strong>Monte Carlo sampling error.</strong> At 100,000 iterations,
-              championship probabilities for favorites (~15%) have a sampling error
-              of ~0.11 percentage points. For long-shot teams (&lt;1%), the relative
-              error is larger. Advancement probabilities for earlier rounds are more
-              precise.
+              championship probabilities for favorites (~15%) have a 95% CI of
+              approximately &plusmn;0.22 percentage points (Wilson interval). For
+              long-shot teams (&lt;1%), the relative error is larger. Advancement
+              probabilities for earlier rounds are more precise.
             </li>
           </ul>
         </div>

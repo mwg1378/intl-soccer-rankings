@@ -28,7 +28,6 @@ export function samplingError95(p: number, n: number): number {
   const z = 1.96;
   const z2 = z * z;
   const denom = 1 + z2 / n;
-  const center = (p + z2 / (2 * n)) / denom;
   const margin = (z / denom) * Math.sqrt(p * (1 - p) / n + z2 / (4 * n * n));
   // Return half-width of the Wilson interval
   return margin;
