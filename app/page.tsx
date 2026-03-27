@@ -18,10 +18,16 @@ export default async function HomePage() {
       where: { currentRank: { gt: 0 } },
       orderBy: { currentRank: "asc" },
       take: 50,
-    }).catch(() => [] as Awaited<ReturnType<typeof prisma.team.findMany>>),
+    }).catch((err) => {
+      console.error("Homepage team query failed:", err);
+      return [] as Awaited<ReturnType<typeof prisma.team.findMany>>;
+    }),
     prisma.worldCupSimulation.findFirst({
       orderBy: { createdAt: "desc" },
-    }).catch(() => null),
+    }).catch((err) => {
+      console.error("Homepage simulation query failed:", err);
+      return null;
+    }),
   ]);
 
   const lastUpdated = teams[0]?.updatedAt ?? new Date();

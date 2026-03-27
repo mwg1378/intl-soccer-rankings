@@ -19,7 +19,9 @@ function makePrismaClient() {
     port: parseInt(url.port || "5432", 10),
     database: url.pathname.slice(1),
     ssl: { rejectUnauthorized: false },
-    max: 2,
+    max: 1,
+    idleTimeoutMillis: 20_000,
+    connectionTimeoutMillis: 10_000,
   });
 
   const adapter = new PrismaPg(pool);

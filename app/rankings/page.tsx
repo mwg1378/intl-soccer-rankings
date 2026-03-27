@@ -8,7 +8,12 @@ import {
 } from "@/components/rankings/confederation-filter";
 import useSWR from "swr";
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const fetcher = async (url: string) => {
+  const r = await fetch(url);
+  const json = await r.json();
+  if (!r.ok) throw new Error(json.details ?? json.error ?? "Unknown error");
+  return json;
+};
 
 export default function RankingsPage() {
   const [confederation, setConfederation] = useState<Confederation>("ALL");
@@ -19,9 +24,10 @@ export default function RankingsPage() {
     ...(confederation !== "ALL" && { confederation }),
   });
 
-  const { data, isLoading } = useSWR(
+  const { data, error, isLoading } = useSWR(
     `/api/rankings?${params.toString()}`,
-    fetcher
+    fetcher,
+    { retry: 3, retryDelay: 1000 }
   );
 
   return (
@@ -53,7 +59,12 @@ export default function RankingsPage() {
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#1a2b4a]" />
         </div>
-      ) : data?.teams ? (
+      ) : error ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <p className="font-semibold text-red-800">Failed to load rankings</p>
+          <p className="mt-1 text-sm text-red-600">{error.message}</p>
+        </div>
+      ) : data?.teams?.length ? (
         <>
           <RankingsTable teams={data.teams} />
           <p className="text-xs text-gray-400 text-center">
