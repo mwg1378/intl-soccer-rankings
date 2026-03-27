@@ -1010,9 +1010,9 @@ async function main() {
           btRankMap.set(btSorted[i].id, i + 1);
         }
 
-        // Only snapshot top 100 teams (to keep DB size reasonable for monthly)
+        // Snapshot top 200 teams (covers all WC/continental tournament participants)
         const snapshotBatch = [];
-        for (let i = 0; i < Math.min(100, ratings.length); i++) {
+        for (let i = 0; i < Math.min(200, ratings.length); i++) {
           const r = ratings[i];
           snapshotBatch.push({
             teamId: r.id,
@@ -1051,7 +1051,7 @@ async function main() {
   }
 
   const finalSnapshotBatch = [];
-  for (let i = 0; i < Math.min(100, teamRatings.length); i++) {
+  for (let i = 0; i < Math.min(200, teamRatings.length); i++) {
     const t = teamRatings[i];
     finalSnapshotBatch.push({
       teamId: t.id,

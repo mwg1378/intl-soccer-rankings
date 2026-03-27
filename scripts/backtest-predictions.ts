@@ -87,18 +87,10 @@ async function main() {
     { name: "Asia Cup 2023/24", pattern: "%Asian Cup%", year: 2024, importance: ["TOURNAMENT_GROUP", "TOURNAMENT_KNOCKOUT"] },
   ];
 
-  // Compute global rating stats for z-score normalization
-  // Use all ranked teams' current Elo as a reasonable approximation
-  const allTeams = await prisma.team.findMany({
-    where: { currentRank: { gt: 0 } },
-    select: { eloOffensive: true, eloDefensive: true },
-  });
-  const nTeams = allTeams.length;
-  const globalAvgOff = allTeams.reduce((s, t) => s + t.eloOffensive, 0) / nTeams;
-  const globalAvgDef = allTeams.reduce((s, t) => s + t.eloDefensive, 0) / nTeams;
-  const globalStdOff = Math.sqrt(allTeams.reduce((s, t) => s + (t.eloOffensive - globalAvgOff) ** 2, 0) / nTeams);
-  const globalStdDef = Math.sqrt(allTeams.reduce((s, t) => s + (t.eloDefensive - globalAvgDef) ** 2, 0) / nTeams);
-  console.log(`Global rating stats: avgOff=${globalAvgOff.toFixed(1)}, avgDef=${globalAvgDef.toFixed(1)}, stdOff=${globalStdOff.toFixed(1)}, stdDef=${globalStdDef.toFixed(1)}\n`);
+  // NOTE: z-score normalization stats are computed per-tournament from
+  // pre-match Elo ratings, NOT from current global ratings.
+  // This avoids lookahead bias (see DATASCI-FEEDBACK.md issue #1).
+  console.log("Using per-tournament rating stats for z-score normalization (no lookahead bias).\n");
 
   const allStats: TournamentStats[] = [];
 
