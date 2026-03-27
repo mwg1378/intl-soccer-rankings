@@ -27,58 +27,10 @@ const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL!;
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
-// --- Betting market consensus odds (FanDuel/DraftKings/bet365, March 2026) ---
-// Implied probabilities from American odds, normalized to sum to ~100%
-// Source: Aggregated from NBC Sports, FOX Sports, DraftKings, FanDuel
-const MARKET_CHAMPION_ODDS: Record<string, number> = {
-  "Spain": 0.152,
-  "England": 0.128,
-  "France": 0.098,
-  "Brazil": 0.093,
-  "Argentina": 0.093,
-  "Portugal": 0.069,
-  "Germany": 0.064,
-  "Netherlands": 0.040,
-  "Norway": 0.032,
-  "Italy": 0.027,
-  "Belgium": 0.027,
-  "Colombia": 0.020,
-  "Morocco": 0.014,
-  "Uruguay": 0.013,
-  "United States": 0.013,
-  "Mexico": 0.012,
-  "Ecuador": 0.010,
-  "Switzerland": 0.010,
-  "Croatia": 0.009,
-  "Japan": 0.009,
-  "Senegal": 0.007,
-  "South Korea": 0.006,
-  "Australia": 0.005,
-  "Ivory Coast": 0.005,
-  "Paraguay": 0.004,
-  "Iran": 0.004,
-  "Saudi Arabia": 0.003,
-  "Scotland": 0.003,
-  "Egypt": 0.003,
-  "Algeria": 0.003,
-  "Austria": 0.003,
-  "Tunisia": 0.002,
-  "Ghana": 0.002,
-  "Panama": 0.002,
-  "South Africa": 0.002,
-  "Qatar": 0.002,
-  "New Zealand": 0.001,
-  "Haiti": 0.001,
-  "Jordan": 0.001,
-  "Uzbekistan": 0.001,
-  "Cape Verde": 0.001,
-};
-
-// Normalize market odds to sum to 1
-const marketTotal = Object.values(MARKET_CHAMPION_ODDS).reduce((s, p) => s + p, 0);
-for (const t of Object.keys(MARKET_CHAMPION_ODDS)) {
-  MARKET_CHAMPION_ODDS[t] /= marketTotal;
-}
+// --- Betting market consensus odds ---
+// Imported from shared module (sportsbooks + Polymarket, March 27 2026)
+import { CONSENSUS_ODDS, SPORTSBOOK_ODDS, POLYMARKET_ODDS } from "../lib/market-odds";
+const MARKET_CHAMPION_ODDS = CONSENSUS_ODDS;
 
 // --- Rating extraction functions ---
 // Each returns { offensive, defensive } for a team
@@ -560,6 +512,25 @@ async function main() {
     const diff = simProb - mktProb;
     console.log(
       `${team.padEnd(23)} ${(mktProb * 100).toFixed(1)}%     ${(simProb * 100).toFixed(1)}%    ${diff > 0 ? "+" : ""}${(diff * 100).toFixed(1)}%`
+    );
+  }
+
+  // --- Phase 5: Sportsbook vs Polymarket divergence ---
+  console.log("\n\n=== SPORTSBOOK vs POLYMARKET DIVERGENCE ===\n");
+  console.log("Where traditional books and prediction markets disagree most:\n");
+  console.log("Team                    Sportsbook  Polymarket  Diff    Notes");
+  console.log("----                    ----------  ----------  ----    -----");
+
+  const sbSorted = Object.entries(SPORTSBOOK_ODDS).sort((a, b) => b[1] - a[1]);
+  for (const [team, sbProb] of sbSorted.slice(0, 20)) {
+    const pmProb = POLYMARKET_ODDS[team] ?? 0;
+    const diff = sbProb - pmProb;
+    const absDiff = Math.abs(diff);
+    const note = absDiff > 0.015
+      ? diff > 0 ? "Books higher" : "Poly higher"
+      : "";
+    console.log(
+      `${team.padEnd(23)} ${(sbProb * 100).toFixed(1)}%       ${(pmProb * 100).toFixed(1)}%       ${diff > 0 ? "+" : ""}${(diff * 100).toFixed(1)}pp   ${note}`
     );
   }
 
