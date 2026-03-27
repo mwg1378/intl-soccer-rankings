@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { MarketAlignmentView } from "@/components/market-alignment/market-alignment-view";
-import { CONSENSUS_ODDS, SPORTSBOOK_ODDS, POLYMARKET_ODDS, MARKET_SOURCES, topTeams } from "@/lib/market-odds";
+import { MARKET_SOURCES } from "@/lib/market-odds";
 import { compareToMarket, computeMetrics, generateDisagreementReport } from "@/lib/market-alignment";
 import { MARKET_OBSERVATIONS } from "@/lib/market-observations";
 import type { Metadata } from "next";

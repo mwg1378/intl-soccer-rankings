@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PowerRankings, type PowerTeam } from "@/components/world-cup/power-rankings";
-import { GROUPS, dbName, CONFIRMED_TEAMS, UEFA_PLAYOFFS, FIFA_PLAYOFFS, PLAYOFF_TEAMS } from "@/lib/world-cup-data";
+import { GROUPS, dbName, UEFA_PLAYOFFS, FIFA_PLAYOFFS, PLAYOFF_TEAMS } from "@/lib/world-cup-data";
 import { CONSENSUS_ODDS } from "@/lib/market-odds";
 
 export const dynamic = "force-dynamic";
