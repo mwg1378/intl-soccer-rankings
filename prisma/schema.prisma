@@ -327,3 +327,19 @@ model PredictionCache {
 
   @@index([homeTeamId, awayTeamId])
 }
+
+model TournamentBacktest {
+  id              String   @id @default(uuid())
+  slug            String   @unique  // e.g. "world-cup-2022"
+  tournament      String             // e.g. "FIFA World Cup 2022"
+  startDate       DateTime @db.Date
+  endDate         DateTime @db.Date
+  totalMatches    Int
+  correctOutcome  Int
+  brierScore      Float
+  logLoss         Float
+  accuracy        Float              // correctOutcome / totalMatches
+  rankings        Json               // pre-tournament team rankings array
+  matches         Json               // match-by-match predictions and actuals
+  createdAt       DateTime @default(now())
+}

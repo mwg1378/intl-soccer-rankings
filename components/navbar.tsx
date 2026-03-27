@@ -8,6 +8,7 @@ const navLinks = [
   { href: "/rankings/compare", label: "Rankings" },
   { href: "/world-cup", label: "World Cup 2026" },
   { href: "/predict", label: "Predictions" },
+  { href: "/backtests", label: "Backtests" },
   { href: "/methodology", label: "Methodology" },
 ];
 
