@@ -22,7 +22,7 @@ export default function PredictPage() {
   const [venue, setVenue] = useState<string>("HOME");
   const [importance, setImportance] = useState<string>("FRIENDLY");
 
-  const { data: teamsData } = useSWR("/api/rankings?pageSize=100", fetcher);
+  const { data: teamsData } = useSWR("/api/rankings?pageSize=211", fetcher);
   const teams = teamsData?.teams ?? [];
 
   const canPredict = homeTeamId && awayTeamId && homeTeamId !== awayTeamId;

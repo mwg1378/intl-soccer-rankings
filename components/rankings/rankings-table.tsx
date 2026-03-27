@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 // ISO 3166-1 alpha-2 to regional indicator flag emoji
@@ -104,8 +104,6 @@ interface RankingsTableProps {
 }
 
 export function RankingsTable({ teams }: RankingsTableProps) {
-  const router = useRouter();
-
   return (
     <div className="overflow-x-auto rounded border border-gray-200">
       <table className="tr-table">
@@ -132,8 +130,7 @@ export function RankingsTable({ teams }: RankingsTableProps) {
             .map((team, i) => (
             <tr
               key={team.id}
-              className="cursor-pointer"
-              onClick={() => router.push(`/team/${team.slug}`)}
+              className="group"
             >
               <td>
                 <span className="font-semibold tabular-nums">
@@ -141,10 +138,12 @@ export function RankingsTable({ teams }: RankingsTableProps) {
                 </span>
               </td>
               <td>
-                <span className="mr-1.5" aria-hidden="true">
-                  {fifaCodeToFlag(team.fifaCode)}
-                </span>
-                <span className="font-medium">{team.name}</span>
+                <Link href={`/team/${team.slug}`} className="inline-flex items-center hover:underline underline-offset-2">
+                  <span className="mr-1.5" aria-hidden="true">
+                    {fifaCodeToFlag(team.fifaCode)}
+                  </span>
+                  <span className="font-medium group-hover:text-[#1a2b4a]">{team.name}</span>
+                </Link>
               </td>
               <td>
                 <span className={cn("text-[11px] font-semibold", confederationColors[team.confederation])}>
