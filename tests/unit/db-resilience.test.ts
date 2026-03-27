@@ -79,4 +79,25 @@ describe("health check endpoint", () => {
     // Should return 503 when unhealthy
     expect(source).toContain("503");
   });
+
+  it("should check roster data exists", async () => {
+    const fs = await import("fs");
+    const source = fs.readFileSync("app/api/health/route.ts", "utf-8");
+
+    expect(source).toContain("teamRoster");
+    expect(source).toMatch(/rosterCount\s*>=\s*500/);
+  });
+});
+
+describe("seed script safety", () => {
+  it("seed script should not be the only way to populate rosters", async () => {
+    const fs = await import("fs");
+    const seed = fs.readFileSync("scripts/seed.ts", "utf-8");
+
+    // Seed script deletes roster data but does NOT repopulate it —
+    // populate-rosters.ts must be run separately. This test documents
+    // that dependency so it doesn't get lost.
+    expect(seed).toContain("teamRoster.deleteMany");
+    expect(fs.existsSync("scripts/populate-rosters.ts")).toBe(true);
+  });
 });

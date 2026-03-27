@@ -19,6 +19,16 @@ export async function GET() {
   }
 
   try {
+    const rosterCount = await prisma.teamRoster.count();
+    checks.rosters = {
+      ok: rosterCount >= 500,
+      detail: `${rosterCount} roster entries (expected 500+)`,
+    };
+  } catch (err) {
+    checks.rosters = { ok: false, detail: `query failed: ${err}` };
+  }
+
+  try {
     const sim = await prisma.worldCupSimulation.findFirst({
       orderBy: { createdAt: "desc" },
       select: { createdAt: true, iterations: true },
