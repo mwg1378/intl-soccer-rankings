@@ -250,14 +250,17 @@ export function overallRating(offensive: number, defensive: number): number {
 // Raw data (Elo points of overperformance relative to UEFA baseline):
 //   CONMEBOL -59 (overperforms Elo), CONCACAF -38, AFC +21, OFC +115, CAF +265
 //
-// Conservative dampened penalties (rounded to 5):
+// Dampened penalties using Bayesian shrinkage proportional to estimation
+// precision. Prior: 25 (mean of historical estimates). Posterior weights
+// data more when sample size is large (CAF: 565 matches, narrow CI) and
+// shrinks toward prior when sample is small (AFC: 303 matches, wide CI).
 const CONFEDERATION_PENALTY: Record<string, number> = {
   UEFA: 0,
   CONMEBOL: 0,
   CONCACAF: 0,   // Data shows no penalty needed (overperforms vs Elo)
-  CAF: 55,       // Largest inflation: CAF teams win 33% in cross-conf play vs 49% Elo-expected
-  AFC: 5,        // Minimal inflation: AFC teams slightly underperform
-  OFC: 25,       // Moderate inflation, small sample (56 matches)
+  CAF: 55,       // High confidence: 565 cross-conf matches, raw=265, CI excludes zero
+  AFC: 20,       // Low precision: 303 matches, raw=21±58, shrunk toward prior ~25
+  OFC: 30,       // Moderate: 56 matches, raw=115, wide CI, shrunk toward prior
 };
 
 /**
