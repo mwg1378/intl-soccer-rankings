@@ -19,8 +19,8 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 export default function PredictPage() {
   const [homeTeamId, setHomeTeamId] = useState<string | null>(null);
   const [awayTeamId, setAwayTeamId] = useState<string | null>(null);
-  const [venue, setVenue] = useState<string>("HOME");
-  const [importance, setImportance] = useState<string>("FRIENDLY");
+  const [venue, setVenue] = useState<string>("NEUTRAL");
+  const [importance, setImportance] = useState<string>("TOURNAMENT_GROUP");
 
   const { data: teamsData } = useSWR("/api/rankings?pageSize=211", fetcher);
   const teams = teamsData?.teams ?? [];
