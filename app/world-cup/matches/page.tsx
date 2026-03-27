@@ -38,7 +38,6 @@ function pct(v: number): string {
 }
 
 function MatchCard({ match }: { match: MatchPrediction }) {
-  const maxProb = Math.max(match.homeWin, match.draw, match.awayWin);
   const homeWidth = Math.round(match.homeWin * 100);
   const drawWidth = Math.round(match.draw * 100);
   const awayWidth = 100 - homeWidth - drawWidth;

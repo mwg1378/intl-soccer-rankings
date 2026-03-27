@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MATCH_SCHEDULE, R32_MATCHES } from "@/lib/world-cup-data";
+import { MATCH_SCHEDULE } from "@/lib/world-cup-data";
 import { cn } from "@/lib/utils";
 
 interface KnockoutBracketProps {

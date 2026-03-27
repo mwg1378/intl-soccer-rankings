@@ -597,11 +597,10 @@ export function runSimulation(
 
     // R32
     for (const m of R32_MATCHES) {
-      let homeName: string;
       let awayName: string;
 
       // Resolve home
-      homeName = advancingTeams.get(m.home)!;
+      const homeName = advancingTeams.get(m.home)!;
 
       // Resolve away
       if (m.away === "3rd") {

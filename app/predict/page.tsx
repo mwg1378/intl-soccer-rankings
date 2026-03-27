@@ -4,7 +4,6 @@ import { useState } from "react";
 import useSWR from "swr";
 import { TeamSelector } from "@/components/predict/team-selector";
 import { PredictionDisplay } from "@/components/predict/prediction-display";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,

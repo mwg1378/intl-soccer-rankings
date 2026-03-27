@@ -84,21 +84,6 @@ const confederationColors: Record<string, string> = {
   OFC: "text-teal-600",
 };
 
-function getRank(team: Team, key: SortKey): number {
-  switch (key) {
-    case "combined": return team.currentRank;
-    case "bt": return team.btRank;
-    case "glicko": return team.glickoRank;
-    case "berrar": return team.berrarRank;
-    case "op": return team.opRank;
-    case "iwPi": return team.iwPiRank;
-    case "moElo": return team.moEloRank;
-    case "gridOpt": return team.gridOptRank;
-    case "top3": return team.top3Rank;
-    case "btMkt": return team.btMktRank;
-    default: return 0;
-  }
-}
 
 function getRating(team: Team, key: SortKey): number {
   switch (key) {
