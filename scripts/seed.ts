@@ -1140,6 +1140,19 @@ async function main() {
   console.log(`Matches: ${processedCount}`);
   console.log(`Snapshots: ${snapshotCount} months`);
 
+  // Auto-populate rosters (seed deletes them, so they must be restored)
+  console.log("\n=== Populating rosters from EA FC data... ===");
+  const { execSync } = await import("child_process");
+  try {
+    execSync("npx tsx scripts/populate-rosters.ts", {
+      stdio: "inherit",
+      env: process.env,
+    });
+  } catch (err) {
+    console.error("WARNING: Roster population failed. Run manually: npx tsx scripts/populate-rosters.ts");
+    console.error(err);
+  }
+
   await prisma.$disconnect();
 }
 
