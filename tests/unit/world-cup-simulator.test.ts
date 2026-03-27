@@ -48,18 +48,21 @@ describe("World Cup simulator", () => {
   });
 
   describe("playoff team data consistency", () => {
-    it("every UEFA playoff path should have exactly 4 contenders (2 semis)", () => {
+    it("every UEFA playoff path should have exactly 2 finalists", () => {
       const uefaPlayoffMatches = dataSrc.match(
-        /semi1:\s*\[.*?\],\s*semi2:\s*\[.*?\]/g
+        /final:\s*\["[^"]+",\s*"[^"]+"\]/g
       );
       expect(uefaPlayoffMatches).not.toBeNull();
-      expect(uefaPlayoffMatches!.length).toBe(4); // 4 UEFA paths (A, B, C, D)
+      // 4 UEFA paths + 2 FIFA paths = 6 total final entries
+      expect(uefaPlayoffMatches!.length).toBe(6);
     });
 
-    it("every FIFA playoff path should have a semi and final opponent", () => {
-      const fifaPlayoffs = dataSrc.match(/semi:\s*\[.*?\],\s*finalOpponent:/g);
-      expect(fifaPlayoffs).not.toBeNull();
-      expect(fifaPlayoffs!.length).toBe(2); // 2 FIFA paths
+    it("every FIFA playoff path should have a final with 2 teams", () => {
+      // Extract the FIFA_PLAYOFFS block and count final entries
+      const fifaBlock = dataSrc.match(/FIFA_PLAYOFFS[\s\S]*?^};/m)?.[0] ?? "";
+      const fifaFinals = fifaBlock.match(/final:\s*\[/g);
+      expect(fifaFinals).not.toBeNull();
+      expect(fifaFinals!.length).toBe(2); // 2 FIFA paths
     });
 
     it("should define exactly 6 playoff placeholders (4 UEFA + 2 FIFA)", () => {
