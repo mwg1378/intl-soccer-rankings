@@ -19,8 +19,6 @@ import {
   FINAL_MATCH,
   THIRD_PLACE_MATCH,
   dbName,
-  type PlayoffPath,
-  type FifaPlayoffPath,
 } from "./world-cup-data";
 
 // --- Rating stats (set by runSimulation before use) ---
@@ -37,17 +35,17 @@ const GROUP_HOST: Record<string, string> = {
 };
 
 // Knockout match → host country (derived from MATCH_SCHEDULE venues)
-// Mexico: Estadio Azteca (Mexico City), BBVA Stadium (Monterrey)
+// Mexico: Estadio Azteca (Mexico City), Estadio BBVA (Monterrey)
 // Canada: BMO Field (Toronto), BC Place (Vancouver)
 // All other knockout venues are in the US
 const KNOCKOUT_MATCH_COUNTRY: Record<number, string> = {
-  79: "Mexico",   // R32 — Mexico City
-  85: "Mexico",   // R32 — Monterrey
-  92: "Mexico",   // R16 — Mexico City
-  84: "Canada",   // R32 — Toronto
-  87: "Canada",   // R32 — Vancouver
-  96: "Canada",   // R16 — Vancouver
-  // All other matches (73-88 R32, 89-96 R16, 97-104 QF/SF/Final) are in the US
+  76: "Mexico",   // R32 — Monterrey (Estadio BBVA)
+  79: "Mexico",   // R32 — Mexico City (Estadio Azteca)
+  83: "Canada",   // R32 — Vancouver (BC Place)
+  84: "Canada",   // R32 — Toronto (BMO Field)
+  92: "Mexico",   // R16 — Mexico City (Estadio Azteca)
+  96: "Canada",   // R16 — Vancouver (BC Place)
+  // All other matches are in the US
 };
 
 function getKnockoutHost(matchNum: number): string {
@@ -198,45 +196,27 @@ function sampleFromPoisson(lambda: number): number {
 }
 
 // --- Playoff Simulation ---
+// Semifinals already played (March 26) — only finals remain.
 
 function simulateUefaPlayoff(
-  path: PlayoffPath,
+  path: { final: [string, string]; targetGroup: string; placeholder: string },
   teamMap: Map<string, TeamData>
 ): string {
-  const s1Home = teamMap.get(dbName(path.semi1[0]))!;
-  const s1Away = teamMap.get(dbName(path.semi1[1]))!;
-  const s2Home = teamMap.get(dbName(path.semi2[0]))!;
-  const s2Away = teamMap.get(dbName(path.semi2[1]))!;
-
-  const semi1Winner = simulateKnockoutMatch(
-    s1Home.ratings, s1Away.ratings, path.semi1[0], path.semi1[1]
-  );
-  const semi2Winner = simulateKnockoutMatch(
-    s2Home.ratings, s2Away.ratings, path.semi2[0], path.semi2[1]
-  );
-
-  const finalHome = teamMap.get(dbName(semi1Winner))!;
-  const finalAway = teamMap.get(dbName(semi2Winner))!;
+  const finalHome = teamMap.get(dbName(path.final[0]))!;
+  const finalAway = teamMap.get(dbName(path.final[1]))!;
   return simulateKnockoutMatch(
-    finalHome.ratings, finalAway.ratings, semi1Winner, semi2Winner
+    finalHome.ratings, finalAway.ratings, path.final[0], path.final[1]
   );
 }
 
 function simulateFifaPlayoff(
-  path: FifaPlayoffPath,
+  path: { final: [string, string]; targetGroup: string; placeholder: string },
   teamMap: Map<string, TeamData>
 ): string {
-  const s1 = teamMap.get(dbName(path.semi[0]))!;
-  const s2 = teamMap.get(dbName(path.semi[1]))!;
-
-  const semiWinner = simulateKnockoutMatch(
-    s1.ratings, s2.ratings, path.semi[0], path.semi[1]
-  );
-
-  const finalHome = teamMap.get(dbName(path.finalOpponent))!;
-  const finalAway = teamMap.get(dbName(semiWinner))!;
+  const finalHome = teamMap.get(dbName(path.final[0]))!;
+  const finalAway = teamMap.get(dbName(path.final[1]))!;
   return simulateKnockoutMatch(
-    finalHome.ratings, finalAway.ratings, path.finalOpponent, semiWinner
+    finalHome.ratings, finalAway.ratings, path.final[0], path.final[1]
   );
 }
 
@@ -778,13 +758,13 @@ export function runSimulation(
     // For playoff teams, find group from qualifier
     if (!group) {
       for (const [, path] of Object.entries(UEFA_PLAYOFFS)) {
-        for (const team of [...path.semi1, ...path.semi2]) {
+        for (const team of path.final) {
           const td = teamDataMap.get(dbName(team));
           if (td && td.slug === slug) group = path.targetGroup;
         }
       }
       for (const [, path] of Object.entries(FIFA_PLAYOFFS)) {
-        for (const team of [...path.semi, path.finalOpponent]) {
+        for (const team of path.final) {
           const td = teamDataMap.get(dbName(team));
           if (td && td.slug === slug) group = path.targetGroup;
         }
@@ -836,30 +816,30 @@ export function runSimulation(
   const matchDescriptions: Record<number, string> = {
     // R32
     73: "2nd Grp A vs 2nd Grp B",
-    74: "1st Grp E vs 3rd Place",
-    75: "1st Grp F vs 2nd Grp C",
-    76: "1st Grp C vs 2nd Grp F",
-    77: "1st Grp I vs 3rd Place",
-    78: "2nd Grp E vs 2nd Grp I",
+    74: "1st Grp C vs 2nd Grp F",
+    75: "1st Grp E vs 3rd Place",
+    76: "1st Grp F vs 2nd Grp C",
+    77: "2nd Grp E vs 2nd Grp I",
+    78: "1st Grp I vs 3rd Place",
     79: "1st Grp A vs 3rd Place",
     80: "1st Grp L vs 3rd Place",
-    81: "1st Grp D vs 3rd Place",
-    82: "1st Grp G vs 3rd Place",
-    83: "2nd Grp K vs 2nd Grp L",
-    84: "1st Grp H vs 2nd Grp J",
-    85: "1st Grp B vs 3rd Place",
-    86: "1st Grp J vs 2nd Grp H",
-    87: "1st Grp K vs 3rd Place",
-    88: "2nd Grp D vs 2nd Grp G",
+    81: "1st Grp G vs 3rd Place",
+    82: "1st Grp D vs 3rd Place",
+    83: "1st Grp B vs 3rd Place",
+    84: "2nd Grp K vs 2nd Grp L",
+    85: "1st Grp H vs 2nd Grp J",
+    86: "2nd Grp D vs 2nd Grp G",
+    87: "1st Grp J vs 2nd Grp H",
+    88: "1st Grp K vs 3rd Place",
     // R16
     89: "W74 vs W77 (L-QF1)",
     90: "W73 vs W75 (L-QF1)",
     91: "W76 vs W78 (L-QF3)",
     92: "W79 vs W80 (L-QF3)",
-    93: "W81 vs W82 (R-QF2)",
-    94: "W83 vs W84 (R-QF2)",
-    95: "W85 vs W86 (R-QF4)",
-    96: "W87 vs W88 (R-QF4)",
+    93: "W83 vs W84 (R-QF2)",
+    94: "W81 vs W82 (R-QF2)",
+    95: "W86 vs W88 (R-QF4)",
+    96: "W85 vs W87 (R-QF4)",
     // QF
     97: "QF1 (Left Upper)",
     98: "QF2 (Right Upper)",

@@ -42,14 +42,10 @@ export default async function GroupStagePage() {
   // Use dbName() to resolve WC names (e.g. "Czechia") to DB names ("Czech Republic")
   const playoffTeamsByGroup: Record<string, string[]> = {};
   for (const [, path] of Object.entries(UEFA_PLAYOFFS)) {
-    playoffTeamsByGroup[path.targetGroup] = [
-      ...path.semi1, ...path.semi2,
-    ].map(dbName);
+    playoffTeamsByGroup[path.targetGroup] = path.final.map(dbName);
   }
   for (const [, path] of Object.entries(FIFA_PLAYOFFS)) {
-    playoffTeamsByGroup[path.targetGroup] = [
-      ...path.semi, path.finalOpponent,
-    ].map(dbName);
+    playoffTeamsByGroup[path.targetGroup] = path.final.map(dbName);
   }
 
   return (

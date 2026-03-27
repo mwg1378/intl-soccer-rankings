@@ -33,13 +33,13 @@ function buildPlayoffMap() {
   const map: Record<string, { teams: string[]; path: string }> = {};
   for (const [pathId, path] of Object.entries(UEFA_PLAYOFFS)) {
     map[path.placeholder] = {
-      teams: [...path.semi1, ...path.semi2].map(dbName),
+      teams: path.final.map(dbName),
       path: `UEFA ${pathId}`,
     };
   }
   for (const [pathId, path] of Object.entries(FIFA_PLAYOFFS)) {
     map[path.placeholder] = {
-      teams: [...path.semi, path.finalOpponent].map(dbName),
+      teams: path.final.map(dbName),
       path: `FIFA ${pathId}`,
     };
   }

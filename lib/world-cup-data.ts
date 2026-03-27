@@ -44,59 +44,52 @@ export const GROUPS: Record<string, string[]> = {
 };
 
 // --- UEFA EUROPEAN PLAYOFFS (March 2026) ---
-// Single-leg semifinals + single-leg final
+// Semifinals played March 26 — only finals remain (March 31).
 export interface PlayoffPath {
-  semi1: [string, string]; // [home, away]
-  semi2: [string, string];
+  final: [string, string]; // [home, away] for the final
   targetGroup: string;
   placeholder: string;
 }
 
 export const UEFA_PLAYOFFS: Record<string, PlayoffPath> = {
   A: {
-    semi1: ["Italy", "Northern Ireland"],
-    semi2: ["Wales", "Bosnia and Herzegovina"],
+    final: ["Bosnia and Herzegovina", "Italy"],  // Bosnia hosts (Zenica)
     targetGroup: "B",
     placeholder: PLAYOFF_UEFA_A,
   },
   B: {
-    semi1: ["Ukraine", "Sweden"],
-    semi2: ["Poland", "Albania"],
+    final: ["Sweden", "Poland"],  // Sweden hosts (Solna)
     targetGroup: "F",
     placeholder: PLAYOFF_UEFA_B,
   },
   C: {
-    semi1: ["Turkey", "Romania"],
-    semi2: ["Slovakia", "Kosovo"],
+    final: ["Kosovo", "Turkey"],  // Kosovo hosts (Pristina)
     targetGroup: "D",
     placeholder: PLAYOFF_UEFA_C,
   },
   D: {
-    semi1: ["Denmark", "North Macedonia"],
-    semi2: ["Czechia", "Republic of Ireland"],
+    final: ["Czechia", "Denmark"],  // Czechia hosts (Prague)
     targetGroup: "A",
     placeholder: PLAYOFF_UEFA_D,
   },
 };
 
 // --- FIFA INTERCONTINENTAL PLAYOFFS ---
+// Semifinals played March 26 — only finals remain (March 31).
 export interface FifaPlayoffPath {
-  semi: [string, string]; // [team1, team2]
-  finalOpponent: string; // team waiting in the final
+  final: [string, string]; // [home, away] for the final
   targetGroup: string;
   placeholder: string;
 }
 
 export const FIFA_PLAYOFFS: Record<string, FifaPlayoffPath> = {
   "1": {
-    semi: ["New Caledonia", "Jamaica"],
-    finalOpponent: "DR Congo",
+    final: ["DR Congo", "Jamaica"],  // Guadalajara, neutral
     targetGroup: "K",
     placeholder: PLAYOFF_FIFA_1,
   },
   "2": {
-    semi: ["Bolivia", "Suriname"],
-    finalOpponent: "Iraq",
+    final: ["Iraq", "Bolivia"],  // Monterrey, neutral
     targetGroup: "I",
     placeholder: PLAYOFF_FIFA_2,
   },
@@ -116,22 +109,22 @@ export interface R32Match {
 export const R32_MATCHES: R32Match[] = [
   // Left pathway
   { num: 73, home: "2A", away: "2B" },
-  { num: 74, home: "1E", away: "3rd", eligible3rd: ["A", "B", "C", "D", "F"] },
-  { num: 75, home: "1F", away: "2C" },
-  { num: 76, home: "1C", away: "2F" },
-  { num: 77, home: "1I", away: "3rd", eligible3rd: ["C", "D", "F", "G", "H"] },
-  { num: 78, home: "2E", away: "2I" },
+  { num: 74, home: "1C", away: "2F" },
+  { num: 75, home: "1E", away: "3rd", eligible3rd: ["A", "B", "C", "D", "F"] },
+  { num: 76, home: "1F", away: "2C" },
+  { num: 77, home: "2E", away: "2I" },
+  { num: 78, home: "1I", away: "3rd", eligible3rd: ["C", "D", "F", "G", "H"] },
   { num: 79, home: "1A", away: "3rd", eligible3rd: ["C", "E", "F", "H", "I"] },
   { num: 80, home: "1L", away: "3rd", eligible3rd: ["E", "H", "I", "J", "K"] },
   // Right pathway
-  { num: 81, home: "1D", away: "3rd", eligible3rd: ["B", "E", "F", "I", "J"] },
-  { num: 82, home: "1G", away: "3rd", eligible3rd: ["A", "E", "H", "I", "J"] },
-  { num: 83, home: "2K", away: "2L" },
-  { num: 84, home: "1H", away: "2J" },
-  { num: 85, home: "1B", away: "3rd", eligible3rd: ["E", "F", "G", "I", "J"] },
-  { num: 86, home: "1J", away: "2H" },
-  { num: 87, home: "1K", away: "3rd", eligible3rd: ["D", "E", "I", "J", "L"] },
-  { num: 88, home: "2D", away: "2G" },
+  { num: 81, home: "1G", away: "3rd", eligible3rd: ["A", "E", "H", "I", "J"] },
+  { num: 82, home: "1D", away: "3rd", eligible3rd: ["B", "E", "F", "I", "J"] },
+  { num: 83, home: "1B", away: "3rd", eligible3rd: ["E", "F", "G", "I", "J"] },
+  { num: 84, home: "2K", away: "2L" },
+  { num: 85, home: "1H", away: "2J" },
+  { num: 86, home: "2D", away: "2G" },
+  { num: 87, home: "1J", away: "2H" },
+  { num: 88, home: "1K", away: "3rd", eligible3rd: ["D", "E", "I", "J", "L"] },
 ];
 
 // Round of 16 bracket
@@ -168,35 +161,35 @@ export const THIRD_PLACE_MATCH = { num: 103, homeLoss: 101, awayLoss: 102 };
 // Dates and venues for all knockout matches (2026 FIFA World Cup)
 export const MATCH_SCHEDULE: Record<number, { date: string; venue: string; city: string }> = {
   // R32 — June 28 – July 3
-  73: { date: "Jun 28", venue: "MetLife Stadium", city: "New York/NJ" },
-  74: { date: "Jun 28", venue: "Lumen Field", city: "Seattle" },
-  75: { date: "Jun 28", venue: "AT&T Stadium", city: "Dallas" },
-  76: { date: "Jun 29", venue: "Hard Rock Stadium", city: "Miami" },
-  77: { date: "Jun 29", venue: "NRG Stadium", city: "Houston" },
-  78: { date: "Jun 29", venue: "SoFi Stadium", city: "Los Angeles" },
+  73: { date: "Jun 28", venue: "SoFi Stadium", city: "Los Angeles" },
+  74: { date: "Jun 29", venue: "NRG Stadium", city: "Houston" },
+  75: { date: "Jun 29", venue: "Gillette Stadium", city: "Boston" },
+  76: { date: "Jun 29", venue: "Estadio BBVA", city: "Monterrey" },
+  77: { date: "Jun 30", venue: "AT&T Stadium", city: "Dallas" },
+  78: { date: "Jun 30", venue: "MetLife Stadium", city: "New York/NJ" },
   79: { date: "Jun 30", venue: "Estadio Azteca", city: "Mexico City" },
-  80: { date: "Jun 30", venue: "Gillette Stadium", city: "Boston" },
-  81: { date: "Jun 30", venue: "Levi's Stadium", city: "Santa Clara" },
-  82: { date: "Jul 1", venue: "Mercedes-Benz Stadium", city: "Atlanta" },
-  83: { date: "Jul 1", venue: "SoFi Stadium", city: "Los Angeles" },
-  84: { date: "Jul 1", venue: "BMO Field", city: "Toronto" },
-  85: { date: "Jul 2", venue: "BBVA Stadium", city: "Monterrey" },
-  86: { date: "Jul 2", venue: "Arrowhead Stadium", city: "Kansas City" },
-  87: { date: "Jul 2", venue: "BC Place", city: "Vancouver" },
-  88: { date: "Jul 3", venue: "AT&T Stadium", city: "Dallas" },
+  80: { date: "Jul 1", venue: "Mercedes-Benz Stadium", city: "Atlanta" },
+  81: { date: "Jul 1", venue: "Lumen Field", city: "Seattle" },
+  82: { date: "Jul 1", venue: "Levi's Stadium", city: "Santa Clara" },
+  83: { date: "Jul 2", venue: "BC Place", city: "Vancouver" },
+  84: { date: "Jul 2", venue: "BMO Field", city: "Toronto" },
+  85: { date: "Jul 2", venue: "SoFi Stadium", city: "Los Angeles" },
+  86: { date: "Jul 3", venue: "AT&T Stadium", city: "Dallas" },
+  87: { date: "Jul 3", venue: "Hard Rock Stadium", city: "Miami" },
+  88: { date: "Jul 3", venue: "Arrowhead Stadium", city: "Kansas City" },
   // R16 — July 4–7
   89: { date: "Jul 4", venue: "Lincoln Financial Field", city: "Philadelphia" },
   90: { date: "Jul 4", venue: "NRG Stadium", city: "Houston" },
   91: { date: "Jul 5", venue: "MetLife Stadium", city: "New York/NJ" },
   92: { date: "Jul 5", venue: "Estadio Azteca", city: "Mexico City" },
-  93: { date: "Jul 6", venue: "Lumen Field", city: "Seattle" },
-  94: { date: "Jul 6", venue: "AT&T Stadium", city: "Dallas" },
+  93: { date: "Jul 6", venue: "AT&T Stadium", city: "Dallas" },
+  94: { date: "Jul 6", venue: "Lumen Field", city: "Seattle" },
   95: { date: "Jul 7", venue: "Mercedes-Benz Stadium", city: "Atlanta" },
   96: { date: "Jul 7", venue: "BC Place", city: "Vancouver" },
   // QF — July 9–11
   97: { date: "Jul 9", venue: "Gillette Stadium", city: "Boston" },
   98: { date: "Jul 10", venue: "SoFi Stadium", city: "Los Angeles" },
-  99: { date: "Jul 10", venue: "Hard Rock Stadium", city: "Miami" },
+  99: { date: "Jul 11", venue: "Hard Rock Stadium", city: "Miami" },
   100: { date: "Jul 11", venue: "Arrowhead Stadium", city: "Kansas City" },
   // SF — July 14–15
   101: { date: "Jul 14", venue: "AT&T Stadium", city: "Dallas" },
@@ -222,14 +215,14 @@ export const CONFIRMED_TEAMS = [
   "England", "Croatia", "Ghana", "Panama",
 ];
 
-// All playoff contenders
+// Playoff finalists (semifinals played March 26, 2026)
 export const PLAYOFF_TEAMS = [
-  // UEFA
-  "Italy", "Northern Ireland", "Wales", "Bosnia and Herzegovina",
-  "Ukraine", "Sweden", "Poland", "Albania",
-  "Turkey", "Romania", "Slovakia", "Kosovo",
-  "Denmark", "North Macedonia", "Czechia", "Republic of Ireland",
-  // FIFA
-  "New Caledonia", "Jamaica", "DR Congo",
-  "Bolivia", "Suriname", "Iraq",
+  // UEFA — finals March 31
+  "Italy", "Bosnia and Herzegovina",
+  "Sweden", "Poland",
+  "Turkey", "Kosovo",
+  "Czechia", "Denmark",
+  // FIFA — finals March 31
+  "Jamaica", "DR Congo",
+  "Bolivia", "Iraq",
 ];

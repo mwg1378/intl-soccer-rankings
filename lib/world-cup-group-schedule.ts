@@ -28,8 +28,8 @@ export const GROUP_STAGE_SCHEDULE: GroupMatch[] = [
   { matchNum: 5, group: "B", home: "Qatar", away: "Switzerland", date: "Jun 13", time: "3:00 PM", venue: "Levi's Stadium", city: "Santa Clara" },
   { matchNum: 17, group: "B", home: "Canada", away: "Qatar", date: "Jun 18", time: "6:00 PM", venue: "BC Place", city: "Vancouver" },
   { matchNum: 18, group: "B", home: "Switzerland", away: "__UEFA_A__", date: "Jun 18", time: "3:00 PM", venue: "SoFi Stadium", city: "Los Angeles" },
-  { matchNum: 39, group: "B", home: "Canada", away: "Switzerland", date: "Jun 24", time: "3:00 PM", venue: "BC Place", city: "Vancouver" },
-  { matchNum: 40, group: "B", home: "Qatar", away: "__UEFA_A__", date: "Jun 24", time: "3:00 PM", venue: "Lumen Field", city: "Seattle" },
+  { matchNum: 39, group: "B", home: "Switzerland", away: "Canada", date: "Jun 24", time: "3:00 PM", venue: "BC Place", city: "Vancouver" },
+  { matchNum: 40, group: "B", home: "__UEFA_A__", away: "Qatar", date: "Jun 24", time: "3:00 PM", venue: "Lumen Field", city: "Seattle" },
 
   // GROUP C
   { matchNum: 6, group: "C", home: "Brazil", away: "Morocco", date: "Jun 13", time: "6:00 PM", venue: "MetLife Stadium", city: "New York/NJ" },
@@ -41,11 +41,11 @@ export const GROUP_STAGE_SCHEDULE: GroupMatch[] = [
 
   // GROUP D
   { matchNum: 4, group: "D", home: "United States", away: "Paraguay", date: "Jun 12", time: "9:00 PM", venue: "SoFi Stadium", city: "Los Angeles" },
-  { matchNum: 8, group: "D", home: "Australia", away: "__UEFA_C__", date: "Jun 13", time: "12:00 PM", venue: "BC Place", city: "Vancouver" },
+  { matchNum: 8, group: "D", home: "Australia", away: "__UEFA_C__", date: "Jun 13", time: "12:00 AM", venue: "BC Place", city: "Vancouver" },
   { matchNum: 21, group: "D", home: "United States", away: "Australia", date: "Jun 19", time: "3:00 PM", venue: "Lumen Field", city: "Seattle" },
-  { matchNum: 22, group: "D", home: "__UEFA_C__", away: "Paraguay", date: "Jun 19", time: "9:00 PM", venue: "Arrowhead Stadium", city: "Kansas City" },
+  { matchNum: 22, group: "D", home: "__UEFA_C__", away: "Paraguay", date: "Jun 19", time: "12:00 AM", venue: "Levi's Stadium", city: "Santa Clara" },
   { matchNum: 43, group: "D", home: "United States", away: "__UEFA_C__", date: "Jun 25", time: "10:00 PM", venue: "SoFi Stadium", city: "Los Angeles" },
-  { matchNum: 44, group: "D", home: "Paraguay", away: "Australia", date: "Jun 25", time: "9:00 PM", venue: "Levi's Stadium", city: "Santa Clara" },
+  { matchNum: 44, group: "D", home: "Paraguay", away: "Australia", date: "Jun 25", time: "10:00 PM", venue: "Levi's Stadium", city: "Santa Clara" },
 
   // GROUP E
   { matchNum: 9, group: "E", home: "Germany", away: "Curacao", date: "Jun 14", time: "1:00 PM", venue: "NRG Stadium", city: "Houston" },
@@ -59,7 +59,7 @@ export const GROUP_STAGE_SCHEDULE: GroupMatch[] = [
   { matchNum: 11, group: "F", home: "Netherlands", away: "Japan", date: "Jun 14", time: "4:00 PM", venue: "AT&T Stadium", city: "Dallas" },
   { matchNum: 12, group: "F", home: "__UEFA_B__", away: "Tunisia", date: "Jun 14", time: "10:00 PM", venue: "Estadio BBVA", city: "Monterrey" },
   { matchNum: 25, group: "F", home: "Netherlands", away: "__UEFA_B__", date: "Jun 20", time: "1:00 PM", venue: "NRG Stadium", city: "Houston" },
-  { matchNum: 26, group: "F", home: "Tunisia", away: "Japan", date: "Jun 20", time: "10:00 PM", venue: "Estadio BBVA", city: "Monterrey" },
+  { matchNum: 26, group: "F", home: "Tunisia", away: "Japan", date: "Jun 20", time: "12:00 AM", venue: "Estadio BBVA", city: "Monterrey" },
   { matchNum: 47, group: "F", home: "Japan", away: "__UEFA_B__", date: "Jun 25", time: "7:00 PM", venue: "AT&T Stadium", city: "Dallas" },
   { matchNum: 48, group: "F", home: "Tunisia", away: "Netherlands", date: "Jun 25", time: "7:00 PM", venue: "Arrowhead Stadium", city: "Kansas City" },
 
@@ -77,7 +77,7 @@ export const GROUP_STAGE_SCHEDULE: GroupMatch[] = [
   { matchNum: 29, group: "H", home: "Spain", away: "Saudi Arabia", date: "Jun 21", time: "12:00 PM", venue: "Mercedes-Benz Stadium", city: "Atlanta" },
   { matchNum: 30, group: "H", home: "Uruguay", away: "Cabo Verde", date: "Jun 21", time: "6:00 PM", venue: "Hard Rock Stadium", city: "Miami" },
   { matchNum: 53, group: "H", home: "Cabo Verde", away: "Saudi Arabia", date: "Jun 26", time: "8:00 PM", venue: "NRG Stadium", city: "Houston" },
-  { matchNum: 54, group: "H", home: "Spain", away: "Uruguay", date: "Jun 26", time: "8:00 PM", venue: "Estadio Akron", city: "Guadalajara" },
+  { matchNum: 54, group: "H", home: "Uruguay", away: "Spain", date: "Jun 26", time: "8:00 PM", venue: "Estadio Akron", city: "Guadalajara" },
 
   // GROUP I
   { matchNum: 55, group: "I", home: "France", away: "Senegal", date: "Jun 16", time: "3:00 PM", venue: "MetLife Stadium", city: "New York/NJ" },
