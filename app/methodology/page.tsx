@@ -181,6 +181,9 @@ Annual mean reversion: 8% pull toward 1500`}
             methodology: 35 player attributes &rarr; 7 clusters &rarr; 4 positions &rarr;
             offensive/defensive decomposition). Confederation penalty applied
             (UEFA/CONMEBOL: 0, CONCACAF: 15, CAF/AFC: 30, OFC: 40 Elo points).
+            These penalties are empirical estimates designed to correct for Elo inflation
+            from intra-confederation play against weaker opponents; see{" "}
+            <a href="#limitations" className="underline">Known Limitations</a> for caveats.
           </p>
           <p className="text-xs text-gray-500">
             Market alignment: MSE = 0.000397 (best individual model), r = 0.824
@@ -404,6 +407,59 @@ Annual decay: 15%`}
             <li>Berrar, D. et al. (2019). Incorporating domain knowledge in machine learning for soccer outcome prediction</li>
             <li>Razali, N. &amp; Yeung, C.Y. (2023). Framework of interpretable match results prediction in football with FIFA ratings</li>
             <li>Elo, A. (1978). The Rating of Chessplayers, Past and Present</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="limitations" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
+        <div className="bg-[#1a2b4a] px-4 py-2">
+          <h2 className="text-sm font-semibold text-white">Known Limitations</h2>
+        </div>
+        <div className="prose prose-neutral max-w-none p-4 text-sm">
+          <p>
+            We aim to be transparent about the limitations of our methodology:
+          </p>
+          <ul>
+            <li>
+              <strong>Market alignment is in-sample.</strong> The composite weights
+              and prediction sensitivity (0.38) were calibrated against the same
+              sportsbook odds used to measure market alignment. MSE and correlation
+              metrics reflect calibration fit, not independent predictive accuracy.
+              Our <a href="#backtesting" className="underline">backtesting</a> provides
+              the out-of-sample evaluation.
+            </li>
+            <li>
+              <strong>Backtesting uses current-period rating statistics.</strong> The
+              z-score normalization in the prediction engine uses global mean and
+              standard deviation computed from current ratings, even when predicting
+              historical tournament matches. This introduces a mild lookahead bias
+              that may make backtested Brier scores slightly optimistic. Future work:
+              compute per-period statistics using only data available before each
+              tournament.
+            </li>
+            <li>
+              <strong>Confederation penalties are empirical, not derived.</strong> The
+              flat Elo deductions (CONCACAF: 15, CAF/AFC: 30, OFC: 40 points) correct
+              for rating inflation from intra-confederation play, but they are manually
+              estimated rather than derived from cross-confederation match analysis.
+              They are consequential (30 points can shift a team several ranks) and may
+              over- or under-correct for specific teams.
+            </li>
+            <li>
+              <strong>Offensive/defensive split is symmetric.</strong> Elo updates
+              apply the same delta to both offensive and defensive sub-ratings (50/50).
+              A 5-0 win and a 1-0 win produce different magnitudes but the same
+              off/def balance, even though they imply different offensive vs. defensive
+              strength. The prediction engine treats these sub-ratings as meaningful
+              signals.
+            </li>
+            <li>
+              <strong>Monte Carlo sampling error.</strong> At 100,000 iterations,
+              championship probabilities for favorites (~15%) have a sampling error
+              of ~0.11 percentage points. For long-shot teams (&lt;1%), the relative
+              error is larger. Advancement probabilities for earlier rounds are more
+              precise.
+            </li>
           </ul>
         </div>
       </section>
