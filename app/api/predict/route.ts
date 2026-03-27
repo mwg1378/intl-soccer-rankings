@@ -34,36 +34,37 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Team not found" }, { status: 404 });
   }
 
-  // Compute mean and std of raw Elo ratings across all ranked teams
+  // Compute mean and std of Grid-Optimized ratings across all ranked teams
+  // (matches what the WC simulation and group-matches API use)
   const allTeams = await prisma.team.findMany({
     where: { currentRank: { gt: 0 } },
-    select: { eloOffensive: true, eloDefensive: true },
+    select: { gridOptOff: true, gridOptDef: true },
   });
 
   const n = allTeams.length;
-  const avgOff = allTeams.reduce((s, t) => s + t.eloOffensive, 0) / n;
-  const avgDef = allTeams.reduce((s, t) => s + t.eloDefensive, 0) / n;
+  const avgOff = allTeams.reduce((s, t) => s + t.gridOptOff, 0) / n;
+  const avgDef = allTeams.reduce((s, t) => s + t.gridOptDef, 0) / n;
   const stdOff = Math.sqrt(
-    allTeams.reduce((s, t) => s + (t.eloOffensive - avgOff) ** 2, 0) / n
+    allTeams.reduce((s, t) => s + (t.gridOptOff - avgOff) ** 2, 0) / n
   );
   const stdDef = Math.sqrt(
-    allTeams.reduce((s, t) => s + (t.eloDefensive - avgDef) ** 2, 0) / n
+    allTeams.reduce((s, t) => s + (t.gridOptDef - avgDef) ** 2, 0) / n
   );
 
   const neutralVenue = venue === "NEUTRAL";
 
-  // Use raw Elo ratings for predictions (more variance = better discrimination)
+  // Use Grid-Optimized composite ratings (70% Combined + 30% BT)
   const effectiveHome = venue === "AWAY" ? awayTeam : homeTeam;
   const effectiveAway = venue === "AWAY" ? homeTeam : awayTeam;
 
   const result = predictMatch({
     homeTeam: {
-      offensive: effectiveHome.eloOffensive,
-      defensive: effectiveHome.eloDefensive,
+      offensive: effectiveHome.gridOptOff,
+      defensive: effectiveHome.gridOptDef,
     },
     awayTeam: {
-      offensive: effectiveAway.eloOffensive,
-      defensive: effectiveAway.eloDefensive,
+      offensive: effectiveAway.gridOptOff,
+      defensive: effectiveAway.gridOptDef,
     },
     neutralVenue,
     matchImportance: matchImportance ?? undefined,

@@ -29,15 +29,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const { homeTeam, awayTeam } = result;
 
-  // Use raw Elo for metadata predictions (same as /api/predict)
+  // Use Grid-Optimized composite for metadata predictions
   const prediction = predictMatch({
     homeTeam: {
-      offensive: homeTeam.eloOffensive,
-      defensive: homeTeam.eloDefensive,
+      offensive: homeTeam.gridOptOff,
+      defensive: homeTeam.gridOptDef,
     },
     awayTeam: {
-      offensive: awayTeam.eloOffensive,
-      defensive: awayTeam.eloDefensive,
+      offensive: awayTeam.gridOptOff,
+      defensive: awayTeam.gridOptDef,
     },
     neutralVenue: true,
   });
@@ -61,30 +61,30 @@ export default async function ShareablePredictionPage({ params }: PageProps) {
 
   const { homeTeam, awayTeam } = result;
 
-  // Use raw Elo ratings (same as /api/predict) for consistent predictions
+  // Use Grid-Optimized composite ratings (same as /api/predict and WC simulation)
   const allTeams = await prisma.team.findMany({
     where: { currentRank: { gt: 0 } },
-    select: { eloOffensive: true, eloDefensive: true },
+    select: { gridOptOff: true, gridOptDef: true },
   });
 
   const n = allTeams.length;
-  const avgOff = allTeams.reduce((s, t) => s + t.eloOffensive, 0) / n;
-  const avgDef = allTeams.reduce((s, t) => s + t.eloDefensive, 0) / n;
+  const avgOff = allTeams.reduce((s, t) => s + t.gridOptOff, 0) / n;
+  const avgDef = allTeams.reduce((s, t) => s + t.gridOptDef, 0) / n;
   const stdOff = Math.sqrt(
-    allTeams.reduce((s, t) => s + (t.eloOffensive - avgOff) ** 2, 0) / n
+    allTeams.reduce((s, t) => s + (t.gridOptOff - avgOff) ** 2, 0) / n
   );
   const stdDef = Math.sqrt(
-    allTeams.reduce((s, t) => s + (t.eloDefensive - avgDef) ** 2, 0) / n
+    allTeams.reduce((s, t) => s + (t.gridOptDef - avgDef) ** 2, 0) / n
   );
 
   const prediction = predictMatch({
     homeTeam: {
-      offensive: homeTeam.eloOffensive,
-      defensive: homeTeam.eloDefensive,
+      offensive: homeTeam.gridOptOff,
+      defensive: homeTeam.gridOptDef,
     },
     awayTeam: {
-      offensive: awayTeam.eloOffensive,
-      defensive: awayTeam.eloDefensive,
+      offensive: awayTeam.gridOptOff,
+      defensive: awayTeam.gridOptDef,
     },
     neutralVenue: true,
     avgOffensive: avgOff,
