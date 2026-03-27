@@ -293,7 +293,7 @@ function extractChampOdds(
 // --- Main ---
 
 async function main() {
-  const ITERATIONS = 5000; // balance between speed and accuracy
+  const ITERATIONS = 20000; // 20k iters — sampling error ~0.25pp at 15%
   console.log("=== Compare Rankings to Betting Market WC 2026 Odds ===\n");
 
   // Load all teams
@@ -438,7 +438,7 @@ async function main() {
           [topIds[i]]: w,
           [topIds[j]]: 1 - w,
         };
-        const sim = runBlendedSim(teams, weights, 2000); // fewer iters for speed
+        const sim = runBlendedSim(teams, weights, 10000); // 10k iters — sampling error ~0.35pp at 15%
         const odds = extractChampOdds(sim, teams);
         const align = computeAlignmentScore(odds, MARKET_CHAMPION_ODDS);
         if (align.mse < bestGridMse) {
