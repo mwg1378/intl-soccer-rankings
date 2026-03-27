@@ -32,10 +32,18 @@ interface DisagreementAnalysis {
   justification: string;
 }
 
+interface MarketObservation {
+  team: string;
+  category: "source_divergence" | "model_insight" | "market_shift" | "playoff_uncertainty";
+  headline: string;
+  analysis: string;
+}
+
 interface MarketAlignmentViewProps {
   comparisons: TeamComparison[];
   metrics: AlignmentMetrics;
   disagreements: DisagreementAnalysis[];
+  observations: MarketObservation[];
   marketSources: {
     sportsbook: { name: string; updated: string; source: string };
     polymarket: { name: string; updated: string; volume: string; source: string };
@@ -45,7 +53,7 @@ interface MarketAlignmentViewProps {
 }
 
 function pct(v: number): string {
-  if (v === 0) return "—";
+  if (v === 0) return "\u2014";
   if (v < 0.001) return "<0.1%";
   return (v * 100).toFixed(1) + "%";
 }
@@ -80,10 +88,25 @@ function severityBadge(severity: DisagreementAnalysis["severity"]): { className:
   }
 }
 
+function mseQuality(mse: number): { label: string; className: string } {
+  if (mse < 0.0003) return { label: "Excellent", className: "text-green-600" };
+  if (mse < 0.0005) return { label: "Good", className: "text-green-500" };
+  if (mse < 0.001) return { label: "Fair", className: "text-yellow-600" };
+  return { label: "Poor", className: "text-red-500" };
+}
+
+const CATEGORY_LABELS: Record<MarketObservation["category"], { label: string; color: string }> = {
+  source_divergence: { label: "Source Divergence", color: "bg-purple-100 text-purple-700" },
+  model_insight: { label: "Model Insight", color: "bg-emerald-100 text-emerald-700" },
+  market_shift: { label: "Market Shift", color: "bg-amber-100 text-amber-700" },
+  playoff_uncertainty: { label: "Playoff", color: "bg-sky-100 text-sky-700" },
+};
+
 export function MarketAlignmentView({
   comparisons,
   metrics,
   disagreements,
+  observations,
   marketSources,
   simIterations,
   simDate,
@@ -92,6 +115,8 @@ export function MarketAlignmentView({
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
 
   const displayed = showAll ? comparisons : comparisons.slice(0, 20);
+  const disagreeTeams = new Set(disagreements.map(d => d.team));
+  const mseQ = mseQuality(metrics.mse);
 
   return (
     <div className="space-y-8">
@@ -100,54 +125,61 @@ export function MarketAlignmentView({
         <h1 className="text-xl font-bold">Market Alignment</h1>
         <p className="text-sm text-gray-400 mt-1">
           How our model&apos;s World Cup 2026 championship probabilities compare against
-          sportsbook consensus and prediction markets.
+          sportsbook consensus and prediction markets. We use disagreements as signal, not noise.
         </p>
       </div>
 
       {/* Summary metrics */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <MetricCard label="MSE vs Market" value={metrics.mse.toFixed(6)} subtitle="lower = better" />
-        <MetricCard label="Rank Correlation" value={metrics.spearmanCorrelation.toFixed(3)} subtitle="Spearman rho" />
+        <div className="rounded-lg border bg-white p-3">
+          <div className="text-xs text-gray-400">MSE vs Market</div>
+          <div className="text-lg font-bold mt-0.5">{metrics.mse.toFixed(6)}</div>
+          <div className={`text-[10px] font-medium ${mseQ.className}`}>
+            {mseQ.label} (below 0.001 = strong fit)
+          </div>
+        </div>
+        <MetricCard label="Rank Correlation" value={metrics.spearmanCorrelation.toFixed(3)} subtitle="1.0 = perfect agreement" />
         <MetricCard label="Top-5 Overlap" value={`${(metrics.top5Overlap * 100).toFixed(0)}%`} subtitle="same 5 favorites" />
         <MetricCard label="Top-10 Overlap" value={`${(metrics.top10Overlap * 100).toFixed(0)}%`} subtitle="same top 10" />
-        <MetricCard label="Mean Abs Diff" value={`${(metrics.meanAbsDiff * 100).toFixed(2)}pp`} subtitle="avg probability gap" />
+        <MetricCard label="Avg Probability Gap" value={`${(metrics.meanAbsDiff * 100).toFixed(2)}pp`} subtitle="per-team average" />
       </div>
 
-      {/* Comparison table */}
+      {/* Comparison table — uses site .tr-table pattern */}
       <div>
         <h2 className="text-lg font-semibold mb-3">Team-by-Team Comparison</h2>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="tr-table">
             <thead>
-              <tr className="border-b text-left text-xs text-gray-400 uppercase tracking-wide">
-                <th className="py-2 pr-4">#</th>
-                <th className="py-2 pr-4">Team</th>
-                <th className="py-2 pr-2 text-right">Our Model</th>
-                <th className="py-2 pr-2 text-right">Consensus</th>
-                <th className="py-2 pr-2 text-right">Sportsbook</th>
-                <th className="py-2 pr-2 text-right">Polymarket</th>
-                <th className="py-2 pr-2 text-right">Diff (pp)</th>
-                <th className="py-2 pl-2">Agreement</th>
+              <tr>
+                <th>#</th>
+                <th>Team</th>
+                <th className="text-right">Our Model</th>
+                <th className="text-right">Consensus</th>
+                <th className="text-right hidden md:table-cell">Sportsbook</th>
+                <th className="text-right hidden md:table-cell">Polymarket</th>
+                <th className="text-right" title="Model probability minus market consensus, in percentage points">Diff</th>
+                <th>Agreement</th>
               </tr>
             </thead>
             <tbody>
               {displayed.map((c, i) => {
                 const diff = diffCell(c.diff);
                 const badge = categoryBadge(c.category);
+                const hasDetail = disagreeTeams.has(c.team);
                 return (
                   <tr
                     key={c.team}
-                    className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => setExpandedTeam(expandedTeam === c.team ? null : c.team)}
+                    className={hasDetail ? "cursor-pointer" : ""}
+                    onClick={hasDetail ? () => setExpandedTeam(expandedTeam === c.team ? null : c.team) : undefined}
                   >
-                    <td className="py-1.5 pr-4 text-gray-400">{i + 1}</td>
-                    <td className="py-1.5 pr-4 font-medium">{c.team}</td>
-                    <td className="py-1.5 pr-2 text-right tabular-nums">{pct(c.modelProb)}</td>
-                    <td className="py-1.5 pr-2 text-right tabular-nums">{pct(c.consensusProb)}</td>
-                    <td className="py-1.5 pr-2 text-right tabular-nums text-gray-500">{pct(c.sportsbookProb)}</td>
-                    <td className="py-1.5 pr-2 text-right tabular-nums text-gray-500">{pct(c.polymarketProb)}</td>
-                    <td className={`py-1.5 pr-2 text-right tabular-nums ${diff.className}`}>{diff.text}</td>
-                    <td className="py-1.5 pl-2">
+                    <td className="text-gray-400">{i + 1}</td>
+                    <td className="font-medium">{c.team}</td>
+                    <td className="text-right tabular-nums">{pct(c.modelProb)}</td>
+                    <td className="text-right tabular-nums">{pct(c.consensusProb)}</td>
+                    <td className="text-right tabular-nums text-gray-500 hidden md:table-cell">{pct(c.sportsbookProb)}</td>
+                    <td className="text-right tabular-nums text-gray-500 hidden md:table-cell">{pct(c.polymarketProb)}</td>
+                    <td className={`text-right tabular-nums ${diff.className}`}>{diff.text}</td>
+                    <td>
                       <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${badge.className}`}>
                         {badge.label}
                       </span>
@@ -174,7 +206,7 @@ export function MarketAlignmentView({
           <h2 className="text-lg font-semibold mb-1">Notable Disagreements</h2>
           <p className="text-sm text-gray-400 mb-4">
             Teams where our model diverges meaningfully from market consensus.
-            These are interesting signals — not necessarily errors. Click to read analysis.
+            These are interesting signals, not necessarily errors.
           </p>
           <div className="space-y-3">
             {disagreements
@@ -188,7 +220,7 @@ export function MarketAlignmentView({
                     className={`border-l-4 ${sev.className} bg-gray-50 rounded-r-lg px-4 py-3 cursor-pointer`}
                     onClick={() => setExpandedTeam(isExpanded ? null : d.team)}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-3">
                         <span className="font-semibold">{d.team}</span>
                         <span className="text-xs text-gray-400">
@@ -212,6 +244,34 @@ export function MarketAlignmentView({
         </div>
       )}
 
+      {/* Market Observations */}
+      {observations.length > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold mb-1">Market Intelligence</h2>
+          <p className="text-sm text-gray-400 mb-4">
+            Qualitative analysis of sportsbook vs prediction market pricing, playoff uncertainty,
+            and where our model&apos;s perspective adds signal.
+          </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            {observations.map((obs) => {
+              const cat = CATEGORY_LABELS[obs.category];
+              return (
+                <div key={`${obs.team}-${obs.category}`} className="border rounded-lg p-4 bg-white">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${cat.color}`}>
+                      {cat.label}
+                    </span>
+                    <span className="text-xs text-gray-400">{obs.team}</span>
+                  </div>
+                  <h3 className="text-sm font-semibold mb-1">{obs.headline}</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">{obs.analysis}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Sources */}
       <div className="text-xs text-gray-400 space-y-1 pt-4 border-t">
         <p>
@@ -225,7 +285,7 @@ export function MarketAlignmentView({
         </p>
         <p>
           Consensus = average of sportsbook implied probability and Polymarket probability, normalized.
-          Diff = model probability minus consensus (positive = our model is more bullish).
+          Diff = model minus consensus (positive = our model is more bullish on that team).
         </p>
       </div>
     </div>

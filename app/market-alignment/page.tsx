@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { MarketAlignmentView } from "@/components/market-alignment/market-alignment-view";
 import { CONSENSUS_ODDS, SPORTSBOOK_ODDS, POLYMARKET_ODDS, MARKET_SOURCES, topTeams } from "@/lib/market-odds";
 import { compareToMarket, computeMetrics, generateDisagreementReport } from "@/lib/market-alignment";
+import { MARKET_OBSERVATIONS } from "@/lib/market-observations";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +57,7 @@ export default async function MarketAlignmentPage() {
       comparisons={top30}
       metrics={metrics}
       disagreements={disagreements}
+      observations={MARKET_OBSERVATIONS}
       marketSources={MARKET_SOURCES}
       simIterations={sim.iterations}
       simDate={sim.createdAt.toISOString()}
