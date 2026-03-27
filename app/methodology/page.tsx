@@ -16,7 +16,22 @@ export default function MethodologyPage() {
         </p>
       </div>
 
-      <section className="overflow-hidden rounded border border-gray-200">
+      {/* Table of Contents */}
+      <nav className="rounded border border-gray-200 p-4 text-sm">
+        <h2 className="font-semibold text-xs uppercase tracking-wide text-gray-500 mb-2">Contents</h2>
+        <ol className="space-y-1 text-gray-600">
+          <li><a href="#overview" className="hover:text-[#1a2b4a] hover:underline">1. Overview</a></li>
+          <li><a href="#individual-models" className="hover:text-[#1a2b4a] hover:underline">2. Individual Rating Models (9)</a></li>
+          <li><a href="#composites" className="hover:text-[#1a2b4a] hover:underline">3. Composite Rankings (3)</a></li>
+          <li><a href="#backtesting" className="hover:text-[#1a2b4a] hover:underline">4. Backtesting</a></li>
+          <li><a href="#prediction" className="hover:text-[#1a2b4a] hover:underline">5. Score Prediction Model</a></li>
+          <li><a href="#simulation" className="hover:text-[#1a2b4a] hover:underline">6. World Cup Simulation</a></li>
+          <li><a href="#home-advantage" className="hover:text-[#1a2b4a] hover:underline">7. Home Advantage</a></li>
+          <li><a href="#data-sources" className="hover:text-[#1a2b4a] hover:underline">8. Data Sources</a></li>
+        </ol>
+      </nav>
+
+      <section id="overview" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
         <div className="bg-[#1a2b4a] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Overview</h2>
         </div>
@@ -43,11 +58,17 @@ export default function MethodologyPage() {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded border border-gray-200">
+      <section id="individual-models" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
         <div className="bg-[#1a2b4a] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Individual Rating Models (9)</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
+          <p className="text-xs text-gray-500 italic">
+            Backtest metrics shown below are from walk-forward evaluation across 2,083
+            tournament matches. Brier score measures prediction quality (lower is better;
+            random guessing = 0.667, always picking the favorite &asymp; 0.58).
+          </p>
+
           <h4>Elo (FIFA-aligned)</h4>
           <p>
             Modified Elo processing all international matches from 2014 onward.
@@ -68,6 +89,9 @@ PSO: Winner W=0.75, Loser W=0.5 (treated as draw)
 Knockout loss protection: negative deltas clamped to 0
 Annual mean reversion: 8% pull toward 1500`}
           </pre>
+          <p className="text-xs text-gray-500">
+            Backtest: Brier = 0.552, Accuracy = 58.0%
+          </p>
 
           <h4>Bradley-Terry (Equilibrium MLE)</h4>
           <p>
@@ -76,45 +100,72 @@ Annual mean reversion: 8% pull toward 1500`}
             time decay, empirical scoreline W-values (sigmoid fit on 49,000+ matches),
             and fixed 50-point home bonus. Single rating per team (not off/def split).
           </p>
+          <p className="text-xs text-gray-500">
+            Backtest: Not independently backtested (batch solver requires full match
+            history). Evaluated via market alignment: MSE = 0.000545, r = 0.891.
+          </p>
 
           <h4>Glicko-2</h4>
           <p>
             Bayesian rating with uncertainty tracking (rating deviation) and volatility.
             Teams with fewer matches have wider confidence intervals. Per-match updates
             via the full Glicko-2 algorithm (Illinois method for volatility estimation).
-            Best individual accuracy in backtesting: <strong>59.3%</strong>.
+          </p>
+          <p className="text-xs text-gray-500">
+            Backtest: Brier = 0.541, Accuracy = 59.3% (best individual accuracy)
           </p>
 
           <h4>Berrar k-NN</h4>
           <p>
             Elo base rating augmented with k-nearest-neighbor adjustments: when predicting
             a match, each team&apos;s recent results against opponents of similar strength
-            modify the prediction. Uses 10 nearest neighbors with a distance kernel.
+            modify the prediction. Uses 10 nearest neighbors with a distance kernel,
+            storing the last 50 matches per team.
+          </p>
+          <p className="text-xs text-gray-500">
+            Backtest: Brier = 0.540, Accuracy = 58.8%
           </p>
 
           <h4>Pi-Ratings (Constantinou &amp; Fenton, 2013)</h4>
           <p>
-            Separate home/away ratings with log-scaled error updates and
-            cross-context learning (home results nudge away rating and vice versa).
+            Separate home/away ratings with log-scaled error updates (c = 3) and
+            cross-context learning (home results nudge away rating and vice versa,
+            mu1 = 0.1, mu2 = 0.3). Ratings are bounded by the log transform,
+            preventing indefinite drift. Annual 8% mean reversion toward 0.
+          </p>
+          <p className="text-xs text-gray-500">
+            Backtest: Evaluated as part of IW-Pi composite (see below).
           </p>
 
           <h4>Importance-Weighted Pi-Ratings</h4>
           <p>
-            Pi-ratings with match importance scaling: World Cup knockout matches
-            produce 3x larger updates than friendlies. Best composite score in
-            backtesting: <strong>Brier = 0.536</strong>.
+            Pi-ratings with match importance scaling: learning rate is multiplied by
+            an importance weight (Friendly = 0.5x, Nations League = 0.75x,
+            Qualifier = 1.0x, Tournament Group = 1.25x, Tournament Knockout = 1.5x).
+            World Cup knockout matches produce 3x larger updates than friendlies.
+          </p>
+          <p className="text-xs text-gray-500">
+            Backtest: Brier = 0.536, Accuracy = 57.6% (best composite score)
           </p>
 
           <h4>Margin-Optimized Elo</h4>
           <p>
             Elo variant with heavy goal-difference multiplier: G = 1 + 0.5 &middot; ln(1 + |gd|).
-            Emphasizes margin of victory for better score prediction.
+            Unlike standard Elo&apos;s capped multiplier (max 1.25x), this goes higher,
+            emphasizing margin of victory for better score prediction.
+          </p>
+          <p className="text-xs text-gray-500">
+            Backtest: Brier = 0.548, Accuracy = 57.2%, Margin MAE = 1.336 (best margin prediction among Elo variants)
           </p>
 
           <h4>Ordered Probit</h4>
           <p>
             Models goal difference directly as an ordinal outcome with latent team
-            strengths and threshold cutpoints. Best margin prediction in backtesting.
+            strengths and threshold cutpoints (&minus;2.5 to +2.5 for 7 GD categories).
+            Gradient descent updates (lr = 0.05). Display rating: 1500 + strength &times; 100.
+          </p>
+          <p className="text-xs text-gray-500">
+            Backtest: Brier = 0.555, Accuracy = 56.8% (best margin prediction overall)
           </p>
 
           <h4>Combined (Elo + Roster)</h4>
@@ -124,10 +175,13 @@ Annual mean reversion: 8% pull toward 1500`}
             offensive/defensive decomposition). Confederation penalty applied
             (UEFA/CONMEBOL: 0, CONCACAF: 15, CAF/AFC: 30, OFC: 40 Elo points).
           </p>
+          <p className="text-xs text-gray-500">
+            Market alignment: MSE = 0.000397 (best individual model), r = 0.824
+          </p>
         </div>
       </section>
 
-      <section className="overflow-hidden rounded border border-gray-200">
+      <section id="composites" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
         <div className="bg-[#1a2b4a] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Composite Rankings (3)</h2>
         </div>
@@ -166,10 +220,15 @@ Annual mean reversion: 8% pull toward 1500`}
               </tr>
             </tbody>
           </table>
+          <p className="text-xs text-gray-500">
+            MSE = mean squared error between model championship probabilities and
+            sportsbook consensus odds (lower is better). Corr = Spearman rank
+            correlation (higher is better).
+          </p>
         </div>
       </section>
 
-      <section className="overflow-hidden rounded border border-gray-200">
+      <section id="backtesting" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
         <div className="bg-[#1a2b4a] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Backtesting</h2>
         </div>
@@ -191,7 +250,11 @@ Annual mean reversion: 8% pull toward 1500`}
             then predict each tournament match. Metrics:
           </p>
           <ul>
-            <li><strong>Brier score:</strong> Squared error on 3-way outcome probabilities (H/D/A)</li>
+            <li>
+              <strong>Brier score:</strong> Squared error on 3-way outcome probabilities
+              (H/D/A). Lower is better &mdash; random guessing scores 0.667, always
+              picking the favorite &asymp; 0.58, and our best model scores 0.536
+            </li>
             <li><strong>Margin MAE:</strong> Absolute error on predicted goal difference</li>
             <li><strong>Goals MAE:</strong> Absolute error on predicted total goals</li>
           </ul>
@@ -208,7 +271,7 @@ Annual mean reversion: 8% pull toward 1500`}
         </div>
       </section>
 
-      <section className="overflow-hidden rounded border border-gray-200">
+      <section id="prediction" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
         <div className="bg-[#1a2b4a] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Score Prediction Model</h2>
         </div>
@@ -237,7 +300,7 @@ Sensitivity: 0.38 (calibrated to match WC sportsbook odds)`}
         </div>
       </section>
 
-      <section className="overflow-hidden rounded border border-gray-200">
+      <section id="simulation" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
         <div className="bg-[#1a2b4a] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">World Cup Simulation</h2>
         </div>
@@ -272,13 +335,13 @@ Sensitivity: 0.38 (calibrated to match WC sportsbook odds)`}
           </ol>
           <p>
             Ratings used: <strong>Grid-Optimized</strong> (70% Combined + 30% BT).
-            Per-team home advantage: Mexico 1.30x, US 1.33x, Canada 1.51x
-            (Bayesian estimates from match history).
+            Per-team home advantage is the Bayesian estimate from each
+            host nation&apos;s match history.
           </p>
         </div>
       </section>
 
-      <section className="overflow-hidden rounded border border-gray-200">
+      <section id="home-advantage" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
         <div className="bg-[#1a2b4a] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Home Advantage</h2>
         </div>
@@ -302,7 +365,7 @@ Annual decay: 15%`}
         </div>
       </section>
 
-      <section className="overflow-hidden rounded border border-gray-200">
+      <section id="data-sources" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
         <div className="bg-[#1a2b4a] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Data Sources</h2>
         </div>
