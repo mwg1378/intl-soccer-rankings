@@ -31,7 +31,7 @@ export function ProbabilityBar({
         {homePct > 0 && (
           <div
             className={cn(
-              "flex items-center justify-center bg-[#399F49] text-white transition-all duration-500",
+              "flex items-center justify-center bg-[#2171cd] text-white transition-all duration-500",
               homePct < 10 && "text-xs"
             )}
             style={{ width: `${homePct}%` }}

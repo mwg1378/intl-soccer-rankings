@@ -70,7 +70,7 @@ export function GoalDistribution({ homeTeam, awayTeam, scoreMatrix }: GoalDistri
                 goals={goals}
                 prob={prob}
                 maxProb={maxProb}
-                color="bg-[#399F49]"
+                color="bg-[#2171cd]"
               />
             ))}
           </div>

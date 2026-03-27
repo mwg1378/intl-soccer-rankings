@@ -23,13 +23,13 @@ export function TopScorelines({
   const maxProb = Math.max(...topScorelines.map((s) => s.probability), 0)
 
   function getOutcomeColor(homeGoals: number, awayGoals: number): string {
-    if (homeGoals > awayGoals) return "bg-[#399F49]/10"
+    if (homeGoals > awayGoals) return "bg-[#2171cd]/10"
     if (homeGoals < awayGoals) return "bg-[#399F49]/15"
     return "bg-gray-100"
   }
 
   function getBarColor(homeGoals: number, awayGoals: number): string {
-    if (homeGoals > awayGoals) return "bg-[#399F49]"
+    if (homeGoals > awayGoals) return "bg-[#2171cd]"
     if (homeGoals < awayGoals) return "bg-[#399F49]"
     return "bg-gray-400"
   }
