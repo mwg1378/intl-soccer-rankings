@@ -17,6 +17,7 @@ const navLinks = [
   { href: "/world-cup", label: "World Cup 2026" },
   { href: "/predict", label: "Predictions" },
   { href: "/market-alignment", label: "Market Odds" },
+  { href: "/backtests", label: "Backtests" },
   { href: "/methodology", label: "Methodology" },
 ];
 
