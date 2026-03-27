@@ -52,8 +52,15 @@ export default function MethodologyPage() {
             mean squared error vs. the market.
           </p>
           <p>
-            Market alignment: <strong>MSE = 0.000274</strong>, Spearman rank correlation{" "}
+            In-sample market calibration: <strong>MSE = 0.000274</strong>, Spearman rank correlation{" "}
             <strong>r = 0.907</strong>, 100% overlap with the sportsbooks&apos; top 5 favorites.
+            Note: composite weights and prediction sensitivity were calibrated against
+            these same odds, so these metrics reflect calibration fit rather than
+            independent validation. See{" "}
+            <a href="/market-alignment" className="underline">Market Odds</a> for
+            the full comparison and{" "}
+            <a href="#backtesting" className="underline">Backtesting</a> for
+            out-of-sample accuracy.
           </p>
         </div>
       </section>
@@ -223,7 +230,8 @@ Annual mean reversion: 8% pull toward 1500`}
           <p className="text-xs text-gray-500">
             MSE = mean squared error between model championship probabilities and
             sportsbook consensus odds (lower is better). Corr = Spearman rank
-            correlation (higher is better).
+            correlation (higher is better). These are in-sample calibration metrics
+            since the composite weights were optimized against these same odds.
           </p>
         </div>
       </section>
@@ -383,8 +391,9 @@ Annual decay: 15%`}
               35 attributes per player) via stefanoleone992/ea-sports-fc-24 dataset
             </li>
             <li>
-              <strong>Betting market odds:</strong> Consensus from FanDuel, DraftKings,
-              bet365 (March 2026) for WC 2026 championship futures
+              <strong>Betting market odds:</strong> Sportsbook consensus (DraftKings,
+              FanDuel, BetMGM via NBC Sports, March 2026) and Polymarket prediction
+              market ($389M+ traded volume) for WC 2026 championship futures
             </li>
           </ul>
           <h4>References</h4>
