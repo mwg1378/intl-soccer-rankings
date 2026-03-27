@@ -57,6 +57,13 @@ export default async function TournamentBacktestPage({
 
   const matches = bt.matches as unknown as MatchResult[];
   const rankings = bt.rankings as unknown as Ranking[];
+  const modelComparison = bt.modelComparison as Record<string, {
+    accuracy: number;
+    brier: number;
+    logLoss: number;
+    correct: number;
+    total: number;
+  }> | null;
 
   // Find teams that participated in this tournament
   const tournamentTeamSlugs = new Set<string>();
@@ -143,6 +150,65 @@ export default async function TournamentBacktestPage({
           detail={`${koCorrect}/${knockoutMatches.length}`}
         />
       </div>
+
+      {/* Model comparison */}
+      {modelComparison && Object.keys(modelComparison).length > 1 && (
+        <div>
+          <h2 className="mb-3 text-lg font-semibold">Model Comparison</h2>
+          <p className="mb-3 text-xs text-gray-400">
+            Head-to-head performance of different rating models on this
+            tournament. &ldquo;Elo (walk-forward)&rdquo; updates ratings after each match;
+            snapshot-based models use pre-tournament ratings for all matches.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-700 text-left text-xs uppercase tracking-wider text-gray-400">
+                  <th className="py-2">Model</th>
+                  <th className="py-2 text-right">Accuracy</th>
+                  <th className="py-2 text-right">Brier</th>
+                  <th className="py-2 text-right">Log Loss</th>
+                  <th className="py-2 text-right">Correct</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(modelComparison)
+                  .sort((a, b) => a[1].brier - b[1].brier)
+                  .map(([name, stats], i) => {
+                    const isBest = i === 0;
+                    return (
+                      <tr
+                        key={name}
+                        className={`border-b border-gray-800 ${isBest ? "bg-[#40C28A]/5" : ""}`}
+                      >
+                        <td className="py-1.5 font-medium">
+                          {name}
+                          {isBest && (
+                            <span className="ml-2 text-[10px] text-[#40C28A] uppercase">
+                              Best
+                            </span>
+                          )}
+                        </td>
+                        <td className={`py-1.5 text-right font-mono ${isBest ? "text-[#40C28A] font-semibold" : ""}`}>
+                          {(stats.accuracy * 100).toFixed(1)}%
+                        </td>
+                        <td className={`py-1.5 text-right font-mono ${isBest ? "text-[#40C28A] font-semibold" : ""}`}>
+                          {stats.brier.toFixed(4)}
+                        </td>
+                        <td className="py-1.5 text-right font-mono text-gray-400">
+                          {stats.logLoss.toFixed(4)}
+                        </td>
+                        <td className="py-1.5 text-right text-gray-400">
+                          {stats.correct}/{stats.total}
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Biggest upsets */}
       {upsets.length > 0 && (

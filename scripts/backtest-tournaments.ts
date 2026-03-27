@@ -19,6 +19,7 @@ import { PrismaClient } from "../app/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 import { predictMatch } from "../lib/prediction-engine";
+import { gridOptimizedRating } from "../lib/composite-engines";
 
 // --- Initialize Prisma ---
 const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL!;
@@ -261,10 +262,175 @@ async function main() {
     const avgLogLoss = totalLogLoss / matches.length;
     const accuracy = correctOutcome / matches.length;
 
-    console.log(`  Results: ${correctOutcome}/${matches.length} correct (${(accuracy * 100).toFixed(1)}%)`);
+    console.log(`  Elo results: ${correctOutcome}/${matches.length} correct (${(accuracy * 100).toFixed(1)}%)`);
     console.log(`  Brier: ${avgBrier.toFixed(4)}, Log Loss: ${avgLogLoss.toFixed(4)}`);
 
-    // 5. Upsert into database
+    // 5. Multi-model comparison using pre-tournament snapshot ratings
+    console.log("  Running multi-model comparison...");
+
+    // Build team ratings lookup from pre-tournament snapshots
+    const teamRatingsMap = new Map<string, {
+      eloOff: number; eloDef: number;
+      combinedOff: number; combinedDef: number;
+      btRating: number | null;
+      glickoRating: number | null;
+      iwPiOverall: number | null;
+      moEloOverall: number | null;
+    }>();
+    for (const r of preRankings) {
+      teamRatingsMap.set(r.slug, {
+        eloOff: r.eloOff,
+        eloDef: r.eloDef,
+        combinedOff: r.offensive,
+        combinedDef: r.defensive,
+        btRating: r.btRating,
+        glickoRating: r.glickoRating,
+        iwPiOverall: r.iwPiOverall,
+        moEloOverall: r.moEloOverall,
+      });
+    }
+
+    // Define models to compare
+    type ModelDef = {
+      name: string;
+      getRatings: (homeSlug: string, awaySlug: string) => { homeOff: number; homeDef: number; awayOff: number; awayDef: number } | null;
+    };
+
+    const models: ModelDef[] = [
+      {
+        name: "Elo (walk-forward)",
+        getRatings: () => null, // Already computed above using per-match Elo
+      },
+      {
+        name: "Combined (Elo+Roster)",
+        getRatings: (homeSlug, awaySlug) => {
+          const h = teamRatingsMap.get(homeSlug);
+          const a = teamRatingsMap.get(awaySlug);
+          if (!h || !a) return null;
+          return { homeOff: h.combinedOff, homeDef: h.combinedDef, awayOff: a.combinedOff, awayDef: a.combinedDef };
+        },
+      },
+      {
+        name: "Grid-Optimized",
+        getRatings: (homeSlug, awaySlug) => {
+          const h = teamRatingsMap.get(homeSlug);
+          const a = teamRatingsMap.get(awaySlug);
+          if (!h || !a || h.btRating == null || a.btRating == null) return null;
+          const hGrid = gridOptimizedRating(h.combinedOff, h.combinedDef, h.btRating);
+          const aGrid = gridOptimizedRating(a.combinedOff, a.combinedDef, a.btRating);
+          return { homeOff: hGrid.offensive, homeDef: hGrid.defensive, awayOff: aGrid.offensive, awayDef: aGrid.defensive };
+        },
+      },
+      {
+        name: "Bradley-Terry",
+        getRatings: (homeSlug, awaySlug) => {
+          const h = teamRatingsMap.get(homeSlug);
+          const a = teamRatingsMap.get(awaySlug);
+          if (!h?.btRating || !a?.btRating) return null;
+          return { homeOff: h.btRating, homeDef: 3000 - h.btRating, awayOff: a.btRating, awayDef: 3000 - a.btRating };
+        },
+      },
+      {
+        name: "Glicko-2",
+        getRatings: (homeSlug, awaySlug) => {
+          const h = teamRatingsMap.get(homeSlug);
+          const a = teamRatingsMap.get(awaySlug);
+          if (!h?.glickoRating || !a?.glickoRating) return null;
+          return { homeOff: h.glickoRating, homeDef: 3000 - h.glickoRating, awayOff: a.glickoRating, awayDef: 3000 - a.glickoRating };
+        },
+      },
+    ];
+
+    const modelComparison: Record<string, { accuracy: number; brier: number; logLoss: number; correct: number; total: number }> = {};
+
+    // Elo (walk-forward) uses the already-computed results
+    modelComparison["Elo (walk-forward)"] = {
+      accuracy: Math.round(accuracy * 10000) / 10000,
+      brier: Math.round(avgBrier * 10000) / 10000,
+      logLoss: Math.round(avgLogLoss * 10000) / 10000,
+      correct: correctOutcome,
+      total: matches.length,
+    };
+
+    // Run snapshot-based models
+    for (const model of models) {
+      if (model.name === "Elo (walk-forward)") continue;
+
+      let mCorrect = 0;
+      let mBrier = 0;
+      let mLogLoss = 0;
+      let mCount = 0;
+
+      // Compute normalization stats for this model's ratings
+      const modelRatings: { off: number; def: number }[] = [];
+      for (const match of matches) {
+        const ratings = model.getRatings(match.homeTeam.slug, match.awayTeam.slug);
+        if (ratings) {
+          modelRatings.push({ off: ratings.homeOff, def: ratings.homeDef });
+          modelRatings.push({ off: ratings.awayOff, def: ratings.awayDef });
+        }
+      }
+      if (modelRatings.length === 0) continue;
+
+      const mN = modelRatings.length;
+      const mAvgOff = modelRatings.reduce((s, r) => s + r.off, 0) / mN;
+      const mAvgDef = modelRatings.reduce((s, r) => s + r.def, 0) / mN;
+      const mStdOff = Math.sqrt(modelRatings.reduce((s, r) => s + (r.off - mAvgOff) ** 2, 0) / mN);
+      const mStdDef = Math.sqrt(modelRatings.reduce((s, r) => s + (r.def - mAvgDef) ** 2, 0) / mN);
+
+      for (const match of matches) {
+        const ratings = model.getRatings(match.homeTeam.slug, match.awayTeam.slug);
+        if (!ratings) continue;
+
+        const pred = predictMatch({
+          homeTeam: { offensive: ratings.homeOff, defensive: ratings.homeDef },
+          awayTeam: { offensive: ratings.awayOff, defensive: ratings.awayDef },
+          neutralVenue: match.neutralVenue,
+          matchImportance: match.matchImportance as any,
+          avgOffensive: mAvgOff,
+          avgDefensive: mAvgDef,
+          stdOffensive: mStdOff,
+          stdDefensive: mStdDef,
+        });
+
+        const actualOutcome =
+          match.homeScore > match.awayScore ? "H" :
+          match.homeScore < match.awayScore ? "A" : "D";
+
+        const maxProb = Math.max(pred.homeWinProb, pred.drawProb, pred.awayWinProb);
+        const predictedOutcome =
+          maxProb === pred.homeWinProb ? "H" :
+          maxProb === pred.awayWinProb ? "A" : "D";
+
+        if (actualOutcome === predictedOutcome) mCorrect++;
+
+        const actualH = actualOutcome === "H" ? 1 : 0;
+        const actualD = actualOutcome === "D" ? 1 : 0;
+        const actualA = actualOutcome === "A" ? 1 : 0;
+        mBrier += (pred.homeWinProb - actualH) ** 2 + (pred.drawProb - actualD) ** 2 + (pred.awayWinProb - actualA) ** 2;
+
+        const eps = 0.001;
+        const pActual =
+          actualOutcome === "H" ? Math.max(pred.homeWinProb, eps) :
+          actualOutcome === "A" ? Math.max(pred.awayWinProb, eps) :
+          Math.max(pred.drawProb, eps);
+        mLogLoss -= Math.log(pActual);
+        mCount++;
+      }
+
+      if (mCount > 0) {
+        modelComparison[model.name] = {
+          accuracy: Math.round((mCorrect / mCount) * 10000) / 10000,
+          brier: Math.round((mBrier / mCount) * 10000) / 10000,
+          logLoss: Math.round((mLogLoss / mCount) * 10000) / 10000,
+          correct: mCorrect,
+          total: mCount,
+        };
+        console.log(`  ${model.name}: ${mCorrect}/${mCount} (${(mCorrect / mCount * 100).toFixed(1)}%), Brier=${(mBrier / mCount).toFixed(4)}`);
+      }
+    }
+
+    // 6. Upsert into database
     console.log("  Storing results...");
     await prisma.tournamentBacktest.upsert({
       where: { slug: tourney.slug },
@@ -280,6 +446,7 @@ async function main() {
         accuracy,
         rankings: preRankings,
         matches: matchResults,
+        modelComparison,
       },
       update: {
         tournament: tourney.name,
@@ -292,6 +459,7 @@ async function main() {
         accuracy,
         rankings: preRankings,
         matches: matchResults,
+        modelComparison,
       },
     });
 
