@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "International Soccer Rankings",
   description:
-    "Current international men's soccer rankings combining Elo ratings with player club performance data.",
+    "International men's soccer rankings powered by 12 backtested models and market-optimized composites, with Dixon-Coles match predictions and World Cup 2026 simulations.",
 };
 
 export default async function HomePage() {

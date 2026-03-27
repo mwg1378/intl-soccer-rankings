@@ -19,7 +19,7 @@ export default function WorldCupLayout({
           2026 FIFA World Cup Simulator
         </h1>
         <p className="text-muted-foreground">
-          10,000 Monte Carlo simulations based on current team ratings
+          100,000 Monte Carlo simulations based on current team ratings
         </p>
       </div>
       <WorldCupNav />

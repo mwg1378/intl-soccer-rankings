@@ -252,7 +252,7 @@ const CONFEDERATION_PENALTY: Record<string, number> = {
 };
 
 /**
- * Combine Elo + roster ratings (70/30 split) with confederation penalty.
+ * Combine Elo + roster ratings (50/50 split) with confederation penalty.
  */
 export function combinedRating(
   eloOff: number,

@@ -24,7 +24,7 @@ export default function MethodologyPage() {
           <p>
             We maintain <strong>12 ranking models</strong> spanning Elo variants,
             Bayesian ratings, pairwise solvers, ordinal regression, and
-            market-optimized composites. Each model was backtested against 1,952
+            market-optimized composites. Each model was backtested against 2,083
             matches across 22 major tournaments and World Cup qualifiers (2013&ndash;2024).
           </p>
           <p>
@@ -61,7 +61,8 @@ export default function MethodologyPage() {
 W_e = 1 / (1 + 10^((R_opp - R_team) / 600))
 
 K values:  Friendly=10, Nations League=15, Qualifier=25
-           Tournament Group=35, Tournament KO=40, WC KO=60
+           Tournament Group=35, Tournament KO=40
+           WC Group=50, WC KO=60
 
 PSO: Winner W=0.75, Loser W=0.5 (treated as draw)
 Knockout loss protection: negative deltas clamped to 0
@@ -175,7 +176,7 @@ Annual mean reversion: 8% pull toward 1500`}
         <div className="prose prose-neutral max-w-none p-4 text-sm">
           <p>
             All models were evaluated via <strong>walk-forward backtesting</strong> across
-            22 tournament windows totaling 1,952 test matches:
+            22 tournament windows totaling 2,083 test matches:
           </p>
           <ul>
             <li>World Cup 2014, 2018, 2022</li>
@@ -222,8 +223,8 @@ z_def = (team_def - avg_def) / std_def
 λ_home = baseline * exp(0.38 * (z_off_home + z_def_away)) * HA
 λ_away = baseline * exp(0.38 * (z_off_away + z_def_home))
 
-Baseline goals: Friendly=1.42, Qualifier=1.32,
-                Group=1.30, Knockout=1.18
+Baseline goals: Friendly=1.42, Nations League=1.38,
+                Qualifier=1.32, Group=1.30, Knockout=1.18
 Home advantage: per-team Bayesian estimate (default 1.22x)
 Dixon-Coles rho: -0.06 (adjusts 0-0, 1-0, 0-1, 1-1)
 Diagonal inflation: 2-10% (context-dependent draw boost)
@@ -248,7 +249,7 @@ Sensitivity: 0.38 (calibrated to match WC sportsbook odds)`}
           <ol>
             <li>
               <strong>Playoffs:</strong> Simulate 4 UEFA and 2 FIFA intercontinental
-              playoff paths (single-leg semi + final)
+              playoff finals (semifinals already decided)
             </li>
             <li>
               <strong>Group stage:</strong> Round-robin within 12 groups of 4.
