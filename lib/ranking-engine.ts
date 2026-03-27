@@ -326,7 +326,11 @@ export interface HomeAwayState {
 /**
  * Bayesian home advantage estimate.
  * Prior: 1.22x (global mean), weight of 30 matches.
- * Observed: ratio of home goals-per-game to away goals-per-game.
+ * Observed: geometric mean of offensive and defensive home advantage ratios:
+ *   - Offensive: homeGoalsScored/awayGoalsScored (scoring more at home)
+ *   - Defensive: awayGoalsConceded/homeGoalsConceded (conceding fewer at home)
+ * Using both sides captures teams with strong defensive home advantage
+ * (e.g., high-altitude venues, physical style at home).
  * Clamped to [0.8, 2.0].
  */
 export function computeHomeAdvantage(state: HomeAwayState): number {
@@ -336,10 +340,17 @@ export function computeHomeAdvantage(state: HomeAwayState): number {
 
   const homeGPG = state.homeGoalsScored / state.homeMatches;
   const awayGPG = state.awayGoalsScored / state.awayMatches;
+  const homeGCPG = state.homeGoalsConceded / state.homeMatches;
+  const awayGCPG = state.awayGoalsConceded / state.awayMatches;
 
-  if (awayGPG < 0.01) return HOME_ADVANTAGE_PRIOR; // avoid division by zero
+  if (awayGPG < 0.01 || homeGCPG < 0.01) return HOME_ADVANTAGE_PRIOR;
 
-  const observedRatio = homeGPG / awayGPG;
+  // Offensive ratio: score more at home than away
+  const offRatio = homeGPG / awayGPG;
+  // Defensive ratio: concede fewer at home than away
+  const defRatio = awayGCPG / homeGCPG;
+  // Geometric mean of both ratios (balanced measure)
+  const observedRatio = Math.sqrt(offRatio * defRatio);
   const n = Math.min(state.homeMatches, state.awayMatches);
 
   const posterior =
