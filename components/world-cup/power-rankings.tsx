@@ -80,6 +80,17 @@ export function PowerRankings({ teams, ratingRange }: PowerRankingsProps) {
   const [sortKey, setSortKey] = useState<SortKey>("overallRating");
   const [confedFilter, setConfedFilter] = useState<string | null>(null);
 
+  // Compute per-dimension ranges for accurate bar scaling
+  const offRange = {
+    min: Math.min(...teams.map((t) => t.offensiveRating)),
+    max: Math.max(...teams.map((t) => t.offensiveRating)),
+  };
+  const defRange = {
+    // Defense is inverted: 3000-rating, so compute range on inverted values
+    min: Math.min(...teams.map((t) => 3000 - t.defensiveRating)),
+    max: Math.max(...teams.map((t) => 3000 - t.defensiveRating)),
+  };
+
   const filtered = confedFilter
     ? teams.filter((t) => t.confederation === confedFilter)
     : teams;
@@ -200,8 +211,8 @@ export function PowerRankings({ teams, ratingRange }: PowerRankingsProps) {
                       <div className="text-[10px] text-gray-400 mb-0.5">Attack</div>
                       <StrengthBar
                         value={team.offensiveRating}
-                        max={ratingRange.max}
-                        min={ratingRange.min}
+                        max={offRange.max}
+                        min={offRange.min}
                         color="bg-[#40C28A]"
                       />
                     </div>
@@ -209,8 +220,8 @@ export function PowerRankings({ teams, ratingRange }: PowerRankingsProps) {
                       <div className="text-[10px] text-gray-400 mb-0.5">Defense</div>
                       <StrengthBar
                         value={3000 - team.defensiveRating}
-                        max={ratingRange.max}
-                        min={ratingRange.min}
+                        max={defRange.max}
+                        min={defRange.min}
                         color="bg-amber-500"
                       />
                     </div>
