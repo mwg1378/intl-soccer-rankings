@@ -78,7 +78,7 @@ function direction(diff: number): TeamComparison["direction"] {
  */
 export function compareToMarket(
   modelOdds: Record<string, number>,
-  iterations: number = 10000,
+  iterations: number = 100000,
 ): TeamComparison[] {
   const allTeams = new Set([
     ...Object.keys(modelOdds),

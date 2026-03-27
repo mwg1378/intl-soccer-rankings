@@ -2,7 +2,7 @@
  * Run the World Cup 2026 Monte Carlo simulation and store results in the DB.
  *
  * Usage: npx tsx scripts/simulate-world-cup.ts [iterations]
- * Default: 10000 iterations
+ * Default: 100000 iterations (always use 100K for production runs)
  */
 
 import "dotenv/config";

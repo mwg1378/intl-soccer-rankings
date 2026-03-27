@@ -104,4 +104,23 @@ describe("World Cup simulator", () => {
       expect(matchCount).toBe(16);
     });
   });
+
+  describe("iteration count defaults", () => {
+    it("simulation script should default to 100K iterations", () => {
+      const scriptSrc = readFileSync(
+        join(__dirname, "../../scripts/simulate-world-cup.ts"),
+        "utf-8"
+      );
+      // The argv default must be 100000, not 10000
+      expect(scriptSrc).toMatch(/argv\[2\]\s*\?\?\s*"100000"/);
+    });
+
+    it("market alignment should default to 100K iterations", () => {
+      const marketSrc = readFileSync(
+        join(__dirname, "../../lib/market-alignment.ts"),
+        "utf-8"
+      );
+      expect(marketSrc).toMatch(/iterations:\s*number\s*=\s*100000/);
+    });
+  });
 });
