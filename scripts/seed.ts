@@ -98,7 +98,43 @@ const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
 // --- Tournament → MatchImportance mapping ---
-function tournamentToImportance(tournament: string): string {
+// Knockout stage start dates for major tournaments (used to distinguish
+// group vs knockout importance). Matches on or after these dates within
+// the tournament get TOURNAMENT_KNOCKOUT (higher K-factor).
+const KNOCKOUT_START_DATES: Record<string, Record<number, string>> = {
+  "fifa world cup": {
+    2014: "2014-06-28",
+    2018: "2018-06-30",
+    2022: "2022-12-03",
+  },
+  "uefa euro": {
+    2016: "2016-06-25",
+    2021: "2021-06-26",
+    2024: "2024-06-29",
+  },
+  "copa am": {
+    2015: "2015-06-25",
+    2016: "2016-06-09",
+    2019: "2019-06-27",
+    2021: "2021-07-02",
+    2024: "2024-07-04",
+  },
+  "african cup": {
+    2015: "2015-01-31",
+    2017: "2017-01-28",
+    2019: "2019-07-05",
+    2022: "2022-01-23",
+    2024: "2024-01-28",
+    2026: "2026-01-03",  // AFCON 2025/26 knockouts
+  },
+  "asian cup": {
+    2015: "2015-01-22",
+    2019: "2019-01-20",
+    2024: "2024-01-31",
+  },
+};
+
+function tournamentToImportance(tournament: string, date?: string): string {
   const t = tournament.toLowerCase();
   if (t.includes("friendly")) return "FRIENDLY";
   if (t.includes("nations league")) return "NATIONS_LEAGUE";
@@ -117,7 +153,20 @@ function tournamentToImportance(tournament: string): string {
     t.includes("gold cup") ||
     t.includes("concacaf")
   ) {
-    return "TOURNAMENT_GROUP"; // We don't have stage info in CSV, default to group
+    // Check if this is a knockout match using date-based heuristics
+    if (date) {
+      for (const [pattern, years] of Object.entries(KNOCKOUT_START_DATES)) {
+        if (t.includes(pattern)) {
+          for (const [year, koDate] of Object.entries(years)) {
+            if (date.startsWith(year) && date >= koDate) {
+              return "TOURNAMENT_KNOCKOUT";
+            }
+          }
+          break;
+        }
+      }
+    }
+    return "TOURNAMENT_GROUP";
   }
   // Regional tournaments and cups
   if (
@@ -494,7 +543,7 @@ async function main() {
       }
     }
 
-    const importance = tournamentToImportance(m.tournament);
+    const importance = tournamentToImportance(m.tournament, m.date);
 
     // Get running win rates for adaptive goal diff
     const homeWR = getWinRate(winRateState.get(m.home_team)!);
@@ -944,7 +993,7 @@ async function main() {
       awayScorePenalties = shootoutWinner === m.home_team ? 4 : 5;
     }
 
-    const importance = tournamentToImportance(m.tournament);
+    const importance = tournamentToImportance(m.tournament, m.date);
     const result = calculateElo(homeElo, awayElo, {
       homeScore,
       awayScore,
