@@ -27,7 +27,7 @@ export default function RankingsPage() {
   const { data, error, isLoading } = useSWR(
     `/api/rankings?${params.toString()}`,
     fetcher,
-    { retry: 3, retryDelay: 1000 }
+    { errorRetryCount: 3, errorRetryInterval: 1000 }
   );
 
   return (
