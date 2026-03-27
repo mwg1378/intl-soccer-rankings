@@ -32,7 +32,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const iterations = parseInt(process.argv[2] ?? "10000", 10);
+  const iterations = parseInt(process.argv[2] ?? "100000", 10);
   console.log(`=== World Cup 2026 Monte Carlo Simulation ===`);
   console.log(`Iterations: ${iterations}\n`);
 
