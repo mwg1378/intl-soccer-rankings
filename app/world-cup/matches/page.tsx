@@ -77,7 +77,7 @@ function MatchCard({ match }: { match: MatchPrediction }) {
       <div className="px-3 pb-1">
         <div className="flex h-6 rounded overflow-hidden text-[10px] font-bold">
           <div
-            className="bg-[#399F49] text-white flex items-center justify-center"
+            className="bg-[#2171cd] text-white flex items-center justify-center"
             style={{ width: `${homeWidth}%` }}
           >
             {homeWidth >= 15 && pct(match.homeWin)}
