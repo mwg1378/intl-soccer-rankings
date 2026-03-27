@@ -38,14 +38,24 @@ const prisma = new PrismaClient({ adapter });
 
 // --- Tournament definitions ---
 const TOURNAMENTS = [
+  // World Cups
   {
     slug: "world-cup-2022",
     name: "FIFA World Cup 2022",
     tournamentPattern: "World Cup",
     startDate: new Date("2022-11-20"),
     endDate: new Date("2022-12-18"),
-    snapshotDate: new Date("2022-10-31"), // pre-tournament snapshot
+    snapshotDate: new Date("2022-10-31"),
   },
+  {
+    slug: "world-cup-2018",
+    name: "FIFA World Cup 2018",
+    tournamentPattern: "World Cup",
+    startDate: new Date("2018-06-14"),
+    endDate: new Date("2018-07-15"),
+    snapshotDate: new Date("2018-05-31"),
+  },
+  // European Championship
   {
     slug: "euro-2024",
     name: "UEFA Euro 2024",
@@ -55,12 +65,47 @@ const TOURNAMENTS = [
     snapshotDate: new Date("2024-05-31"),
   },
   {
+    slug: "euro-2020",
+    name: "UEFA Euro 2020/21",
+    tournamentPattern: "Euro",
+    startDate: new Date("2021-06-11"),
+    endDate: new Date("2021-07-11"),
+    snapshotDate: new Date("2021-05-31"),
+  },
+  // Copa América
+  {
     slug: "copa-america-2024",
     name: "Copa América 2024",
     tournamentPattern: "Copa Am",
     startDate: new Date("2024-06-20"),
     endDate: new Date("2024-07-14"),
     snapshotDate: new Date("2024-05-31"),
+  },
+  {
+    slug: "copa-america-2021",
+    name: "Copa América 2021",
+    tournamentPattern: "Copa Am",
+    startDate: new Date("2021-06-13"),
+    endDate: new Date("2021-07-10"),
+    snapshotDate: new Date("2021-05-31"),
+  },
+  // Africa Cup of Nations
+  {
+    slug: "afcon-2023",
+    name: "Africa Cup of Nations 2024",
+    tournamentPattern: "Africa",
+    startDate: new Date("2024-01-13"),
+    endDate: new Date("2024-02-11"),
+    snapshotDate: new Date("2023-12-31"),
+  },
+  // Asian Cup
+  {
+    slug: "asian-cup-2023",
+    name: "AFC Asian Cup 2023/24",
+    tournamentPattern: "Asian Cup",
+    startDate: new Date("2024-01-12"),
+    endDate: new Date("2024-02-10"),
+    snapshotDate: new Date("2023-12-31"),
   },
 ];
 
