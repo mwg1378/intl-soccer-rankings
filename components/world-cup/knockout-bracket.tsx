@@ -70,7 +70,7 @@ function MatchSlot({
     ? "bg-amber-700"
     : has3rd
     ? "bg-amber-50 border-b border-amber-200"
-    : "bg-[#1a2b4a]";
+    : "bg-[#399F49]";
 
   const headerText = has3rd && !isFinal && !isThirdPlace
     ? "text-amber-800"
@@ -148,7 +148,7 @@ export function KnockoutBracket({ bracketOdds, groupOdds }: KnockoutBracketProps
             className={cn(
               "px-3 py-2 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors",
               activeRound === round.id
-                ? "border-[#1a2b4a] text-[#1a2b4a]"
+                ? "border-[#399F49] text-[#399F49]"
                 : "border-transparent text-gray-400 hover:text-gray-600"
             )}
           >

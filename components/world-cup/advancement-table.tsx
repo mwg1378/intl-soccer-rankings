@@ -65,7 +65,7 @@ export function AdvancementTable({ advancementOdds }: AdvancementTableProps) {
         <button
           onClick={() => setShowPlayoffs(!showPlayoffs)}
           className={`px-2.5 py-1 text-xs font-semibold rounded ${
-            showPlayoffs ? "bg-[#1a2b4a] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            showPlayoffs ? "bg-[#399F49] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
           {showPlayoffs ? "Hide" : "Show"} Playoff Teams
@@ -86,7 +86,7 @@ export function AdvancementTable({ advancementOdds }: AdvancementTableProps) {
                 <th
                   key={col.key}
                   className={`text-right cursor-pointer ${
-                    sortKey === col.key ? "!text-[#40C28A] underline" : ""
+                    sortKey === col.key ? "!text-[#399F49] underline" : ""
                   }`}
                   onClick={() => setSortKey(col.key)}
                 >

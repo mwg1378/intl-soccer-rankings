@@ -105,7 +105,7 @@ export default async function HomePage() {
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
                     <div
-                      className="h-full rounded-full bg-[#1a2b4a] transition-all duration-500"
+                      className="h-full rounded-full bg-[#399F49] transition-all duration-500"
                       style={{ width: `${(f.modelProb / maxProb) * 100}%` }}
                     />
                   </div>

@@ -27,7 +27,7 @@ function pct(v: number): string {
 export function WorldCupCard({ info }: { info: WorldCupInfo }) {
   return (
     <div className="rounded border border-gray-200 overflow-hidden">
-      <div className="bg-[#1a2b4a] px-4 py-2 flex items-center justify-between">
+      <div className="bg-[#399F49] px-4 py-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-white">World Cup 2026</h3>
         <span className="text-xs text-white/70">Group {info.group}</span>
       </div>
@@ -69,7 +69,7 @@ function OddsPill({ label, value, highlight }: { label: string; value: string; h
   return (
     <div className="text-center">
       <div className="text-[10px] text-gray-400 uppercase tracking-wider">{label}</div>
-      <div className={`font-mono text-sm font-bold tabular-nums ${highlight ? "text-[#40C28A]" : ""}`}>
+      <div className={`font-mono text-sm font-bold tabular-nums ${highlight ? "text-[#399F49]" : ""}`}>
         {value}
       </div>
     </div>

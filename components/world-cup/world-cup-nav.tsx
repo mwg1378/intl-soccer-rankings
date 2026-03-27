@@ -27,7 +27,7 @@ export function WorldCupNav() {
             className={cn(
               "px-3 py-2 text-xs font-semibold uppercase tracking-wide border-b-2 transition-colors -mb-px flex items-center gap-1 whitespace-nowrap flex-shrink-0",
               pathname === tab.href
-                ? "text-[#1a2b4a] border-[#1a2b4a]"
+                ? "text-[#399F49] border-[#399F49]"
                 : "text-gray-400 border-transparent hover:text-gray-700 hover:border-gray-300"
             )}
           >

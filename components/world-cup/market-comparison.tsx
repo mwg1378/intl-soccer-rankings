@@ -68,7 +68,7 @@ export function MarketComparison({ comparisons, metrics, disagreements }: Market
         <button
           onClick={() => setFilterCat(null)}
           className={`px-2.5 py-1 text-xs font-semibold rounded ${
-            !filterCat ? "bg-[#1a2b4a] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            !filterCat ? "bg-[#399F49] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
           All
@@ -80,7 +80,7 @@ export function MarketComparison({ comparisons, metrics, disagreements }: Market
               key={cat}
               onClick={() => setFilterCat(cat === filterCat ? null : cat)}
               className={`px-2.5 py-1 text-xs font-semibold rounded ${
-                filterCat === cat ? "bg-[#1a2b4a] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                filterCat === cat ? "bg-[#399F49] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               {badge.label}

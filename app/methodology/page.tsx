@@ -20,20 +20,20 @@ export default function MethodologyPage() {
       <nav className="rounded border border-gray-200 p-4 text-sm">
         <h2 className="font-semibold text-xs uppercase tracking-wide text-gray-500 mb-2">Contents</h2>
         <ol className="space-y-1 text-gray-600">
-          <li><a href="#overview" className="hover:text-[#1a2b4a] hover:underline">1. Overview</a></li>
-          <li><a href="#individual-models" className="hover:text-[#1a2b4a] hover:underline">2. Individual Rating Models (9)</a></li>
-          <li><a href="#composites" className="hover:text-[#1a2b4a] hover:underline">3. Composite Rankings (3)</a></li>
-          <li><a href="#backtesting" className="hover:text-[#1a2b4a] hover:underline">4. Backtesting</a></li>
-          <li><a href="#prediction" className="hover:text-[#1a2b4a] hover:underline">5. Score Prediction Model</a></li>
-          <li><a href="#simulation" className="hover:text-[#1a2b4a] hover:underline">6. World Cup Simulation</a></li>
-          <li><a href="#home-advantage" className="hover:text-[#1a2b4a] hover:underline">7. Home Advantage</a></li>
-          <li><a href="#data-sources" className="hover:text-[#1a2b4a] hover:underline">8. Data Sources</a></li>
-          <li><a href="#limitations" className="hover:text-[#1a2b4a] hover:underline">9. Known Limitations</a></li>
+          <li><a href="#overview" className="hover:text-[#399F49] hover:underline">1. Overview</a></li>
+          <li><a href="#individual-models" className="hover:text-[#399F49] hover:underline">2. Individual Rating Models (9)</a></li>
+          <li><a href="#composites" className="hover:text-[#399F49] hover:underline">3. Composite Rankings (3)</a></li>
+          <li><a href="#backtesting" className="hover:text-[#399F49] hover:underline">4. Backtesting</a></li>
+          <li><a href="#prediction" className="hover:text-[#399F49] hover:underline">5. Score Prediction Model</a></li>
+          <li><a href="#simulation" className="hover:text-[#399F49] hover:underline">6. World Cup Simulation</a></li>
+          <li><a href="#home-advantage" className="hover:text-[#399F49] hover:underline">7. Home Advantage</a></li>
+          <li><a href="#data-sources" className="hover:text-[#399F49] hover:underline">8. Data Sources</a></li>
+          <li><a href="#limitations" className="hover:text-[#399F49] hover:underline">9. Known Limitations</a></li>
         </ol>
       </nav>
 
       <section id="overview" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
-        <div className="bg-[#1a2b4a] px-4 py-2">
+        <div className="bg-[#399F49] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Overview</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
@@ -67,7 +67,7 @@ export default function MethodologyPage() {
       </section>
 
       <section id="individual-models" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
-        <div className="bg-[#1a2b4a] px-4 py-2">
+        <div className="bg-[#399F49] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Individual Rating Models (9)</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
@@ -195,7 +195,7 @@ Annual mean reversion: 8% pull toward 1500`}
       </section>
 
       <section id="composites" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
-        <div className="bg-[#1a2b4a] px-4 py-2">
+        <div className="bg-[#399F49] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Composite Rankings (3)</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
@@ -243,7 +243,7 @@ Annual mean reversion: 8% pull toward 1500`}
       </section>
 
       <section id="backtesting" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
-        <div className="bg-[#1a2b4a] px-4 py-2">
+        <div className="bg-[#399F49] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Backtesting</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
@@ -286,7 +286,7 @@ Annual mean reversion: 8% pull toward 1500`}
       </section>
 
       <section id="prediction" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
-        <div className="bg-[#1a2b4a] px-4 py-2">
+        <div className="bg-[#399F49] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Score Prediction Model</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
@@ -315,7 +315,7 @@ Sensitivity: 0.38 (calibrated to match WC sportsbook odds)`}
       </section>
 
       <section id="simulation" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
-        <div className="bg-[#1a2b4a] px-4 py-2">
+        <div className="bg-[#399F49] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">World Cup Simulation</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
@@ -356,7 +356,7 @@ Sensitivity: 0.38 (calibrated to match WC sportsbook odds)`}
       </section>
 
       <section id="home-advantage" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
-        <div className="bg-[#1a2b4a] px-4 py-2">
+        <div className="bg-[#399F49] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Home Advantage</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
@@ -380,7 +380,7 @@ Annual decay: 15%`}
       </section>
 
       <section id="data-sources" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
-        <div className="bg-[#1a2b4a] px-4 py-2">
+        <div className="bg-[#399F49] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Data Sources</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">
@@ -415,7 +415,7 @@ Annual decay: 15%`}
       </section>
 
       <section id="limitations" className="overflow-hidden rounded border border-gray-200 scroll-mt-4">
-        <div className="bg-[#1a2b4a] px-4 py-2">
+        <div className="bg-[#399F49] px-4 py-2">
           <h2 className="text-sm font-semibold text-white">Known Limitations</h2>
         </div>
         <div className="prose prose-neutral max-w-none p-4 text-sm">

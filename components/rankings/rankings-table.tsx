@@ -138,11 +138,11 @@ export function RankingsTable({ teams }: RankingsTableProps) {
                 </span>
               </td>
               <td>
-                <Link href={`/team/${team.slug}`} className="inline-flex items-center hover:underline underline-offset-2">
+                <Link href={`/team/${team.slug}`} className="inline-flex items-center hover:underline underline-offset-2 text-[#2171cd]">
                   <span className="mr-1.5" aria-hidden="true">
                     {fifaCodeToFlag(team.fifaCode)}
                   </span>
-                  <span className="font-medium group-hover:text-[#1a2b4a]">{team.name}</span>
+                  <span className="font-medium">{team.name}</span>
                 </Link>
               </td>
               <td>

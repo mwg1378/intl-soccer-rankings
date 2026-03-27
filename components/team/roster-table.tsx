@@ -134,7 +134,7 @@ export function RosterTable({ players }: RosterTableProps) {
                 <span className="flex items-center gap-2">
                   {player.name}
                   {player.isStartingXI && (
-                    <span className="rounded bg-[#1a2b4a] px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+                    <span className="rounded bg-[#399F49] px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
                       XI
                     </span>
                   )}

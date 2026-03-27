@@ -80,7 +80,7 @@ function MatchSlot({
 
   return (
     <div className="rounded border border-gray-200 overflow-hidden">
-      <div className={`px-3 py-1.5 ${has3rd ? "bg-amber-50 border-b border-amber-200" : "bg-[#1a2b4a]"}`}>
+      <div className={`px-3 py-1.5 ${has3rd ? "bg-amber-50 border-b border-amber-200" : "bg-[#399F49]"}`}>
         <div className={`text-xs font-semibold ${has3rd ? "text-amber-800" : "text-white"}`}>
           M{matchNum} &mdash; {data.description}
         </div>

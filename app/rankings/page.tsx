@@ -57,7 +57,7 @@ export default function RankingsPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#1a2b4a]" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#399F49]" />
         </div>
       ) : error ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">

@@ -66,7 +66,7 @@ export default async function BacktestsPage() {
       {/* Cross-tournament summary */}
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-lg border border-gray-200 bg-white p-4 text-center shadow-sm">
-          <div className="text-3xl font-bold text-[#1a2b4a]">
+          <div className="text-3xl font-bold text-[#399F49]">
             {((totalCorrect / totalMatches) * 100).toFixed(1)}%
           </div>
           <div className="text-[11px] uppercase tracking-wider text-gray-500">
@@ -77,7 +77,7 @@ export default async function BacktestsPage() {
           </div>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4 text-center shadow-sm">
-          <div className="text-3xl font-bold text-[#1a2b4a]">
+          <div className="text-3xl font-bold text-[#399F49]">
             {weightedBrier.toFixed(3)}
           </div>
           <div className="text-[11px] uppercase tracking-wider text-gray-500">
@@ -88,7 +88,7 @@ export default async function BacktestsPage() {
           </div>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4 text-center shadow-sm">
-          <div className="text-3xl font-bold text-[#1a2b4a]">
+          <div className="text-3xl font-bold text-[#399F49]">
             {backtests.length}
           </div>
           <div className="text-[11px] uppercase tracking-wider text-gray-500">
@@ -175,7 +175,7 @@ export default async function BacktestsPage() {
 
             <div className="mt-4 grid grid-cols-3 gap-3 text-center">
               <div>
-                <div className="text-2xl font-bold text-[#1a2b4a]">
+                <div className="text-2xl font-bold text-[#399F49]">
                   {(bt.accuracy * 100).toFixed(1)}%
                 </div>
                 <div className="text-[11px] uppercase tracking-wider text-gray-500">

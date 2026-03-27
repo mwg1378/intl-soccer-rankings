@@ -54,13 +54,13 @@ function CustomTooltip({
       <p className="mb-1 font-medium">{formatted}</p>
       {rank != null && (
         <p className="text-gray-500">
-          Rank: <span className="font-semibold text-[#1a2b4a]">#{rank}</span>
+          Rank: <span className="font-semibold text-[#399F49]">#{rank}</span>
         </p>
       )}
       {rating != null && (
         <p className="text-gray-500">
           Rating:{" "}
-          <span className="font-semibold text-[#1a2b4a]">
+          <span className="font-semibold text-[#399F49]">
             {rating.toFixed(1)}
           </span>
         </p>
@@ -126,7 +126,7 @@ export function RankingChart({ data }: RankingChartProps) {
           yAxisId="rank"
           type="monotone"
           dataKey="rank"
-          stroke="#1a2b4a"
+          stroke="#399F49"
           strokeWidth={2}
           dot={false}
           activeDot={{ r: 4, strokeWidth: 0 }}

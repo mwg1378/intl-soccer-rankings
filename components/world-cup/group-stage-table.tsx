@@ -58,7 +58,7 @@ export function GroupStageTable({ groupOdds, playoffTeamsByGroup = {} }: GroupSt
           onClick={() => setSelectedGroup(null)}
           className={`px-2.5 py-1 text-xs font-semibold rounded ${
             !selectedGroup
-              ? "bg-[#1a2b4a] text-white"
+              ? "bg-[#399F49] text-white"
               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}
         >
@@ -70,7 +70,7 @@ export function GroupStageTable({ groupOdds, playoffTeamsByGroup = {} }: GroupSt
             onClick={() => setSelectedGroup(g === selectedGroup ? null : g)}
             className={`px-2.5 py-1 text-xs font-semibold rounded ${
               selectedGroup === g
-                ? "bg-[#1a2b4a] text-white"
+                ? "bg-[#399F49] text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >

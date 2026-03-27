@@ -122,9 +122,16 @@
   }
   body {
     @apply bg-background text-foreground text-sm;
+    font-family: -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui,
+      helvetica neue, helvetica, Ubuntu, roboto, noto, arial, sans-serif;
+    color: #333;
+    line-height: 1.4;
   }
-  html {
-    @apply font-sans;
+  a {
+    color: #2171cd;
+  }
+  a:hover {
+    color: #145098;
   }
 }
 
@@ -133,19 +140,20 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  color: #333;
 }
 
 .tr-table thead th {
-  background: #1a2b4a;
-  color: #fff;
-  font-weight: 600;
+  background: #EFEFEF;
+  color: #333;
+  font-weight: bold;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  padding: 8px 12px;
+  padding: 6px 12px;
   text-align: left;
   white-space: nowrap;
-  border-bottom: 2px solid #0f1d36;
+  border-bottom: 1px solid #ccc;
 }
 
 .tr-table thead th.text-right {
@@ -153,7 +161,7 @@
 }
 
 .tr-table tbody tr {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #efefef;
   transition: background 0.1s;
 }
 
@@ -166,7 +174,7 @@
 }
 
 .tr-table tbody td {
-  padding: 6px 12px;
+  padding: 4px 12px;
   white-space: nowrap;
 }
 
@@ -185,6 +193,6 @@
 
 .tr-table tbody tr.separator-row td {
   padding: 4px 12px;
-  border-top: 1px dashed #cbd5e1;
+  border-top: 1px dashed #ccc;
   border-bottom: none;
 }

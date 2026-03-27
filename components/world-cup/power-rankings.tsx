@@ -115,7 +115,7 @@ export function PowerRankings({ teams, ratingRange }: PowerRankingsProps) {
             onClick={() => setConfedFilter(null)}
             className={`px-2.5 py-1 text-xs font-semibold rounded ${
               !confedFilter
-                ? "bg-[#1a2b4a] text-white"
+                ? "bg-[#399F49] text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
@@ -127,7 +127,7 @@ export function PowerRankings({ teams, ratingRange }: PowerRankingsProps) {
               onClick={() => setConfedFilter(c === confedFilter ? null : c)}
               className={`px-2.5 py-1 text-xs font-semibold rounded ${
                 confedFilter === c
-                  ? "bg-[#1a2b4a] text-white"
+                  ? "bg-[#399F49] text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
@@ -152,7 +152,7 @@ export function PowerRankings({ teams, ratingRange }: PowerRankingsProps) {
             onClick={() => setSortKey(key)}
             className={`px-2 py-1 text-xs rounded ${
               sortKey === key
-                ? "bg-[#1a2b4a] text-white"
+                ? "bg-[#399F49] text-white"
                 : "bg-gray-50 text-gray-500 hover:bg-gray-100"
             }`}
           >
@@ -183,7 +183,7 @@ export function PowerRankings({ teams, ratingRange }: PowerRankingsProps) {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Link
                       href={`/team/${team.slug}`}
-                      className="font-semibold text-sm hover:text-[#1a2b4a] hover:underline"
+                      className="font-semibold text-sm hover:text-[#399F49] hover:underline"
                     >
                       {team.name}
                     </Link>
@@ -204,7 +204,7 @@ export function PowerRankings({ teams, ratingRange }: PowerRankingsProps) {
                         value={team.overallRating}
                         max={ratingRange.max}
                         min={ratingRange.min}
-                        color="bg-[#1a2b4a]"
+                        color="bg-[#399F49]"
                       />
                     </div>
                     <div>
@@ -213,7 +213,7 @@ export function PowerRankings({ teams, ratingRange }: PowerRankingsProps) {
                         value={team.offensiveRating}
                         max={offRange.max}
                         min={offRange.min}
-                        color="bg-[#40C28A]"
+                        color="bg-[#399F49]"
                       />
                     </div>
                     <div>

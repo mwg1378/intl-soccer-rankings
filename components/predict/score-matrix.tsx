@@ -14,11 +14,11 @@ export function ScoreMatrix({ matrix, homeTeam, awayTeam }: ScoreMatrixProps) {
   function getCellColor(prob: number): string {
     if (maxProb === 0) return ""
     const intensity = prob / maxProb
-    if (intensity > 0.8) return "bg-[#1a2b4a] text-white"
-    if (intensity > 0.6) return "bg-[#1a2b4a]/70 text-white"
-    if (intensity > 0.4) return "bg-[#1a2b4a]/50 text-white"
-    if (intensity > 0.2) return "bg-[#1a2b4a]/30"
-    if (intensity > 0.05) return "bg-[#1a2b4a]/15"
+    if (intensity > 0.8) return "bg-[#399F49] text-white"
+    if (intensity > 0.6) return "bg-[#399F49]/70 text-white"
+    if (intensity > 0.4) return "bg-[#399F49]/50 text-white"
+    if (intensity > 0.2) return "bg-[#399F49]/30"
+    if (intensity > 0.05) return "bg-[#399F49]/15"
     return "bg-gray-50 text-gray-300"
   }
 

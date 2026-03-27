@@ -59,7 +59,7 @@ export function TeamTabs({ roster, matches, chartData }: TeamTabsProps) {
             onClick={() => setActive(tab.key)}
             className={`px-4 py-2 text-xs font-semibold uppercase tracking-wide border-b-2 -mb-px transition-colors ${
               active === tab.key
-                ? "text-[#1a2b4a] border-[#1a2b4a]"
+                ? "text-[#399F49] border-[#399F49]"
                 : "text-gray-400 border-transparent hover:text-gray-700 hover:border-gray-300"
             }`}
           >

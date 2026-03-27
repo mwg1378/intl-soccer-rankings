@@ -87,7 +87,7 @@ export default function EloRankingsPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#1a2b4a]" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#399F49]" />
         </div>
       ) : sorted.length > 0 ? (
         <>

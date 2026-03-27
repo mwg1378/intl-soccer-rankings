@@ -115,7 +115,7 @@ export default async function TournamentBacktestPage({
       <div>
         <Link
           href="/backtests"
-          className="text-xs text-gray-500 hover:text-[#1a2b4a]"
+          className="text-xs text-gray-500 hover:text-[#399F49]"
         >
           &larr; All Backtests
         </Link>
@@ -320,7 +320,7 @@ export default async function TournamentBacktestPage({
                   <td className="font-medium">
                     <Link
                       href={`/team/${r.slug}`}
-                      className="hover:text-[#1a2b4a] hover:underline"
+                      className="hover:text-[#399F49] hover:underline"
                     >
                       {r.team}
                     </Link>
@@ -463,7 +463,7 @@ function MetricCard({
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 text-center shadow-sm">
       <div
-        className={`text-2xl font-bold ${highlight ? "text-[#1a2b4a]" : ""}`}
+        className={`text-2xl font-bold ${highlight ? "text-[#399F49]" : ""}`}
       >
         {value}
       </div>

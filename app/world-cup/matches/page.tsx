@@ -77,7 +77,7 @@ function MatchCard({ match }: { match: MatchPrediction }) {
       <div className="px-3 pb-1">
         <div className="flex h-6 rounded overflow-hidden text-[10px] font-bold">
           <div
-            className="bg-[#1a2b4a] text-white flex items-center justify-center"
+            className="bg-[#399F49] text-white flex items-center justify-center"
             style={{ width: `${homeWidth}%` }}
           >
             {homeWidth >= 15 && pct(match.homeWin)}
@@ -89,7 +89,7 @@ function MatchCard({ match }: { match: MatchPrediction }) {
             {drawWidth >= 15 && pct(match.draw)}
           </div>
           <div
-            className="bg-[#40C28A] text-white flex items-center justify-center"
+            className="bg-[#399F49] text-white flex items-center justify-center"
             style={{ width: `${awayWidth}%` }}
           >
             {awayWidth >= 15 && pct(match.awayWin)}
@@ -158,7 +158,7 @@ export default function GroupMatchesPage() {
             className={cn(
               "px-3 py-1.5 text-xs font-bold border-b-2 -mb-px transition-colors",
               activeGroup === g
-                ? "border-[#1a2b4a] text-[#1a2b4a]"
+                ? "border-[#399F49] text-[#399F49]"
                 : "border-transparent text-gray-400 hover:text-gray-600",
             )}
           >
@@ -169,7 +169,7 @@ export default function GroupMatchesPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#1a2b4a]" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#399F49]" />
         </div>
       ) : groupData ? (
         <div className="space-y-4">

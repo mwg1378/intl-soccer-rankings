@@ -61,7 +61,7 @@ export function PredictionDisplay({ prediction }: PredictionDisplayProps) {
 
       {/* Win Probability Bar */}
       <div className="overflow-hidden rounded border border-gray-200">
-        <div className="bg-[#1a2b4a] px-4 py-2">
+        <div className="bg-[#399F49] px-4 py-2">
           <h3 className="text-sm font-semibold text-white">Win Probability</h3>
         </div>
         <div className="p-4">
@@ -77,7 +77,7 @@ export function PredictionDisplay({ prediction }: PredictionDisplayProps) {
 
       {/* Goal Distribution */}
       <div className="overflow-hidden rounded border border-gray-200">
-        <div className="bg-[#1a2b4a] px-4 py-2">
+        <div className="bg-[#399F49] px-4 py-2">
           <h3 className="text-sm font-semibold text-white">Goal Distribution</h3>
         </div>
         <div className="p-4">
@@ -92,7 +92,7 @@ export function PredictionDisplay({ prediction }: PredictionDisplayProps) {
       {/* Score Matrix and Top Scorelines side by side on larger screens */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="overflow-hidden rounded border border-gray-200">
-          <div className="bg-[#1a2b4a] px-4 py-2">
+          <div className="bg-[#399F49] px-4 py-2">
             <h3 className="text-sm font-semibold text-white">Score Probabilities</h3>
           </div>
           <div className="p-4">
@@ -105,7 +105,7 @@ export function PredictionDisplay({ prediction }: PredictionDisplayProps) {
         </div>
 
         <div className="overflow-hidden rounded border border-gray-200">
-          <div className="bg-[#1a2b4a] px-4 py-2">
+          <div className="bg-[#399F49] px-4 py-2">
             <h3 className="text-sm font-semibold text-white">Most Likely Scores</h3>
           </div>
           <div className="p-4">

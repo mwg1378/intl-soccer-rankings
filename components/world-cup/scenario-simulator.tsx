@@ -55,7 +55,7 @@ function MatchInput({ match, onChange }: MatchInputProps) {
           const v = e.target.value === "" ? null : parseInt(e.target.value, 10);
           onChange(v, match.awayGoals);
         }}
-        className="w-12 rounded border border-gray-300 px-2 py-1 text-center text-sm font-mono tabular-nums focus:border-[#1a2b4a] focus:outline-none focus:ring-1 focus:ring-[#1a2b4a]"
+        className="w-12 rounded border border-gray-300 px-2 py-1 text-center text-sm font-mono tabular-nums focus:border-[#399F49] focus:outline-none focus:ring-1 focus:ring-[#399F49]"
         placeholder="-"
       />
       <span className="text-xs text-gray-400">v</span>
@@ -68,7 +68,7 @@ function MatchInput({ match, onChange }: MatchInputProps) {
           const v = e.target.value === "" ? null : parseInt(e.target.value, 10);
           onChange(match.homeGoals, v);
         }}
-        className="w-12 rounded border border-gray-300 px-2 py-1 text-center text-sm font-mono tabular-nums focus:border-[#1a2b4a] focus:outline-none focus:ring-1 focus:ring-[#1a2b4a]"
+        className="w-12 rounded border border-gray-300 px-2 py-1 text-center text-sm font-mono tabular-nums focus:border-[#399F49] focus:outline-none focus:ring-1 focus:ring-[#399F49]"
         placeholder="-"
       />
       <span className="w-28 truncate text-sm font-medium">
@@ -223,7 +223,7 @@ export function ScenarioSimulator() {
             onClick={() => handleGroupChange(g)}
             className={`px-2.5 py-1 text-xs font-semibold rounded ${
               selectedGroup === g
-                ? "bg-[#1a2b4a] text-white"
+                ? "bg-[#399F49] text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
