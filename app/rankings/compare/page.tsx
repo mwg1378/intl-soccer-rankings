@@ -160,6 +160,9 @@ export default function CompareRankingsPage() {
           </a>
         ))}
       </div>
+      <p className="text-[11px] text-gray-400 -mt-3">
+        Brier score: lower is better (random guessing = 0.667). Composites (*) are evaluated by market alignment (MSE and Spearman r), not Brier.
+      </p>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">

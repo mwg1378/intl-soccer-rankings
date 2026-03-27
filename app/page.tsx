@@ -114,7 +114,15 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-3 text-xs">
+          <p className="mt-2 text-[10px] text-gray-400">
+            Mkt = consensus of{" "}
+            <Link href="/world-cup/odds" className="underline underline-offset-2">
+              sportsbook &amp; Polymarket odds
+            </Link>{" "}
+            (Mar 2026).
+          </p>
+
+          <div className="mt-2 flex flex-wrap gap-3 text-xs">
             <Link
               href="/world-cup/advancement"
               className="text-gray-400 hover:text-gray-700 underline-offset-4 hover:underline"
