@@ -196,7 +196,7 @@ export function PowerRankings({ teams, ratingRange }: PowerRankingsProps) {
                     </span>
                   </div>
 
-                  {/* Strength bars */}
+                  {/* Strength bars — longer = stronger */}
                   <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
                     <div>
                       <div className="text-[10px] text-gray-400 mb-0.5">Overall</div>
@@ -217,7 +217,7 @@ export function PowerRankings({ teams, ratingRange }: PowerRankingsProps) {
                       />
                     </div>
                     <div>
-                      <div className="text-[10px] text-gray-400 mb-0.5">Defense</div>
+                      <div className="text-[10px] text-gray-400 mb-0.5" title="Goals prevented — longer bar = fewer goals conceded">Defense</div>
                       <StrengthBar
                         value={3000 - team.defensiveRating}
                         max={defRange.max}

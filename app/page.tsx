@@ -36,6 +36,9 @@ export default async function HomePage() {
     probQF: number;
   }>;
 
+  // Build slug lookup from teams we already fetched
+  const slugByName = new Map(teams.map((t) => [t.name, t.slug]));
+
   // Build top favorites with model + market odds
   const favorites = Object.values(advancementOdds)
     .filter((a) => a.probChampion > 0.005)
@@ -43,6 +46,7 @@ export default async function HomePage() {
     .slice(0, 8)
     .map((a) => ({
       name: a.name,
+      slug: slugByName.get(a.name) ?? a.name.toLowerCase().replace(/\s+/g, "-"),
       group: a.group,
       modelProb: a.probChampion,
       marketProb: CONSENSUS_ODDS[a.name] ?? 0,
@@ -70,9 +74,10 @@ export default async function HomePage() {
 
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {favorites.map((f, idx) => (
-              <div
+              <Link
                 key={f.name}
-                className="rounded border border-gray-200 p-3 hover:border-gray-300 transition-colors"
+                href={`/team/${f.slug}`}
+                className="block rounded border border-gray-200 p-3 hover:border-gray-300 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -110,7 +115,7 @@ export default async function HomePage() {
                     </span>
                   )}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 

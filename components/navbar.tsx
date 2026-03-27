@@ -60,15 +60,13 @@ export function Navbar() {
         {/* Mobile hamburger */}
         <div className="ml-auto md:hidden">
           <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger>
-              <button
-                className="flex h-8 w-8 items-center justify-center rounded text-white/80 hover:text-white"
-                aria-label="Open menu"
-              >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M3 5h14M3 10h14M3 15h14" />
-                </svg>
-              </button>
+            <SheetTrigger
+              className="flex h-8 w-8 items-center justify-center rounded text-white/80 hover:text-white"
+              aria-label="Open menu"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M3 5h14M3 10h14M3 15h14" />
+              </svg>
             </SheetTrigger>
             <SheetContent side="right" className="w-64 bg-[#1a2b4a] text-white border-[#1a2b4a]">
               <SheetHeader>
